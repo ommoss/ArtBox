@@ -52,12 +52,17 @@ export default function ProductBuilder({
   }, [])
 
   const unitPrice = useMemo(() => {
-    const sum = Object.values(selections).reduce(
-      (acc, o) => acc + (o?.priceModifierAmount ?? 0),
-      0,
+    // Only count selections from groups that are currently visible — hidden
+    // groups (e.g. canvas-edge-color when wrap is gallery) shouldn't add cost.
+    const visibleSlugs = new Set(
+      template.optionGroups.filter((g) => isGroupVisible(g, selections)).map((g) => g.slug),
     )
+    const sum = Object.entries(selections).reduce((acc, [slug, opt]) => {
+      if (!visibleSlugs.has(slug)) return acc
+      return acc + (opt?.priceModifierAmount ?? 0)
+    }, 0)
     return Math.round((template.basePrice + sum) * 100) / 100
-  }, [selections, template.basePrice])
+  }, [selections, template])
 
   const totalPrice = useMemo(
     () => Math.round(unitPrice * quantity * 100) / 100,
@@ -124,14 +129,17 @@ export default function ProductBuilder({
           <p style={styles.description}>{template.description}</p>
         ) : null}
 
-        {template.optionGroups.map((group) => (
-          <OptionGroupControl
-            key={group.slug}
-            group={group}
-            selectedId={selections[group.slug]?.id}
-            onSelect={(opt) => handleSelect(group, opt)}
-          />
-        ))}
+        {template.optionGroups.map((group) => {
+          if (!isGroupVisible(group, selections)) return null
+          return (
+            <OptionGroupControl
+              key={group.slug}
+              group={group}
+              selectedId={selections[group.slug]?.id}
+              onSelect={(opt) => handleSelect(group, opt)}
+            />
+          )
+        })}
 
         <div style={styles.quantityRow}>
           <label style={styles.quantityLabel}>Quantity</label>
@@ -409,6 +417,20 @@ function computeDimensions(
   }
 }
 
+// Some option groups only matter when another option is set a certain way
+// (e.g. the canvas edge colour only matters when wrap = "solid"). Rather than
+// model this in the schema, we hardcode the small set of dependencies here.
+// Returns true if the group should be visible given current selections.
+function isGroupVisible(
+  group: PublicOptionGroup,
+  selections: Record<string, PublicOption>,
+): boolean {
+  if (group.slug === 'canvas-edge-color') {
+    return selections['canvas-wrap']?.value === 'solid'
+  }
+  return true
+}
+
 // Reconcile a previous selections map against a new template. Sizes carry
 // over by closest area; other groups carry over by exact value match if the
 // new template happens to share a group.
@@ -534,6 +556,199 @@ function optionBackground(
   return { background: cssTexture(opt.swatchColor || fallbackColor) }
 }
 
+// === Depth visualization ===
+// Approach A: a single bottom-edge strip foreshortened via CSS perspective.
+// Scaffolded so adding a right-edge strip (Approach B) is just dropping the
+// `right` flag in the spec and rendering the second JSX block.
+
+type DepthEdgeStyle =
+  // Canvas wrap: shows a slice of the print's inflated image — either the
+  // bleed past the visible print (gallery) or the print's edge mirrored.
+  | { kind: 'gallery' }
+  | { kind: 'mirror' }
+  // For frames, blocks, and solid-coloured canvas wraps: a CSS background.
+  | { kind: 'fill'; style: React.CSSProperties }
+
+type DepthSpec = {
+  depthInches: number
+  // Pixels of bleed inflation applied uniformly on all four edges of the
+  // canvas print so the image's aspect ratio is preserved (rather than being
+  // crushed only vertically). Always uses the max stretcher depth so the
+  // print view stays stable when the customer toggles 0.75" ↔ 1.5".
+  // 0 for non-canvas templates.
+  inflationPx: number
+  bottom: DepthEdgeStyle
+  right: DepthEdgeStyle
+}
+
+const MAX_CANVAS_STRETCHER_IN = 1.5
+
+function getDepthSpec(
+  template: PublicProductTemplate,
+  selections: Record<string, PublicOption>,
+  pxPerIn: number,
+): DepthSpec | null {
+  if (template.category === 'canvas') {
+    const stretcher = selections['stretcher-depth']
+    const wrap = selections['canvas-wrap']
+    const edgeColor = selections['canvas-edge-color']
+
+    const depthInches = stretcher?.value === '1.5in' ? 1.5 : 0.75
+    const inflationPx = MAX_CANVAS_STRETCHER_IN * pxPerIn
+
+    let edge: DepthEdgeStyle
+    if (wrap?.value === 'mirror') {
+      edge = { kind: 'mirror' }
+    } else if (wrap?.value === 'solid') {
+      edge = {
+        kind: 'fill',
+        style: { background: edgeColor?.swatchColor || '#1a2840' },
+      }
+    } else {
+      edge = { kind: 'gallery' }
+    }
+    // Bottom and right share the same edge treatment for canvas — the same
+    // wrap logic applies to every side of the canvas in real life.
+    return { depthInches, inflationPx, bottom: edge, right: edge }
+  }
+
+  if (template.category === 'framed') {
+    const frame = selections['frame-color']
+    const edge: DepthEdgeStyle = {
+      kind: 'fill',
+      style: { background: woodGrainBackground(frame?.swatchColor || '#3a2a1c') },
+    }
+    return { depthInches: 1.25, inflationPx: 0, bottom: edge, right: edge }
+  }
+
+  if (template.category === 'block_mount') {
+    const edgeOpt = selections['block-edge']
+    const edge: DepthEdgeStyle = {
+      kind: 'fill',
+      style: { background: blockEdgeBackground(edgeOpt?.swatchColor || '#c19a6b') },
+    }
+    return { depthInches: 0.75, inflationPx: 0, bottom: edge, right: edge }
+  }
+
+  return null
+}
+
+function DepthStrips({
+  spec,
+  pxPerIn,
+  imageUrl,
+  printWidthPx,
+  printHeightPx,
+}: {
+  spec: DepthSpec
+  pxPerIn: number
+  imageUrl: string
+  printWidthPx: number
+  printHeightPx: number
+}) {
+  // For canvas the strip thickness equals the actual bleed; for non-image
+  // wraps (frame/block) we add a small visual multiplier since there's no
+  // literal bleed to reveal.
+  const stripThickness =
+    spec.inflationPx > 0
+      ? spec.depthInches * pxPerIn
+      : spec.depthInches * pxPerIn * 1.4
+
+  const inflatedWidth = printWidthPx + 2 * spec.inflationPx
+  const inflatedHeight = printHeightPx + 2 * spec.inflationPx
+
+  // Build the inner image element for an edge given how it should expose
+  // the inflated image. Returns null for fill-style edges.
+  const renderEdgeImage = (
+    edge: DepthEdgeStyle,
+    side: 'bottom' | 'right',
+  ): React.ReactNode => {
+    if (edge.kind === 'fill') return null
+    const isMirror = edge.kind === 'mirror'
+
+    // Default positioning matches the print's image (centred with bleed
+    // around). Each kind/side combo shifts and/or flips from there.
+    let left = -spec.inflationPx
+    let top = -spec.inflationPx
+    let transform: string | undefined
+
+    if (edge.kind === 'gallery') {
+      if (side === 'bottom') top = -(spec.inflationPx + printHeightPx)
+      if (side === 'right') left = -(spec.inflationPx + printWidthPx)
+    } else if (isMirror) {
+      // Position matches the print, just flip the relevant axis.
+      transform = side === 'bottom' ? 'scaleY(-1)' : 'scaleX(-1)'
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        style={{
+          display: 'block',
+          position: 'absolute',
+          left,
+          top,
+          width: inflatedWidth,
+          height: inflatedHeight,
+          objectFit: 'cover',
+          objectPosition: 'center',
+          transform,
+          transformOrigin: 'center',
+        }}
+      />
+    )
+  }
+
+  return (
+    <>
+      {/* Bottom strip — tilts back away from the viewer */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 'calc(100% + 3px)',
+          height: stripThickness,
+          transformOrigin: 'top',
+          transform: 'perspective(1400px) rotateX(-30deg)',
+          boxShadow:
+            'inset 0 1px 3px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.14)',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          borderRadius: '2px',
+          ...(spec.bottom.kind === 'fill' ? spec.bottom.style : {}),
+        }}
+      >
+        {renderEdgeImage(spec.bottom, 'bottom')}
+      </div>
+
+      {/* Right strip — tilts back to the right of the viewer */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 'calc(100% + 3px)',
+          width: stripThickness,
+          transformOrigin: 'left',
+          transform: 'perspective(1400px) rotateY(30deg)',
+          boxShadow:
+            'inset 1px 0 3px rgba(0,0,0,0.18), 4px 0 10px rgba(0,0,0,0.14)',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          borderRadius: '2px',
+          ...(spec.right.kind === 'fill' ? spec.right.style : {}),
+        }}
+      >
+        {renderEdgeImage(spec.right, 'right')}
+      </div>
+    </>
+  )
+}
+
 function ImagePreview({
   template,
   imageUrl,
@@ -579,6 +794,8 @@ function ImagePreview({
     boxSizing: 'border-box',
   }
 
+  const depthSpec = getDepthSpec(template, selections, pxPerIn)
+
   if (template.category === 'framed') {
     const frameBg = optionBackground(frameOpt, woodGrainBackground, '#3a2a1c')
     const matBg = optionBackground(matSel, matTextureBackground, matColorBase)
@@ -607,6 +824,15 @@ function ImagePreview({
             <div style={glassShimmer()} />
           </div>
         </div>
+        {depthSpec ? (
+          <DepthStrips
+            spec={depthSpec}
+            pxPerIn={pxPerIn}
+            imageUrl={imageUrl}
+            printWidthPx={widthPx}
+            printHeightPx={heightPx}
+          />
+        ) : null}
       </div>
     )
   }
@@ -625,20 +851,64 @@ function ImagePreview({
         }}
       >
         <img src={imageUrl} alt="" style={imageStyle} />
+        {depthSpec ? (
+          <DepthStrips
+            spec={depthSpec}
+            pxPerIn={pxPerIn}
+            imageUrl={imageUrl}
+            printWidthPx={widthPx}
+            printHeightPx={heightPx}
+          />
+        ) : null}
       </div>
     )
   }
 
   if (template.category === 'canvas') {
+    // Inflate the image on BOTH axes so the bleed extends past the visible
+    // print on every side without distorting the image's aspect ratio. An
+    // inner clip container shows the central printWidthPx × printHeightPx
+    // window; the depth strips reveal the bottom and right bleed bands.
+    const inflationPx = depthSpec?.inflationPx ?? 0
+    const inflatedWidth = widthPx + 2 * inflationPx
+    const inflatedHeight = heightPx + 2 * inflationPx
     return (
-      <div
-        style={{
-          ...outerCommon,
-          boxShadow: '0 18px 32px rgba(0,0,0,0.22), 4px 0 0 0 rgba(0,0,0,0.06), 0 4px 0 0 rgba(0,0,0,0.06)',
-        }}
-      >
-        <img src={imageUrl} alt="" style={imageStyle} />
-        <div style={canvasOverlay()} />
+      <div style={outerCommon}>
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            boxShadow:
+              '0 18px 32px rgba(0,0,0,0.22), 4px 0 0 0 rgba(0,0,0,0.06), 0 4px 0 0 rgba(0,0,0,0.06)',
+          }}
+        >
+          <img
+            src={imageUrl}
+            alt=""
+            style={{
+              display: 'block',
+              position: 'absolute',
+              left: -inflationPx,
+              top: -inflationPx,
+              width: inflatedWidth,
+              height: inflatedHeight,
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
+          <div style={canvasOverlay()} />
+        </div>
+        {depthSpec ? (
+          <DepthStrips
+            spec={depthSpec}
+            pxPerIn={pxPerIn}
+            imageUrl={imageUrl}
+            printWidthPx={widthPx}
+            printHeightPx={heightPx}
+          />
+        ) : null}
       </div>
     )
   }
