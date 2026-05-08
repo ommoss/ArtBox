@@ -1,0 +1,10 @@
+.next
+node_modules
+.env
+.env.local
+data/
+media/
+*.db
+*.db-journal
+payload-types.ts
+src/app/(payload)/admin/importMap.js

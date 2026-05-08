@@ -1,0 +1,17 @@
+{
+  "name": "artbox-platform",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm --filter fulfillment-platform dev",
+    "dev:fulfillment": "pnpm --filter fulfillment-platform dev",
+    "dev:artist": "pnpm --filter artist-template dev",
+    "dev:all": "pnpm --parallel --filter fulfillment-platform --filter artist-template dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
