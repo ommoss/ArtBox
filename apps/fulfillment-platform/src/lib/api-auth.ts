@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 export type ResolvedArtist = {
-  id: string | number
+  id: number
   slug: string
   name: string
   status: string
@@ -28,7 +28,7 @@ export async function resolveArtistFromRequest(
   if (artist.status !== 'active') return null
 
   return {
-    id: artist.id,
+    id: Number(artist.id),
     slug: artist.slug,
     name: artist.name,
     status: artist.status,

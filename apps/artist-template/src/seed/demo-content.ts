@@ -89,7 +89,7 @@ const artworks: ArtworkSeed[] = [
 ]
 
 export async function seedDemoContent(payload: Payload) {
-  const galleryIdBySlug = new Map<string, string | number>()
+  const galleryIdBySlug = new Map<string, number>()
 
   for (const g of galleries) {
     const existing = (
@@ -101,7 +101,7 @@ export async function seedDemoContent(payload: Payload) {
       })
     ).docs[0]
     if (existing) {
-      galleryIdBySlug.set(g.slug, existing.id)
+      galleryIdBySlug.set(g.slug, Number(existing.id))
       continue
     }
     const created = await payload.create({
@@ -115,7 +115,7 @@ export async function seedDemoContent(payload: Payload) {
         isPublished: true,
       },
     })
-    galleryIdBySlug.set(g.slug, created.id)
+    galleryIdBySlug.set(g.slug, Number(created.id))
   }
 
   for (const a of artworks) {

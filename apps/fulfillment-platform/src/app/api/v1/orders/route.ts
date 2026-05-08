@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         .filter((s): s is string => typeof s === 'string' && s.length > 0),
     ),
   )
-  const skuToId = new Map<string, string | number>()
+  const skuToId = new Map<string, number>()
   if (skuList.length > 0) {
     const skuLookup = await payload.find({
       collection: 'production-catalog',
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       limit: skuList.length,
       depth: 0,
     })
-    for (const item of skuLookup.docs) skuToId.set(item.sku, item.id)
+    for (const item of skuLookup.docs) skuToId.set(item.sku, Number(item.id))
     const missing = skuList.filter((sku) => !skuToId.has(sku))
     if (missing.length > 0) {
       return json(422, { error: 'unknown_production_skus', missing })
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         .filter((s): s is string => typeof s === 'string' && s.length > 0),
     ),
   )
-  const slugToTemplateId = new Map<string, string | number>()
+  const slugToTemplateId = new Map<string, number>()
   if (templateSlugs.length > 0) {
     const tmplLookup = await payload.find({
       collection: 'product-templates',
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       limit: templateSlugs.length,
       depth: 0,
     })
-    for (const t of tmplLookup.docs) slugToTemplateId.set(t.slug, t.id)
+    for (const t of tmplLookup.docs) slugToTemplateId.set(t.slug, Number(t.id))
     const missing = templateSlugs.filter((s) => !slugToTemplateId.has(s))
     if (missing.length > 0) {
       return json(422, { error: 'unknown_template_slugs', missing })
@@ -133,11 +133,12 @@ export async function POST(request: Request) {
     },
   })
 
+  const orderId = Number(created.id)
   for (const line of order.lines) {
     await payload.create({
       collection: 'order-lines',
       data: {
-        order: created.id,
+        order: orderId,
         productionItem: line.productionSku ? skuToId.get(line.productionSku) : undefined,
         template: line.templateSlug ? slugToTemplateId.get(line.templateSlug) : undefined,
         configuration: line.configuration ?? undefined,
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
   await payload.create({
     collection: 'fulfillment-events',
     data: {
-      order: created.id,
+      order: orderId,
       type: 'system',
       message: `Order received from ${artist.name} site`,
       metadata: {

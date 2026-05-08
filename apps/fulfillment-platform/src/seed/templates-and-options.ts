@@ -281,8 +281,8 @@ const templates: TemplateSeed[] = [
 
 export async function seedTemplatesAndOptions(payload: Payload) {
   // 1. Seed option groups + their options
-  const groupIdBySlug = new Map<string, string | number>()
-  const optionIdsByGroupSlug = new Map<string, (string | number)[]>()
+  const groupIdBySlug = new Map<string, number>()
+  const optionIdsByGroupSlug = new Map<string, number[]>()
 
   for (const g of groups) {
     let groupDoc = (
@@ -300,16 +300,17 @@ export async function seedTemplatesAndOptions(payload: Payload) {
         data: { slug: g.slug, name: g.name, inputType: g.inputType, helpText: g.helpText },
       })
     }
-    groupIdBySlug.set(g.slug, groupDoc.id)
+    const groupId = Number(groupDoc.id)
+    groupIdBySlug.set(g.slug, groupId)
 
-    const optionIds: (string | number)[] = []
+    const optionIds: number[] = []
     for (const o of g.options) {
       const existing = (
         await payload.find({
           collection: 'options',
           where: {
             and: [
-              { optionGroup: { equals: groupDoc.id } },
+              { optionGroup: { equals: groupId } },
               { value: { equals: o.value } },
             ],
           },
@@ -319,12 +320,12 @@ export async function seedTemplatesAndOptions(payload: Payload) {
       ).docs[0]
 
       if (existing) {
-        optionIds.push(existing.id)
+        optionIds.push(Number(existing.id))
       } else {
         const created = await payload.create({
           collection: 'options',
           data: {
-            optionGroup: groupDoc.id,
+            optionGroup: groupId,
             label: o.label,
             value: o.value,
             priceModifierAmount: o.priceModifierAmount,
@@ -335,7 +336,7 @@ export async function seedTemplatesAndOptions(payload: Payload) {
             isActive: true,
           },
         })
-        optionIds.push(created.id)
+        optionIds.push(Number(created.id))
       }
     }
     optionIdsByGroupSlug.set(g.slug, optionIds)
@@ -353,7 +354,7 @@ export async function seedTemplatesAndOptions(payload: Payload) {
     ).docs[0]
     if (existing) continue
 
-    let baseProductionSkuId: string | number | undefined
+    let baseProductionSkuId: number | undefined
     if (t.baseProductionSku) {
       const sku = (
         await payload.find({
@@ -363,7 +364,7 @@ export async function seedTemplatesAndOptions(payload: Payload) {
           depth: 0,
         })
       ).docs[0]
-      if (sku) baseProductionSkuId = sku.id
+      if (sku) baseProductionSkuId = Number(sku.id)
     }
 
     const configuration = t.optionGroupSlugs.map((slug) => ({

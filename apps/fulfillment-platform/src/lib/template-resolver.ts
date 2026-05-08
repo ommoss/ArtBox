@@ -28,7 +28,7 @@ export async function loadPublicTemplate(
   })
   const tmpl = result.docs[0]
   if (!tmpl) return null
-  return shapeTemplate(tmpl)
+  return shapeTemplate(tmpl as unknown as Doc)
 }
 
 export async function loadPublicTemplates(
@@ -41,7 +41,7 @@ export async function loadPublicTemplates(
     depth: 3,
     sort: 'sortOrder',
   })
-  return result.docs.map(shapeTemplate)
+  return result.docs.map((d) => shapeTemplate(d as unknown as Doc))
 }
 
 function shapeTemplate(tmpl: Doc): PublicProductTemplate {
