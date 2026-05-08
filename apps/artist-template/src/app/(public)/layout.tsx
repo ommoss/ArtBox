@@ -26,15 +26,41 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         }}
       >
         <CartProviderWrapper>
-          <header
-            style={{
-              padding: '20px 32px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid rgba(0,0,0,0.06)',
-            }}
-          >
+          <style>{`
+            .public-header {
+              padding: 20px 32px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 16px;
+              border-bottom: 1px solid rgba(0,0,0,0.06);
+            }
+            .public-nav {
+              display: flex;
+              gap: 24px;
+              align-items: center;
+              flex-wrap: wrap;
+            }
+            .checkout-grid {
+              display: grid;
+              grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+              gap: 48px;
+              padding: 48px 32px;
+              max-width: 1100px;
+              margin: 0 auto;
+            }
+            @media (max-width: 768px) {
+              .public-header { padding: 16px 20px; gap: 12px; }
+              .public-nav { gap: 14px; }
+              .checkout-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+                padding: 32px 20px;
+              }
+            }
+          `}</style>
+          <header className="public-header">
             <Link
               href="/"
               style={{
@@ -47,7 +73,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             >
               {brand.artistName}
             </Link>
-            <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <nav className="public-nav">
               <Link href="/gallery" style={navStyle(brand.primary)}>
                 Galleries
               </Link>

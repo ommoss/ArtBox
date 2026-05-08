@@ -77,7 +77,9 @@ export default function ProductBuilder({
   const dims = computeDimensions(sizeSelection?.widthIn, sizeSelection?.heightIn)
 
   return (
-    <div style={styles.shell}>
+    <>
+      <style>{RESPONSIVE_CSS}</style>
+      <div className="pb-shell" style={styles.shell}>
       <div style={styles.preview}>
         <div style={styles.previewFrame}>
           <ImagePreview template={template} imageUrl={imageUrl} selections={selections} />
@@ -156,9 +158,26 @@ export default function ProductBuilder({
           </ul>
         </details>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
+
+const RESPONSIVE_CSS = `
+.pb-shell {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.1fr) minmax(280px, 1fr);
+  gap: 48px;
+  padding: 32px;
+}
+@media (max-width: 768px) {
+  .pb-shell {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+    padding: 20px !important;
+  }
+}
+`
 
 function OptionGroupControl({
   group,

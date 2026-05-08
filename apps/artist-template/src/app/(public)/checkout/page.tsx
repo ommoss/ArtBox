@@ -69,16 +69,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <section
-      style={{
-        padding: '48px 32px',
-        maxWidth: 1100,
-        margin: '0 auto',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-        gap: 48,
-      }}
-    >
+    <section className="checkout-grid">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <h1 style={{ fontSize: '1.6rem', fontWeight: 500, marginTop: 0 }}>Checkout</h1>
 
