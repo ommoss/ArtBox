@@ -148,19 +148,19 @@ export const themeLinks: ThemeLink[] = [
     preset: 'editorial',
     label: 'Editorial',
     tagline: 'Magazine, generous',
-    url: 'https://art-box-artist-template-editorial.vercel.app',
+    url: 'https://art-box-artist-demo-editorial.vercel.app',
   },
   {
     preset: 'atmospheric',
     label: 'Atmospheric',
     tagline: 'Dark & cinematic',
-    url: 'https://art-box-artist-template-atmospheric.vercel.app',
+    url: 'https://art-box-artist-demo-atmospheric.vercel.app',
   },
   {
     preset: 'warm',
     label: 'Warm',
     tagline: 'Vintage & curated',
-    url: 'https://art-box-artist-template-warm.vercel.app',
+    url: 'https://art-box-artist-demo-warm.vercel.app',
   },
 ]
 
