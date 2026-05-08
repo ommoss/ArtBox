@@ -1,3 +1,4 @@
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
@@ -46,11 +47,21 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URI || `file:${path.resolve(dirname, '../data/fulfillment.db')}`,
-    },
-  }),
+  db: (() => {
+    const uri = process.env.DATABASE_URI || ''
+    const useSqlite = !uri || uri.startsWith('file:')
+    if (useSqlite) {
+      return sqliteAdapter({
+        client: {
+          url: uri || `file:${path.resolve(dirname, '../data/fulfillment.db')}`,
+        },
+      })
+    }
+    return postgresAdapter({
+      pool: { connectionString: uri },
+      push: true,
+    })
+  })(),
   sharp,
   onInit: async (payload) => {
     await seedProductionCatalog(payload)
