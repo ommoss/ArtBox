@@ -34,14 +34,14 @@ export default async function ArtworkDetail({ params }: Args) {
     <section style={{ padding: '48px 32px', maxWidth: 1280, margin: '0 auto' }}>
       <Link
         href={gallery?.slug ? `/gallery/${gallery.slug}` : '/gallery'}
-        style={{ color: 'rgba(0,0,0,0.5)', fontSize: '0.9rem', textDecoration: 'none' }}
+        style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}
       >
         ← {gallery?.name ?? 'Galleries'}
       </Link>
 
       <header style={{ marginTop: 16, marginBottom: 32 }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginBottom: 6, overflowWrap: 'anywhere' }}>{artwork.title}</h1>
-        <p style={{ color: 'rgba(0,0,0,0.55)', margin: 0, fontSize: '0.95rem' }}>
+        <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem' }}>
           {[artwork.year, artwork.location].filter(Boolean).join(' · ')}
         </p>
         {artwork.description ? (
@@ -61,7 +61,7 @@ export default async function ArtworkDetail({ params }: Args) {
           artworkSlug={artwork.slug as string}
         />
       ) : (
-        <p style={{ color: '#888' }}>This artwork has no image attached.</p>
+        <p style={{ color: 'var(--color-secondary)' }}>This artwork has no image attached.</p>
       )}
     </section>
   )

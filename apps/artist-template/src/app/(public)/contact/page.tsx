@@ -11,7 +11,7 @@ export default function ContactPage() {
       <h1 style={{ fontSize: '2rem', fontWeight: 500, marginTop: 0, marginBottom: 8 }}>
         Contact
       </h1>
-      <p style={{ color: '#666', marginTop: 0, marginBottom: 32, maxWidth: 560 }}>
+      <p style={{ color: 'var(--color-secondary)', marginTop: 0, marginBottom: 32, maxWidth: 560 }}>
         For commissions, licensing, exhibitions, or press inquiries — drop a message below or
         get in touch directly.
       </p>
@@ -34,14 +34,14 @@ export default function ContactPage() {
               letterSpacing: 1.5,
               marginTop: 0,
               marginBottom: 8,
-              color: '#666',
+              color: 'var(--color-secondary)',
             }}
           >
             Direct
           </h3>
           <a
             href={`mailto:hello@${handle}.com`}
-            style={{ color: '#111', textDecoration: 'none', borderBottom: '1px solid #ccc' }}
+            style={{ color: 'var(--color-primary)', textDecoration: 'none', borderBottom: '1px solid var(--color-border)' }}
           >
             hello@{handle}.com
           </a>
@@ -53,7 +53,7 @@ export default function ContactPage() {
               letterSpacing: 1.5,
               marginTop: 32,
               marginBottom: 8,
-              color: '#666',
+              color: 'var(--color-secondary)',
             }}
           >
             Social
@@ -64,7 +64,7 @@ export default function ContactPage() {
               href={`https://instagram.com/${handle}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#111', textDecoration: 'none', borderBottom: '1px solid #ccc' }}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none', borderBottom: '1px solid var(--color-border)' }}
             >
               @{handle}
             </a>
@@ -77,12 +77,12 @@ export default function ContactPage() {
               letterSpacing: 1.5,
               marginTop: 32,
               marginBottom: 8,
-              color: '#666',
+              color: 'var(--color-secondary)',
             }}
           >
             Studio
           </h3>
-          <p style={{ margin: 0, color: '#444' }}>
+          <p style={{ margin: 0, color: 'var(--color-primary)' }}>
             Vancouver Island, British Columbia
           </p>
 
@@ -93,18 +93,18 @@ export default function ContactPage() {
               letterSpacing: 1.5,
               marginTop: 32,
               marginBottom: 8,
-              color: '#666',
+              color: 'var(--color-secondary)',
             }}
           >
             Print fulfillment
           </h3>
-          <p style={{ margin: 0, color: '#444' }}>
+          <p style={{ margin: 0, color: 'var(--color-primary)' }}>
             Orders are produced and shipped by{' '}
             <a
               href="https://artboxprinting.com"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#111', textDecoration: 'none', borderBottom: '1px solid #ccc' }}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none', borderBottom: '1px solid var(--color-border)' }}
             >
               Artbox Printing
             </a>{' '}
@@ -116,10 +116,10 @@ export default function ContactPage() {
       <p
         style={{
           marginTop: 64,
-          color: '#888',
+          color: 'var(--color-secondary)',
           fontSize: '0.85rem',
           fontStyle: 'italic',
-          borderTop: '1px solid rgba(0,0,0,0.06)',
+          borderTop: '1px solid var(--color-border)',
           paddingTop: 24,
         }}
       >

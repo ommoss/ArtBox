@@ -28,17 +28,17 @@ export default async function OrderConfirmation({ searchParams }: Args) {
       <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginTop: 0 }}>Order received</h1>
 
       {ref ? (
-        <p style={{ color: '#444', fontSize: '1rem' }}>
-          Reference: <code style={{ background: '#f4f4f0', padding: '2px 6px', borderRadius: 3 }}>{ref}</code>
+        <p style={{ color: 'var(--color-primary)', fontSize: '1rem' }}>
+          Reference: <code style={{ background: 'var(--color-surface)', padding: '2px 6px', borderRadius: 3, border: '1px solid var(--color-border)' }}>{ref}</code>
         </p>
       ) : null}
 
-      <p style={{ color: '#666', maxWidth: 520, margin: '16px auto 0', lineHeight: 1.6 }}>
+      <p style={{ color: 'var(--color-secondary)', maxWidth: 520, margin: '16px auto 0', lineHeight: 1.6 }}>
         Thanks — the Artbox team has been notified and will begin production shortly. You&apos;ll
         get an email when it ships.
       </p>
 
-      <p style={{ color: '#888', fontSize: '0.85rem', marginTop: 8 }}>
+      <p style={{ color: 'var(--color-secondary)', fontSize: '0.85rem', marginTop: 8 }}>
         (Mock order. No payment was captured.{orderId ? ` Internal order id: ${orderId}.` : ''})
       </p>
 
@@ -48,8 +48,8 @@ export default async function OrderConfirmation({ searchParams }: Args) {
           display: 'inline-block',
           marginTop: 32,
           padding: '10px 18px',
-          background: '#111',
-          color: '#fff',
+          background: 'var(--color-primary)',
+          color: 'var(--color-bg)',
           textDecoration: 'none',
           borderRadius: 4,
         }}

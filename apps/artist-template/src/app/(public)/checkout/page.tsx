@@ -60,8 +60,8 @@ export default function CheckoutPage() {
     return (
       <section style={{ padding: '48px 32px', maxWidth: 720, margin: '0 auto' }}>
         <h1 style={{ fontSize: '1.6rem', fontWeight: 500 }}>Checkout</h1>
-        <p style={{ color: '#666' }}>Your cart is empty.</p>
-        <Link href="/gallery" style={{ color: '#111' }}>
+        <p style={{ color: 'var(--color-secondary)' }}>Your cart is empty.</p>
+        <Link href="/gallery" style={{ color: 'var(--color-primary)' }}>
           Browse galleries →
         </Link>
       </section>
@@ -128,8 +128,8 @@ export default function CheckoutPage() {
           disabled={pending}
           style={{
             padding: '14px 20px',
-            background: pending ? '#666' : '#111',
-            color: '#fff',
+            background: pending ? 'var(--color-secondary)' : 'var(--color-primary)',
+            color: 'var(--color-bg)',
             border: 'none',
             borderRadius: 4,
             cursor: pending ? 'wait' : 'pointer',
@@ -144,7 +144,7 @@ export default function CheckoutPage() {
         <h2 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
           Order summary
         </h2>
-        <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 4, padding: 16 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 4, padding: 16 }}>
           {items.map((item) => (
             <div
               key={item.id}
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
                 display: 'flex',
                 gap: 12,
                 padding: '8px 0',
-                borderBottom: '1px solid rgba(0,0,0,0.05)',
+                borderBottom: '1px solid var(--color-border)',
               }}
             >
               <div
@@ -168,7 +168,7 @@ export default function CheckoutPage() {
               />
               <div style={{ flex: 1, fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: 500 }}>{item.artworkTitle}</div>
-                <div style={{ color: '#666' }}>
+                <div style={{ color: 'var(--color-secondary)' }}>
                   {item.templateName} × {item.quantity}
                 </div>
               </div>
@@ -201,7 +201,7 @@ function Field({
   defaultValue?: string
 }) {
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem', color: '#444' }}>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem', color: 'var(--color-secondary)' }}>
       {label}
       <input
         type={type}
@@ -210,9 +210,11 @@ function Field({
         defaultValue={defaultValue}
         style={{
           padding: '8px 10px',
-          border: '1px solid #ccc',
+          border: '1px solid var(--color-border)',
           borderRadius: 4,
           fontSize: '1rem',
+          background: 'var(--color-surface)',
+          color: 'var(--color-primary)',
         }}
       />
     </label>
@@ -237,11 +239,11 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 }
 
 const fieldset: React.CSSProperties = {
-  border: '1px solid rgba(0,0,0,0.1)',
+  border: '1px solid var(--color-border)',
   borderRadius: 4,
   padding: 16,
   display: 'flex',
   flexDirection: 'column',
   gap: 12,
 }
-const legend: React.CSSProperties = { padding: '0 8px', fontSize: '0.85rem', color: '#444' }
+const legend: React.CSSProperties = { padding: '0 8px', fontSize: '0.85rem', color: 'var(--color-secondary)' }

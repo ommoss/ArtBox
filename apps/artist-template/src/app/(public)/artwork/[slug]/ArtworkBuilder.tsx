@@ -28,8 +28,8 @@ export default function ArtworkBuilder({
 
   if (!active) {
     return (
-      <div style={{ padding: 32, background: '#fff', borderRadius: 8 }}>
-        <p style={{ color: '#888' }}>
+      <div style={{ padding: 32, background: 'var(--color-surface)', borderRadius: 8 }}>
+        <p style={{ color: 'var(--color-secondary)' }}>
           No products available yet. Connect this site to the Artbox fulfillment platform by setting{' '}
           <code>FULFILLMENT_API_URL</code> and <code>FULFILLMENT_API_KEY</code> in <code>.env</code>.
         </p>
@@ -67,9 +67,11 @@ export default function ArtworkBuilder({
             onClick={() => setActiveSlug(t.slug)}
             style={{
               padding: '8px 14px',
-              background: t.slug === active.slug ? '#111' : '#fff',
-              color: t.slug === active.slug ? '#fff' : '#333',
-              border: '1px solid #ddd',
+              background:
+                t.slug === active.slug ? 'var(--color-primary)' : 'var(--color-surface)',
+              color:
+                t.slug === active.slug ? 'var(--color-bg)' : 'var(--color-primary)',
+              border: '1px solid var(--color-border)',
               borderRadius: 999,
               cursor: 'pointer',
               fontSize: '0.85rem',

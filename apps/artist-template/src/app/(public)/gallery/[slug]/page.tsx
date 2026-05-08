@@ -34,7 +34,7 @@ export default async function GalleryDetail({ params }: Args) {
 
   return (
     <section style={{ padding: '64px 32px', maxWidth: 1280, margin: '0 auto' }}>
-      <Link href="/gallery" style={{ color: 'rgba(0,0,0,0.5)', fontSize: '0.9rem', textDecoration: 'none' }}>
+      <Link href="/gallery" style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}>
         ← All galleries
       </Link>
 
@@ -42,7 +42,7 @@ export default async function GalleryDetail({ params }: Args) {
         {gallery.name}
       </h1>
       {gallery.description ? (
-        <p style={{ color: 'rgba(0,0,0,0.6)', marginBottom: 32, maxWidth: 600 }}>{gallery.description}</p>
+        <p style={{ color: 'var(--color-secondary)', marginBottom: 32, maxWidth: 600 }}>{gallery.description}</p>
       ) : null}
 
       <div
@@ -74,7 +74,7 @@ export default async function GalleryDetail({ params }: Args) {
                 {a.title}
               </h3>
               {a.year ? (
-                <p style={{ color: 'rgba(0,0,0,0.5)', margin: 0, fontSize: '0.85rem' }}>{a.year}</p>
+                <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.85rem' }}>{a.year}</p>
               ) : null}
             </Link>
           )

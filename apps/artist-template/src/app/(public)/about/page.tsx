@@ -51,7 +51,7 @@ export default function AboutPage() {
           fontSize: '0.85rem',
           textTransform: 'uppercase',
           letterSpacing: 1.5,
-          color: '#666',
+          color: 'var(--color-secondary)',
           marginTop: 64,
           marginBottom: 16,
         }}
@@ -67,10 +67,10 @@ export default function AboutPage() {
       <p
         style={{
           marginTop: 64,
-          color: '#888',
+          color: 'var(--color-secondary)',
           fontSize: '0.85rem',
           fontStyle: 'italic',
-          borderTop: '1px solid rgba(0,0,0,0.06)',
+          borderTop: '1px solid var(--color-border)',
           paddingTop: 24,
         }}
       >

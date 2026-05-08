@@ -28,7 +28,7 @@ export default function ContactForm() {
         <p style={{ margin: 0, color: '#1a7f46', fontWeight: 500 }}>
           Thanks — we&apos;ll be in touch shortly.
         </p>
-        <p style={{ marginTop: 6, marginBottom: 0, color: '#666', fontSize: '0.85rem' }}>
+        <p style={{ marginTop: 6, marginBottom: 0, color: 'var(--color-secondary)', fontSize: '0.85rem' }}>
           (Demo only — no message was actually sent. Real form will route to the artist&apos;s
           email of choice.)
         </p>
@@ -62,8 +62,8 @@ export default function ContactForm() {
         disabled={pending}
         style={{
           padding: '12px 20px',
-          background: pending ? '#666' : '#111',
-          color: '#fff',
+          background: pending ? 'var(--color-secondary)' : 'var(--color-primary)',
+          color: 'var(--color-bg)',
           border: 'none',
           borderRadius: 4,
           cursor: pending ? 'wait' : 'pointer',
@@ -97,9 +97,11 @@ function Field({
         required={required}
         style={{
           padding: '8px 10px',
-          border: '1px solid #ccc',
+          border: '1px solid var(--color-border)',
           borderRadius: 4,
           fontSize: '1rem',
+          background: 'var(--color-surface)',
+          color: 'var(--color-primary)',
         }}
       />
     </label>

@@ -47,7 +47,7 @@ export default async function GalleriesIndex() {
                 {g.name}
               </h3>
               {g.description ? (
-                <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.9rem', overflowWrap: 'anywhere' }}>
+                <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.9rem', overflowWrap: 'anywhere' }}>
                   {g.description}
                 </p>
               ) : null}

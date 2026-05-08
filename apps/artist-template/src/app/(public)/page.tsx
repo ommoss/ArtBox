@@ -32,7 +32,7 @@ export default async function HomePage() {
         <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', margin: 0, fontWeight: 500, letterSpacing: -0.5 }}>
           {brand.artistName}
         </h1>
-        <p style={{ fontSize: '1.15rem', color: 'rgba(0,0,0,0.6)', marginTop: 16 }}>
+        <p style={{ fontSize: '1.15rem', color: 'var(--color-secondary)', marginTop: 16 }}>
           {brand.tagline}
         </p>
       </section>
@@ -70,7 +70,7 @@ export default async function HomePage() {
                   {g.name}
                 </h3>
                 {g.description ? (
-                  <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.95rem', overflowWrap: 'anywhere' }}>
+                  <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem', overflowWrap: 'anywhere' }}>
                     {g.description}
                   </p>
                 ) : null}

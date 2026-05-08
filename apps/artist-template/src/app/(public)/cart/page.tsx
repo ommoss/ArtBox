@@ -15,11 +15,11 @@ export default function CartPage() {
       <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginTop: 0 }}>Cart</h1>
 
       {!hydrated ? (
-        <p style={{ color: '#888' }}>Loading cart…</p>
+        <p style={{ color: 'var(--color-secondary)' }}>Loading cart…</p>
       ) : items.length === 0 ? (
-        <div style={{ padding: '48px 0', color: '#666' }}>
+        <div style={{ padding: '48px 0', color: 'var(--color-secondary)' }}>
           <p>Your cart is empty.</p>
-          <Link href="/gallery" style={{ color: '#111' }}>
+          <Link href="/gallery" style={{ color: 'var(--color-primary)' }}>
             Browse galleries →
           </Link>
         </div>
@@ -37,8 +37,8 @@ export default function CartPage() {
                     gap: 16,
                     alignItems: 'center',
                     padding: 16,
-                    background: '#fff',
-                    border: '1px solid rgba(0,0,0,0.08)',
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 4,
                   }}
                 >
@@ -54,7 +54,7 @@ export default function CartPage() {
                   />
                   <div>
                     <div style={{ fontWeight: 500 }}>{item.artworkTitle}</div>
-                    <div style={{ color: '#666', fontSize: '0.9rem', marginTop: 2 }}>
+                    <div style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', marginTop: 2 }}>
                       {item.templateName}
                     </div>
                     <ul
@@ -63,7 +63,7 @@ export default function CartPage() {
                         padding: 0,
                         listStyle: 'none',
                         fontSize: '0.8rem',
-                        color: '#777',
+                        color: 'var(--color-secondary)',
                       }}
                     >
                       {item.configuration.selections.map((sel) => (
@@ -78,7 +78,7 @@ export default function CartPage() {
                         alignItems: 'center',
                       }}
                     >
-                      <label style={{ fontSize: '0.8rem', color: '#666' }}>Qty</label>
+                      <label style={{ fontSize: '0.8rem', color: 'var(--color-secondary)' }}>Qty</label>
                       <input
                         type="number"
                         min={1}
@@ -93,8 +93,10 @@ export default function CartPage() {
                         style={{
                           width: 56,
                           padding: '4px 6px',
-                          border: '1px solid #ddd',
+                          border: '1px solid var(--color-border)',
                           borderRadius: 4,
+                          background: 'var(--color-surface)',
+                          color: 'var(--color-primary)',
                         }}
                       />
                       <button
@@ -125,8 +127,8 @@ export default function CartPage() {
             style={{
               marginTop: 32,
               padding: 20,
-              background: '#fff',
-              border: '1px solid rgba(0,0,0,0.08)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
               borderRadius: 4,
             }}
           >
@@ -140,7 +142,7 @@ export default function CartPage() {
               <span>Subtotal</span>
               <span>{fmt(subtotal)}</span>
             </div>
-            <p style={{ color: '#888', fontSize: '0.85rem', marginTop: 8 }}>
+            <p style={{ color: 'var(--color-secondary)', fontSize: '0.85rem', marginTop: 8 }}>
               Shipping and tax calculated at checkout.
             </p>
             <Link
@@ -149,8 +151,8 @@ export default function CartPage() {
                 display: 'block',
                 marginTop: 16,
                 padding: '14px 20px',
-                background: '#111',
-                color: '#fff',
+                background: 'var(--color-primary)',
+                color: 'var(--color-bg)',
                 textDecoration: 'none',
                 borderRadius: 4,
                 textAlign: 'center' as const,
