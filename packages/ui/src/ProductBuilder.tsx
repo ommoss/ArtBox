@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import type {
   BuilderConfiguration,
@@ -26,14 +26,30 @@ export default function ProductBuilder({
   imageTitle,
   onAddToCart,
 }: Props) {
-  const [selections, setSelections] = useState<Record<string, PublicOption>>(() => {
-    const init: Record<string, PublicOption> = {}
-    for (const g of template.optionGroups) {
-      if (g.options.length > 0) init[g.slug] = g.options[0]
-    }
-    return init
-  })
+  const [selections, setSelections] = useState<Record<string, PublicOption>>(() =>
+    reconcileSelections({}, template),
+  )
   const [quantity, setQuantity] = useState(1)
+  const [pxPerIn, setPxPerIn] = useState(PX_PER_IN_DESKTOP)
+
+  // Carry size selection (and equivalent options) across template switches.
+  useEffect(() => {
+    setSelections((prev) => reconcileSelections(prev, template))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template.slug])
+
+  // Smaller pixels-per-inch on mobile so 24×36 fits a phone viewport.
+  useEffect(() => {
+    const update = () =>
+      setPxPerIn(
+        typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT_PX
+          ? PX_PER_IN_MOBILE
+          : PX_PER_IN_DESKTOP,
+      )
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
   const unitPrice = useMemo(() => {
     const sum = Object.values(selections).reduce(
@@ -74,7 +90,7 @@ export default function ProductBuilder({
   }
 
   const sizeSelection = findSizeSelection(template, selections)
-  const dims = computeDimensions(sizeSelection?.widthIn, sizeSelection?.heightIn)
+  const dims = computeDimensions(sizeSelection?.widthIn, sizeSelection?.heightIn, pxPerIn)
 
   return (
     <>
@@ -82,7 +98,12 @@ export default function ProductBuilder({
       <div className="pb-shell" style={styles.shell}>
       <div style={styles.preview}>
         <div style={styles.previewFrame}>
-          <ImagePreview template={template} imageUrl={imageUrl} selections={selections} />
+          <ImagePreview
+            template={template}
+            imageUrl={imageUrl}
+            selections={selections}
+            pxPerIn={pxPerIn}
+          />
         </div>
         <p style={styles.previewCaption}>
           {imageTitle ? <span>{imageTitle}</span> : null}
@@ -135,7 +156,12 @@ export default function ProductBuilder({
           </div>
         </div>
 
-        <button type="button" onClick={handleAddToCart} style={styles.cta}>
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          style={styles.cta}
+          className="pb-cta-desktop"
+        >
           Add to cart →
         </button>
 
@@ -159,6 +185,36 @@ export default function ProductBuilder({
         </details>
       </div>
       </div>
+
+      {/* Mobile-only sticky bottom bar — keeps the CTA + price visible while
+          scrolling through long option lists. Hidden on desktop. */}
+      <div className="pb-sticky-spacer" aria-hidden />
+      <div className="pb-sticky-cta">
+        <div>
+          <div style={{ fontSize: '0.7rem', color: C_SECONDARY, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Total
+          </div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: C_PRIMARY }}>
+            {fmt(totalPrice)}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          style={{
+            padding: '12px 20px',
+            background: C_PRIMARY,
+            color: C_BG,
+            border: 'none',
+            borderRadius: 4,
+            fontSize: '0.95rem',
+            cursor: 'pointer',
+            minHeight: 44,
+          }}
+        >
+          Add to cart
+        </button>
+      </div>
     </>
   )
 }
@@ -170,11 +226,58 @@ const RESPONSIVE_CSS = `
   gap: 48px;
   padding: 32px;
 }
+.pb-sticky-cta { display: none; }
+.pb-sticky-spacer { display: none; }
+.pb-size-btn:focus,
+.pb-radio-row:focus,
+.pb-radio-row input:focus,
+.pb-cta-desktop:focus {
+  outline: none;
+}
+.pb-size-btn:focus-visible,
+.pb-radio-row:focus-visible,
+.pb-radio-row input:focus-visible,
+.pb-cta-desktop:focus-visible {
+  outline: 2px solid var(--color-primary, #1a1a1a);
+  outline-offset: 2px;
+}
 @media (max-width: 768px) {
   .pb-shell {
     grid-template-columns: 1fr !important;
-    gap: 32px !important;
-    padding: 20px !important;
+    gap: 24px !important;
+    padding: 16px !important;
+  }
+  .pb-shell > div:first-child > div:first-child {
+    /* tighter previewFrame on mobile so the cream backing block doesn't dominate */
+    min-height: 280px !important;
+    padding: 16px !important;
+  }
+  .pb-size-btn {
+    padding: 14px 10px !important;
+    min-height: 48px !important;
+  }
+  .pb-radio-row {
+    padding: 14px !important;
+    min-height: 48px !important;
+  }
+  .pb-cta-desktop { display: none !important; }
+  .pb-sticky-cta {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: var(--color-surface, #ffffff);
+    border-top: 1px solid var(--color-border, rgba(0,0,0,0.1));
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+  }
+  .pb-sticky-spacer {
+    display: block;
+    height: 80px;
   }
 }
 `
@@ -228,6 +331,7 @@ function OptionGroupControl({
                 key={opt.id}
                 type="button"
                 onClick={() => onSelect(opt)}
+                className="pb-size-btn"
                 style={{
                   ...styles.sizeButton,
                   ...(selected ? styles.sizeButtonSelected : {}),
@@ -246,6 +350,7 @@ function OptionGroupControl({
             return (
               <label
                 key={opt.id}
+                className="pb-radio-row"
                 style={{
                   ...styles.selectRow,
                   ...(selected ? styles.selectRowSelected : {}),
@@ -271,21 +376,27 @@ function OptionGroupControl({
   )
 }
 
-// 12 px = 1 inch baseline. Below the floor, the print is uniformly scaled up
-// so the smaller dimension reaches MIN_PREVIEW_DIM. Aspect ratio preserved.
-const PX_PER_IN = 12
-const MIN_PREVIEW_DIM = 100
-const FALLBACK_WIDTH = 240
-const FALLBACK_HEIGHT = 240
+// Pixels-per-inch in the on-screen preview. Smaller on mobile so a 24×36
+// print doesn't overflow a phone viewport.
+const PX_PER_IN_DESKTOP = 15
+const PX_PER_IN_MOBILE = 11
+const MOBILE_BREAKPOINT_PX = 768
+const MIN_PREVIEW_DIM = 140
+const FALLBACK_WIDTH = 280
+const FALLBACK_HEIGHT = 280
 
 type PreviewDims = { widthPx: number; heightPx: number; enlarged: boolean }
 
-function computeDimensions(widthIn?: number, heightIn?: number): PreviewDims {
+function computeDimensions(
+  widthIn: number | undefined,
+  heightIn: number | undefined,
+  pxPerIn: number,
+): PreviewDims {
   if (!widthIn || !heightIn) {
     return { widthPx: FALLBACK_WIDTH, heightPx: FALLBACK_HEIGHT, enlarged: false }
   }
-  const naturalW = widthIn * PX_PER_IN
-  const naturalH = heightIn * PX_PER_IN
+  const naturalW = widthIn * pxPerIn
+  const naturalH = heightIn * pxPerIn
   const minDim = Math.min(naturalW, naturalH)
   if (minDim >= MIN_PREVIEW_DIM) {
     return { widthPx: naturalW, heightPx: naturalH, enlarged: false }
@@ -296,6 +407,43 @@ function computeDimensions(widthIn?: number, heightIn?: number): PreviewDims {
     heightPx: Math.round(naturalH * scale),
     enlarged: true,
   }
+}
+
+// Reconcile a previous selections map against a new template. Sizes carry
+// over by closest area; other groups carry over by exact value match if the
+// new template happens to share a group.
+function reconcileSelections(
+  prev: Record<string, PublicOption>,
+  template: PublicProductTemplate,
+): Record<string, PublicOption> {
+  const next: Record<string, PublicOption> = {}
+  const prevSize = Object.values(prev).find((o) => o?.widthIn && o?.heightIn)
+  for (const group of template.optionGroups) {
+    if (group.options.length === 0) continue
+    if (group.inputType === 'size' && prevSize) {
+      const oldArea = (prevSize.widthIn || 0) * (prevSize.heightIn || 0)
+      let best = group.options[0]
+      let bestDelta = Infinity
+      for (const opt of group.options) {
+        const area = (opt.widthIn || 0) * (opt.heightIn || 0)
+        if (area > 0) {
+          const delta = Math.abs(area - oldArea)
+          if (delta < bestDelta) {
+            bestDelta = delta
+            best = opt
+          }
+        }
+      }
+      next[group.slug] = best
+    } else {
+      const carry = prev[group.slug]
+      const valueMatch = carry
+        ? group.options.find((o) => o.id === carry.id || o.value === carry.value)
+        : undefined
+      next[group.slug] = valueMatch ?? group.options[0]
+    }
+  }
+  return next
 }
 
 function findSizeSelection(
@@ -310,20 +458,98 @@ function findSizeSelection(
   return null
 }
 
+// === Material background fallback chain ===
+// 1. If option.previewImage is set, use it as a tiled background (artbox staff
+//    can upload real wood/mat/edge photos in admin — see IMAGE_GUIDELINES.md).
+// 2. Else, generate a CSS texture appropriate to the material kind.
+// 3. Else, fall back to a solid swatchColor.
+
+function woodGrainBackground(baseColor: string): string {
+  // Vertical grain stripes overlaid on the base color. Subtle on dark woods,
+  // a touch more visible on light woods.
+  return [
+    'repeating-linear-gradient(90deg, transparent 0 3px, rgba(0,0,0,0.06) 3px 4px)',
+    'repeating-linear-gradient(90deg, transparent 0 11px, rgba(255,255,255,0.05) 11px 13px)',
+    'linear-gradient(180deg, rgba(255,255,255,0.06), transparent 25%, transparent 75%, rgba(0,0,0,0.07))',
+    `linear-gradient(${baseColor}, ${baseColor})`,
+  ].join(', ')
+}
+
+function matTextureBackground(baseColor: string): string {
+  // Two staggered radial-dot patterns simulate cotton/paper tooth.
+  return [
+    'radial-gradient(rgba(0,0,0,0.025) 0.5px, transparent 0.5px) 0 0 / 4px 4px',
+    'radial-gradient(rgba(0,0,0,0.02) 0.5px, transparent 0.5px) 2px 2px / 4px 4px',
+    `linear-gradient(${baseColor}, ${baseColor})`,
+  ].join(', ')
+}
+
+function blockEdgeBackground(baseColor: string): string {
+  // Slight horizontal grain to suggest sustainable wood block edge.
+  return [
+    'repeating-linear-gradient(0deg, transparent 0 4px, rgba(0,0,0,0.04) 4px 5px)',
+    `linear-gradient(${baseColor}, ${baseColor})`,
+  ].join(', ')
+}
+
+function canvasOverlay(): React.CSSProperties {
+  // Faint cross-hatch suggesting woven canvas. Painted ON the image.
+  return {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    backgroundImage: [
+      'repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 1px, transparent 1px 3px)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 3px)',
+    ].join(', '),
+    mixBlendMode: 'multiply',
+  }
+}
+
+function glassShimmer(): React.CSSProperties {
+  // Diagonal sheen suggesting glass over the matted print.
+  return {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+    background:
+      'linear-gradient(135deg, rgba(255,255,255,0) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 65%)',
+  }
+}
+
+function optionBackground(
+  opt: PublicOption | undefined,
+  cssTexture: (color: string) => string,
+  fallbackColor: string,
+): React.CSSProperties {
+  if (!opt) return { background: fallbackColor }
+  if (opt.previewImage) {
+    return {
+      backgroundImage: `url(${opt.previewImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }
+  }
+  return { background: cssTexture(opt.swatchColor || fallbackColor) }
+}
+
 function ImagePreview({
   template,
   imageUrl,
   selections,
+  pxPerIn,
 }: {
   template: PublicProductTemplate
   imageUrl: string
   selections: Record<string, PublicOption>
+  pxPerIn: number
 }) {
   const sizeSel = findSizeSelection(template, selections)
-  const { widthPx, heightPx } = computeDimensions(sizeSel?.widthIn, sizeSel?.heightIn)
+  const { widthPx, heightPx } = computeDimensions(sizeSel?.widthIn, sizeSel?.heightIn, pxPerIn)
 
-  const frameColor = selections['frame-color']?.swatchColor
-  const blockEdge = selections['block-edge']?.swatchColor
+  const frameOpt = selections['frame-color']
+  const blockEdgeOpt = selections['block-edge']
   const matSel = selections['mat']
 
   // Frame and mat thickness scale with the print so a 24×36 looks heftier than an 11×14.
@@ -335,7 +561,7 @@ function ImagePreview({
     if (matSel.value?.startsWith('2')) return Math.round(baseDim * 0.08)
     return 0
   })()
-  const matColor = matSel?.value?.endsWith('-black') ? '#111' : '#fafafa'
+  const matColorBase = matSel?.value?.endsWith('-black') ? '#1a1a1a' : '#f4f1ea'
   const blockEdgeThicknessPx = template.category === 'block_mount' ? 6 : 0
 
   const imageStyle: React.CSSProperties = {
@@ -345,49 +571,59 @@ function ImagePreview({
     objectFit: 'cover',
   }
 
-  // Outer container's dimensions = the customer's selected print size.
-  // Frame/mat/edge treatments live INSIDE this container so total visible size = print size.
-  const outerStyle: React.CSSProperties = {
+  const outerCommon: React.CSSProperties = {
     width: widthPx,
     height: heightPx,
+    position: 'relative',
     transition: 'width 0.25s ease, height 0.25s ease',
-    boxShadow:
-      template.category === 'canvas'
-        ? '0 18px 32px rgba(0,0,0,0.22)'
-        : template.category === 'block_mount'
-          ? '0 14px 28px rgba(0,0,0,0.22)'
-          : template.category === 'framed'
-            ? '0 12px 32px rgba(0,0,0,0.20)'
-            : '0 8px 24px rgba(0,0,0,0.12)',
-    background:
-      template.category === 'framed' ? frameColor || '#222' :
-      template.category === 'block_mount' ? blockEdge || '#c19a6b' :
-      'transparent',
-    padding: template.category === 'framed' ? frameThicknessPx : blockEdgeThicknessPx,
     boxSizing: 'border-box',
   }
 
   if (template.category === 'framed') {
+    const frameBg = optionBackground(frameOpt, woodGrainBackground, '#3a2a1c')
+    const matBg = optionBackground(matSel, matTextureBackground, matColorBase)
     return (
-      <div style={outerStyle}>
+      <div
+        style={{
+          ...outerCommon,
+          ...frameBg,
+          padding: frameThicknessPx,
+          boxShadow: '0 12px 32px rgba(0,0,0,0.22), inset 0 0 0 1px rgba(0,0,0,0.15)',
+        }}
+      >
         <div
           style={{
+            position: 'relative',
             width: '100%',
             height: '100%',
-            background: matColor,
+            ...matBg,
             padding: matThicknessPx,
             boxSizing: 'border-box',
+            boxShadow: matThicknessPx > 0 ? 'inset 0 1px 4px rgba(0,0,0,0.08)' : undefined,
           }}
         >
-          <img src={imageUrl} alt="" style={imageStyle} />
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <img src={imageUrl} alt="" style={imageStyle} />
+            <div style={glassShimmer()} />
+          </div>
         </div>
       </div>
     )
   }
 
   if (template.category === 'block_mount') {
+    const edgeBg = optionBackground(blockEdgeOpt, blockEdgeBackground, '#c19a6b')
     return (
-      <div style={outerStyle}>
+      <div
+        style={{
+          ...outerCommon,
+          ...edgeBg,
+          padding: blockEdgeThicknessPx,
+          // Stepped shadow suggests the wood block has thickness.
+          boxShadow:
+            '3px 3px 0 0 rgba(0,0,0,0.18), 5px 5px 0 0 rgba(0,0,0,0.14), 0 16px 28px rgba(0,0,0,0.2)',
+        }}
+      >
         <img src={imageUrl} alt="" style={imageStyle} />
       </div>
     )
@@ -395,14 +631,25 @@ function ImagePreview({
 
   if (template.category === 'canvas') {
     return (
-      <div style={outerStyle}>
+      <div
+        style={{
+          ...outerCommon,
+          boxShadow: '0 18px 32px rgba(0,0,0,0.22), 4px 0 0 0 rgba(0,0,0,0.06), 0 4px 0 0 rgba(0,0,0,0.06)',
+        }}
+      >
         <img src={imageUrl} alt="" style={imageStyle} />
+        <div style={canvasOverlay()} />
       </div>
     )
   }
 
   return (
-    <div style={outerStyle}>
+    <div
+      style={{
+        ...outerCommon,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      }}
+    >
       <img src={imageUrl} alt="" style={imageStyle} />
     </div>
   )
