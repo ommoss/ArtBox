@@ -1,6 +1,6 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { createRequire } from 'module'
 import path from 'path'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -49,17 +49,20 @@ export default buildConfig({
   },
   db: (() => {
     const uri = process.env.DATABASE_URI || ''
-    const useSqlite = !uri || uri.startsWith('file:')
-    if (useSqlite) {
-      return sqliteAdapter({
-        client: {
-          url: uri || `file:${path.resolve(dirname, '../data/fulfillment.db')}`,
-        },
+    if (uri.startsWith('postgres')) {
+      return postgresAdapter({
+        pool: { connectionString: uri },
+        push: true,
       })
     }
-    return postgresAdapter({
-      pool: { connectionString: uri },
-      push: true,
+    // Local dev only. Loaded via createRequire so Next.js does not trace
+    // libsql into the production serverless bundle.
+    const requireFn = createRequire(import.meta.url)
+    const { sqliteAdapter } = requireFn('@payloadcms/db-sqlite') as typeof import('@payloadcms/db-sqlite')
+    return sqliteAdapter({
+      client: {
+        url: uri || `file:${path.resolve(dirname, '../data/fulfillment.db')}`,
+      },
     })
   })(),
   sharp,
