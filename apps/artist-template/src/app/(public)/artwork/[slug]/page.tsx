@@ -40,7 +40,7 @@ export default async function ArtworkDetail({ params }: Args) {
       </Link>
 
       <header style={{ marginTop: 16, marginBottom: 32 }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginBottom: 6 }}>{artwork.title}</h1>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginBottom: 6, overflowWrap: 'anywhere' }}>{artwork.title}</h1>
         <p style={{ color: 'rgba(0,0,0,0.55)', margin: 0, fontSize: '0.95rem' }}>
           {[artwork.year, artwork.location].filter(Boolean).join(' · ')}
         </p>

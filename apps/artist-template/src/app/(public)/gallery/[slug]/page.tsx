@@ -64,11 +64,13 @@ export default async function GalleryDetail({ params }: Args) {
               <div
                 style={{
                   aspectRatio: '1 / 1',
-                  background: url ? `url(${url}) center/cover` : '#ddd',
+                  background: url
+                    ? `url(${url}) center/cover`
+                    : 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
                   borderRadius: 2,
                 }}
               />
-              <h3 style={{ fontSize: '1rem', fontWeight: 500, marginTop: 10, marginBottom: 0 }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 500, marginTop: 10, marginBottom: 0, overflowWrap: 'anywhere' }}>
                 {a.title}
               </h3>
               {a.year ? (

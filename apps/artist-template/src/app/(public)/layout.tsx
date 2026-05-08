@@ -98,11 +98,15 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               padding: '32px',
               borderTop: '1px solid rgba(0,0,0,0.06)',
               color: 'rgba(0,0,0,0.5)',
-              fontSize: '0.85rem',
+              fontSize: '0.8rem',
               textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
             }}
           >
-            © {new Date().getFullYear()} {brand.artistName}. Prints fulfilled by Artbox Printing.
+            <span>© {new Date().getFullYear()} {brand.artistName}</span>
+            <span style={{ opacity: 0.7 }}>Prints by Artbox Printing</span>
           </footer>
         </CartProviderWrapper>
       </body>

@@ -60,15 +60,17 @@ export default async function HomePage() {
                 <div
                   style={{
                     aspectRatio: '4 / 3',
-                    background: cover ? `url(${cover}) center/cover` : '#ddd',
+                    background: cover
+                      ? `url(${cover}) center/cover`
+                      : 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
                     borderRadius: 4,
                   }}
                 />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 500, marginTop: 16, marginBottom: 4 }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 500, marginTop: 16, marginBottom: 4, overflowWrap: 'anywhere' }}>
                   {g.name}
                 </h3>
                 {g.description ? (
-                  <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.95rem' }}>
+                  <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.95rem', overflowWrap: 'anywhere' }}>
                     {g.description}
                   </p>
                 ) : null}

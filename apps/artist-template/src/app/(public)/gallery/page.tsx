@@ -37,15 +37,17 @@ export default async function GalleriesIndex() {
               <div
                 style={{
                   aspectRatio: '4 / 3',
-                  background: cover ? `url(${cover}) center/cover` : '#ddd',
+                  background: cover
+                    ? `url(${cover}) center/cover`
+                    : 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
                   borderRadius: 4,
                 }}
               />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 500, marginTop: 12, marginBottom: 4 }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 500, marginTop: 12, marginBottom: 4, overflowWrap: 'anywhere' }}>
                 {g.name}
               </h3>
               {g.description ? (
-                <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.9rem' }}>
+                <p style={{ color: 'rgba(0,0,0,0.6)', margin: 0, fontSize: '0.9rem', overflowWrap: 'anywhere' }}>
                   {g.description}
                 </p>
               ) : null}
