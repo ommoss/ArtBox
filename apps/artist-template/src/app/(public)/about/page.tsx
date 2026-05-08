@@ -1,4 +1,9 @@
+import Image from 'next/image'
+
 import { getArtistBrand } from '@/lib/artist-config'
+
+const PORTRAIT_URL =
+  'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80'
 
 export default function AboutPage() {
   const brand = getArtistBrand()
@@ -19,14 +24,21 @@ export default function AboutPage() {
       >
         <div
           style={{
+            position: 'relative',
             aspectRatio: '4 / 5',
-            backgroundImage:
-              'url(https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             borderRadius: 4,
+            overflow: 'hidden',
           }}
-        />
+        >
+          <Image
+            src={PORTRAIT_URL}
+            alt={`Portrait of ${brand.artistName}`}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </div>
 
         <div style={{ lineHeight: 1.7, fontSize: '1.05rem' }}>
           <p style={{ marginTop: 0 }}>
