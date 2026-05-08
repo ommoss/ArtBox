@@ -7,4 +7,3 @@ media/
 *.db
 *.db-journal
 payload-types.ts
-src/app/(payload)/admin/importMap.js
