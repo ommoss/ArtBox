@@ -121,11 +121,25 @@ const groups: GroupSeed[] = [
     slug: 'canvas-wrap',
     name: 'Canvas edge',
     inputType: 'select',
+    helpText:
+      'Gallery wraps the image around the edge. Mirror reflects the image at the edge. Solid uses a chosen colour.',
     options: [
       { value: 'gallery', label: 'Gallery wrap (image continues over edge)', priceModifierAmount: 0, sortOrder: 1 },
-      { value: 'mirror', label: 'Mirror wrap', priceModifierAmount: 10, sortOrder: 2 },
-      { value: 'white', label: 'White edge', priceModifierAmount: 10, sortOrder: 3 },
-      { value: 'black', label: 'Black edge', priceModifierAmount: 10, sortOrder: 4 },
+      { value: 'mirror', label: 'Mirror wrap (image reflected at edge)', priceModifierAmount: 10, sortOrder: 2 },
+      { value: 'solid', label: 'Solid colour edge', priceModifierAmount: 10, sortOrder: 3 },
+    ],
+  },
+  {
+    slug: 'canvas-edge-color',
+    name: 'Edge colour',
+    inputType: 'swatch',
+    helpText: 'Only applies when "Solid colour edge" is selected above.',
+    options: [
+      { value: 'white', label: 'White', priceModifierAmount: 0, swatchColor: '#f5f5f0', sortOrder: 1 },
+      { value: 'cream', label: 'Cream', priceModifierAmount: 0, swatchColor: '#e8dccd', sortOrder: 2 },
+      { value: 'gray', label: 'Charcoal', priceModifierAmount: 0, swatchColor: '#3a3a3a', sortOrder: 3 },
+      { value: 'navy', label: 'Navy', priceModifierAmount: 0, swatchColor: '#1a2840', sortOrder: 4 },
+      { value: 'black', label: 'Black', priceModifierAmount: 0, swatchColor: '#111111', sortOrder: 5 },
     ],
   },
   {
@@ -244,7 +258,7 @@ const templates: TemplateSeed[] = [
     description: 'Giclée on photo canvas, gallery-wrapped over a wood stretcher.',
     basePrice: 0,
     baseProductionSku: 'CAN-16x20',
-    optionGroupSlugs: ['canvas-size', 'stretcher-depth', 'canvas-wrap'],
+    optionGroupSlugs: ['canvas-size', 'stretcher-depth', 'canvas-wrap', 'canvas-edge-color'],
     sortOrder: 3,
   },
   {
@@ -342,7 +356,9 @@ export async function seedTemplatesAndOptions(payload: Payload) {
     optionIdsByGroupSlug.set(g.slug, optionIds)
   }
 
-  // 2. Seed templates
+  // 2. Seed templates (force-update existing template configuration to match
+  //    the current spec, so adding/removing/reordering option groups in this
+  //    file propagates to the deployed DB on boot)
   for (const t of templates) {
     const existing = (
       await payload.find({
@@ -352,7 +368,6 @@ export async function seedTemplatesAndOptions(payload: Payload) {
         depth: 0,
       })
     ).docs[0]
-    if (existing) continue
 
     let baseProductionSkuId: number | undefined
     if (t.baseProductionSku) {
@@ -367,11 +382,37 @@ export async function seedTemplatesAndOptions(payload: Payload) {
       if (sku) baseProductionSkuId = Number(sku.id)
     }
 
-    const configuration = t.optionGroupSlugs.map((slug) => ({
-      optionGroup: groupIdBySlug.get(slug)!,
-      allowedOptions: optionIdsByGroupSlug.get(slug)!,
-      isRequired: true,
-    }))
+    const configuration = t.optionGroupSlugs
+      .filter((slug) => groupIdBySlug.has(slug))
+      .map((slug) => ({
+        optionGroup: groupIdBySlug.get(slug)!,
+        allowedOptions: optionIdsByGroupSlug.get(slug)!,
+        isRequired: true,
+      }))
+
+    if (existing) {
+      // Only push an update when the config differs, to avoid spurious updates
+      // on every boot.
+      const existingConfig = (existing as { configuration?: unknown[] }).configuration
+      const expectedSlugList = t.optionGroupSlugs.join(',')
+      const existingSlugList = Array.isArray(existingConfig)
+        ? existingConfig
+            .map((c) => {
+              const og = (c as { optionGroup?: { slug?: string } | number }).optionGroup
+              return typeof og === 'object' && og && 'slug' in og ? og.slug : ''
+            })
+            .filter(Boolean)
+            .join(',')
+        : ''
+      if (existingSlugList !== expectedSlugList) {
+        await payload.update({
+          collection: 'product-templates',
+          id: existing.id,
+          data: { configuration, baseProductionSku: baseProductionSkuId },
+        })
+      }
+      continue
+    }
 
     await payload.create({
       collection: 'product-templates',
