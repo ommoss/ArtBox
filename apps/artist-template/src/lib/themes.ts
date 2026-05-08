@@ -142,25 +142,25 @@ export const themeLinks: ThemeLink[] = [
     preset: 'minimal',
     label: 'Minimal',
     tagline: 'Clean & contemporary',
-    url: 'https://art-box-artist-demo.vercel.app',
+    url: 'https://art-box-artist-template.vercel.app',
   },
   {
     preset: 'editorial',
     label: 'Editorial',
     tagline: 'Magazine, generous',
-    url: 'https://art-box-artist-demo-editorial.vercel.app',
+    url: 'https://art-box-artist-template-editorial.vercel.app',
   },
   {
     preset: 'atmospheric',
     label: 'Atmospheric',
     tagline: 'Dark & cinematic',
-    url: 'https://art-box-artist-demo-atmospheric.vercel.app',
+    url: 'https://art-box-artist-template-atmospheric.vercel.app',
   },
   {
     preset: 'warm',
     label: 'Warm',
     tagline: 'Vintage & curated',
-    url: 'https://art-box-artist-demo-warm.vercel.app',
+    url: 'https://art-box-artist-template-warm.vercel.app',
   },
 ]
 
