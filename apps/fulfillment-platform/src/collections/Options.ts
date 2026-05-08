@@ -53,7 +53,10 @@ export const Options: CollectionConfig = {
     {
       name: 'previewImage',
       type: 'text',
-      admin: { description: 'Optional preview image URL (frame mock, edge sample, etc.)' },
+      admin: {
+        description:
+          "Optional photographic texture. Frame colours: square wood-grain photo (≥1200×1200px). Mat options: square mat-board scan (≥800×800px). Block edges: wide edge strip (≥1600×400px, 4:1+ aspect). Leave empty to use the CSS-generated texture. Full guidelines: see IMAGE_GUIDELINES.md in the repo root.",
+      },
     },
     {
       type: 'row',
