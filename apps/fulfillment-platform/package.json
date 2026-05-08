@@ -16,7 +16,6 @@
     "@artbox/types": "workspace:*",
     "@artbox/ui": "workspace:*",
     "@payloadcms/db-postgres": "latest",
-    "@payloadcms/db-sqlite": "latest",
     "@payloadcms/next": "latest",
     "@payloadcms/richtext-lexical": "latest",
     "@payloadcms/ui": "latest",

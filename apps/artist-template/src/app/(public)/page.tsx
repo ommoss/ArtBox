@@ -4,6 +4,9 @@ import { getPayload } from 'payload'
 
 import { getArtistBrand } from '@/lib/artist-config'
 
+// Galleries can be edited live in the CMS — render fresh per request.
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const brand = getArtistBrand()
   const payload = await getPayload({ config })

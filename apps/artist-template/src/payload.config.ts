@@ -1,6 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { createRequire } from 'module'
 import path from 'path'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -26,24 +25,18 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: (() => {
-    const uri = process.env.DATABASE_URI || ''
-    if (uri.startsWith('postgres')) {
-      return postgresAdapter({
-        pool: { connectionString: uri },
-        push: true,
-      })
-    }
-    // Local dev only. Loaded via createRequire so Next.js does not trace
-    // libsql into the production serverless bundle.
-    const requireFn = createRequire(import.meta.url)
-    const { sqliteAdapter } = requireFn('@payloadcms/db-sqlite') as typeof import('@payloadcms/db-sqlite')
-    return sqliteAdapter({
-      client: {
-        url: uri || `file:${path.resolve(dirname, '../data/artist.db')}`,
-      },
-    })
-  })(),
+  db: postgresAdapter({
+    pool: {
+      connectionString:
+        process.env.DATABASE_URI ||
+        (() => {
+          throw new Error(
+            'DATABASE_URI is not set. Provide a Postgres connection string (e.g. from Neon) in apps/artist-template/.env',
+          )
+        })(),
+    },
+    push: true,
+  }),
   sharp,
   onInit: async (payload) => {
     await seedDemoContent(payload)
