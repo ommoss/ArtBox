@@ -42,14 +42,13 @@ export default function AboutPage() {
 
         <div style={{ lineHeight: 1.7, fontSize: '1.05rem' }}>
           <p style={{ marginTop: 0 }}>
-            {brand.artistName} is a photographer working in the spaces between land and sea —
-            long-form documentary work shaped by patience, weather, and a deep familiarity with
-            place.
+            This is the artist&apos;s &quot;About&quot; page. A short introduction goes here —
+            who they are, where they work, what shapes their practice. Two or three paragraphs
+            land best.
           </p>
           <p>
-            Trained in [discipline] before turning to photography, [their] work has appeared in
-            [Publications] and been exhibited at [Galleries]. [They] live and work on the west
-            coast of Canada, often on assignment further afield.
+            A second paragraph can cover background, training, publications, exhibitions, and
+            recurring themes. Short, specific sentences read better than a single dense block.
           </p>
           <p>
             Prints are produced through Artbox Printing in Victoria, BC, on archival fine art

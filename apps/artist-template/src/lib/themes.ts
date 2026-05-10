@@ -169,9 +169,11 @@ export function getTheme(): Theme {
   const preset = themes[presetName] ?? themes.minimal
   return {
     ...preset,
-    artistName: process.env.NEXT_PUBLIC_ARTIST_NAME || 'Sample Artist',
+    // Default placeholder uses a historical figure so the demo content is
+    // unambiguously not a real living artist's site.
+    artistName: process.env.NEXT_PUBLIC_ARTIST_NAME || 'Vincent van Gogh',
     tagline:
-      process.env.NEXT_PUBLIC_ARTIST_TAGLINE || 'Photographs from the field',
+      process.env.NEXT_PUBLIC_ARTIST_TAGLINE || 'Studies in light and colour',
   }
 }
 

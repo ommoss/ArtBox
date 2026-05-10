@@ -31,6 +31,11 @@ export default function ProductBuilder({
   )
   const [quantity, setQuantity] = useState(1)
   const [pxPerIn, setPxPerIn] = useState(PX_PER_IN_DESKTOP)
+  // Both the refine section and the price breakdown are closed by default
+  // for SSR/hydration safety; the viewport effect opens them on desktop
+  // after mount.
+  const [refineOpen, setRefineOpen] = useState(false)
+  const [priceOpen, setPriceOpen] = useState(false)
 
   // Carry size selection (and equivalent options) across template switches.
   useEffect(() => {
@@ -38,26 +43,35 @@ export default function ProductBuilder({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template.slug])
 
-  // Smaller pixels-per-inch on mobile so 24×36 fits a phone viewport.
+  // Smaller pixels-per-inch on mobile so 24×36 fits a phone viewport, and
+  // collapsible details default-open on desktop / closed on mobile.
   useEffect(() => {
-    const update = () =>
-      setPxPerIn(
+    const update = () => {
+      const isMobile =
         typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT_PX
-          ? PX_PER_IN_MOBILE
-          : PX_PER_IN_DESKTOP,
-      )
+      setPxPerIn(isMobile ? PX_PER_IN_MOBILE : PX_PER_IN_DESKTOP)
+      setRefineOpen(!isMobile)
+      setPriceOpen(!isMobile)
+    }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
 
   const unitPrice = useMemo(() => {
-    const sum = Object.values(selections).reduce(
-      (acc, o) => acc + (o?.priceModifierAmount ?? 0),
-      0,
+    // Hidden groups (e.g. canvas-edge-color when wrap=gallery) shouldn't
+    // contribute their price modifier to the total.
+    const visibleSlugs = new Set(
+      template.optionGroups
+        .filter((g) => isGroupVisible(g, selections))
+        .map((g) => g.slug),
     )
+    const sum = Object.entries(selections).reduce((acc, [slug, opt]) => {
+      if (!visibleSlugs.has(slug)) return acc
+      return acc + (opt?.priceModifierAmount ?? 0)
+    }, 0)
     return Math.round((template.basePrice + sum) * 100) / 100
-  }, [selections, template.basePrice])
+  }, [selections, template])
 
   const totalPrice = useMemo(
     () => Math.round(unitPrice * quantity * 100) / 100,
@@ -91,12 +105,21 @@ export default function ProductBuilder({
 
   const sizeSelection = findSizeSelection(template, selections)
   const dims = computeDimensions(sizeSelection?.widthIn, sizeSelection?.heightIn, pxPerIn)
+  const shipDate = useMemo(() => estimatedShipDate(template.category), [template.category])
+
+  // Split option groups: "primary" stay inline, "refine" tuck into a
+  // collapsible section (open on desktop, closed on mobile).
+  const visibleGroups = template.optionGroups.filter((g) =>
+    isGroupVisible(g, selections),
+  )
+  const primaryGroups = visibleGroups.filter((g) => !ADVANCED_GROUP_SLUGS.has(g.slug))
+  const refineGroups = visibleGroups.filter((g) => ADVANCED_GROUP_SLUGS.has(g.slug))
 
   return (
     <>
       <style>{RESPONSIVE_CSS}</style>
       <div className="pb-shell" style={styles.shell}>
-      <div style={styles.preview}>
+      <div className="pb-preview" style={styles.preview}>
         <div style={styles.previewFrame}>
           <ImagePreview
             template={template}
@@ -124,7 +147,7 @@ export default function ProductBuilder({
           <p style={styles.description}>{template.description}</p>
         ) : null}
 
-        {template.optionGroups.map((group) => (
+        {primaryGroups.map((group) => (
           <OptionGroupControl
             key={group.slug}
             group={group}
@@ -132,6 +155,31 @@ export default function ProductBuilder({
             onSelect={(opt) => handleSelect(group, opt)}
           />
         ))}
+
+        {refineGroups.length > 0 ? (
+          <details
+            className="pb-refine"
+            open={refineOpen}
+            onToggle={(e) => setRefineOpen((e.currentTarget as HTMLDetailsElement).open)}
+          >
+            <summary className="pb-refine-summary">
+              Refine print
+              <span className="pb-refine-hint">
+                ({refineGroups.length} more {refineGroups.length === 1 ? 'option' : 'options'})
+              </span>
+            </summary>
+            <div className="pb-refine-body">
+              {refineGroups.map((group) => (
+                <OptionGroupControl
+                  key={group.slug}
+                  group={group}
+                  selectedId={selections[group.slug]?.id}
+                  onSelect={(opt) => handleSelect(group, opt)}
+                />
+              ))}
+            </div>
+          </details>
+        ) : null}
 
         <div style={styles.quantityRow}>
           <label style={styles.quantityLabel}>Quantity</label>
@@ -156,6 +204,66 @@ export default function ProductBuilder({
           </div>
         </div>
 
+        <div style={styles.shipDateRow} aria-label="Estimated ready-by date">
+          <span style={styles.shipDateIcon} aria-hidden>
+            ✓
+          </span>
+          <span>
+            <strong>Ready to ship by {shipDate}</strong>{' '}
+            <span style={styles.shipDateHint}>· production and dispatch from Victoria, BC</span>
+          </span>
+        </div>
+
+        <details
+          style={styles.summary}
+          open={priceOpen}
+          onToggle={(e) =>
+            setPriceOpen((e.currentTarget as HTMLDetailsElement).open)
+          }
+        >
+          <summary style={styles.summaryTitle}>Price breakdown</summary>
+          <div style={styles.priceBreakdown}>
+            <div style={styles.priceRow}>
+              <span>Base ({template.name})</span>
+              <span style={styles.priceValue}>{fmt(template.basePrice)}</span>
+            </div>
+            {visibleGroups.map((group) => {
+              const sel = selections[group.slug]
+              if (!sel) return null
+              return (
+                <div key={group.slug} style={styles.priceRow}>
+                  <span>
+                    {group.name}: {sel.label}
+                  </span>
+                  <span style={styles.priceValue}>
+                    {sel.priceModifierAmount > 0
+                      ? `+${fmt(sel.priceModifierAmount)}`
+                      : 'no charge'}
+                  </span>
+                </div>
+              )
+            })}
+            <div style={styles.priceDivider} />
+            <div style={styles.priceRow}>
+              <span>Per print</span>
+              <span style={styles.priceValue}>{fmt(unitPrice)}</span>
+            </div>
+            {quantity > 1 ? (
+              <>
+                <div style={styles.priceRow}>
+                  <span>Quantity</span>
+                  <span style={styles.priceValue}>× {quantity}</span>
+                </div>
+                <div style={styles.priceDivider} />
+                <div style={{ ...styles.priceRow, fontWeight: 600 }}>
+                  <span>Total</span>
+                  <span style={styles.priceValue}>{fmt(totalPrice)}</span>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </details>
+
         <button
           type="button"
           onClick={handleAddToCart}
@@ -164,25 +272,6 @@ export default function ProductBuilder({
         >
           Add to cart →
         </button>
-
-        <details style={styles.summary}>
-          <summary style={styles.summaryTitle}>Configuration summary</summary>
-          <ul style={styles.summaryList}>
-            {template.optionGroups.map((group) => {
-              const sel = selections[group.slug]
-              return (
-                <li key={group.slug}>
-                  <strong>{group.name}:</strong> {sel?.label ?? '—'}{' '}
-                  {sel?.priceModifierAmount ? (
-                    <span style={styles.summaryDelta}>
-                      (+{fmt(sel.priceModifierAmount)})
-                    </span>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        </details>
       </div>
       </div>
 
@@ -241,11 +330,58 @@ const RESPONSIVE_CSS = `
   outline: 2px solid var(--color-primary, #1a1a1a);
   outline-offset: 2px;
 }
+.pb-preview {
+  position: sticky;
+  top: 16px;
+  align-self: flex-start;
+}
+.pb-refine {
+  border-top: 1px solid var(--color-border, rgba(0,0,0,0.08));
+  padding-top: 12px;
+}
+.pb-refine-summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary, #1a1a1a);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pb-refine-summary::-webkit-details-marker { display: none; }
+.pb-refine-summary::before {
+  content: '+';
+  font-size: 0.95rem;
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+.pb-refine[open] .pb-refine-summary::before { content: '−'; }
+.pb-refine-hint {
+  font-size: 0.7rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-secondary, rgba(0,0,0,0.6));
+}
+.pb-refine-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 16px;
+}
 @media (max-width: 768px) {
   .pb-shell {
     grid-template-columns: 1fr !important;
     gap: 24px !important;
     padding: 16px !important;
+  }
+  .pb-preview {
+    /* In single-column mobile layout, sticky doesn't make sense — controls
+       are below the preview, not beside it. */
+    position: static !important;
   }
   .pb-shell > div:first-child > div:first-child {
     /* tighter previewFrame on mobile so the cream backing block doesn't dominate */
@@ -384,6 +520,51 @@ const MOBILE_BREAKPOINT_PX = 768
 const MIN_PREVIEW_DIM = 140
 const FALLBACK_WIDTH = 280
 const FALLBACK_HEIGHT = 280
+
+// Option groups that get tucked into the "Refine print" details element.
+// Most customers leave these at default; the primary lineup (size, frame
+// colour, wrap mode, etc.) stays inline.
+const ADVANCED_GROUP_SLUGS = new Set([
+  'mat',
+  'glass-type',
+  'card-finish',
+  'canvas-edge-color',
+])
+
+// Production + dispatch lead time per template category, in business days.
+// Tunable per Artbox's actual capacity; these are conservative starting
+// estimates that survive typical seasonal variance.
+const SHIP_LEAD_DAYS: Record<string, number> = {
+  paper_print: 7,
+  framed: 14,
+  canvas: 10,
+  block_mount: 10,
+  art_card: 5,
+  sticker: 5,
+  poster: 7,
+  calendar: 9,
+}
+
+function estimatedShipDate(category: string): string {
+  const days = SHIP_LEAD_DAYS[category] ?? 7
+  const target = new Date()
+  target.setDate(target.getDate() + days)
+  return target.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
+}
+
+// Option groups whose price modifiers shouldn't count toward unit price when
+// the group is hidden — e.g. canvas edge colour when wrap is gallery, since
+// the colour swatch isn't actually applied. Mirrors the visibility rules
+// below.
+function isGroupVisible(
+  group: PublicOptionGroup,
+  selections: Record<string, PublicOption>,
+): boolean {
+  if (group.slug === 'canvas-edge-color') {
+    return selections['canvas-wrap']?.value === 'solid'
+  }
+  return true
+}
 
 type PreviewDims = { widthPx: number; heightPx: number; enlarged: boolean }
 
@@ -803,4 +984,53 @@ const styles: Record<string, React.CSSProperties> = {
   summaryTitle: { cursor: 'pointer', color: C_SECONDARY, fontSize: '0.85rem' },
   summaryList: { margin: '8px 0 0 0', paddingLeft: 20, fontSize: '0.9rem', color: C_PRIMARY },
   summaryDelta: { color: C_SECONDARY, opacity: 0.8 },
+  shipDateRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 10px',
+    background: 'rgba(26, 127, 70, 0.08)',
+    border: `1px solid rgba(26, 127, 70, 0.18)`,
+    borderRadius: 4,
+    fontSize: '0.85rem',
+    color: C_PRIMARY,
+  },
+  shipDateIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    background: '#1a7f46',
+    color: '#fff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    flex: '0 0 18px',
+  },
+  shipDateHint: { color: C_SECONDARY, fontWeight: 400 },
+  priceBreakdown: {
+    marginTop: 12,
+    padding: '10px 12px',
+    background: C_BG,
+    border: `1px solid ${C_BORDER}`,
+    borderRadius: 4,
+    fontSize: '0.85rem',
+    color: C_PRIMARY,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+  },
+  priceRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 12,
+    lineHeight: 1.5,
+  },
+  priceValue: { color: C_PRIMARY, fontVariantNumeric: 'tabular-nums' as const },
+  priceDivider: {
+    height: 1,
+    background: C_BORDER,
+    margin: '6px 0',
+  },
 }
