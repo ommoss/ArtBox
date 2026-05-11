@@ -5,8 +5,10 @@ import { getPayload } from 'payload'
 
 import { getArtistBrand } from '@/lib/artist-config'
 
-// Galleries can be edited live in the CMS — render fresh per request.
-export const dynamic = 'force-dynamic'
+// Cache rendered pages for 5 minutes. CMS edits propagate within that window
+// — fine for a gallery site where new work goes up rarely. Big win over
+// force-dynamic: no Neon cold-start on every visit.
+export const revalidate = 300
 
 export default async function HomePage() {
   const brand = getArtistBrand()

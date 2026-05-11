@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 
+export const revalidate = 300
+
 type Args = { params: Promise<{ slug: string }> }
 
 export default async function GalleryDetail({ params }: Args) {
