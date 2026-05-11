@@ -7,6 +7,8 @@ import { fetchTemplates, fulfillmentConfigured } from '@/lib/fulfillment-client'
 
 import ArtworkBuilder from './ArtworkBuilder'
 
+export const revalidate = 300
+
 type Args = { params: Promise<{ slug: string }> }
 
 export default async function ArtworkDetail({ params }: Args) {

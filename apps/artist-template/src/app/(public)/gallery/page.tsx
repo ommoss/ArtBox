@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export default async function GalleriesIndex() {
   const payload = await getPayload({ config })
