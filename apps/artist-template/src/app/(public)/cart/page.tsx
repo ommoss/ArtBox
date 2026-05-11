@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { useCart } from '@/lib/cart-context'
@@ -44,14 +45,22 @@ export default function CartPage() {
                 >
                   <div
                     style={{
+                      position: 'relative',
                       width: 88,
                       height: 88,
-                      backgroundImage: `url(${item.imageUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
                       borderRadius: 2,
+                      overflow: 'hidden',
+                      flex: '0 0 88px',
                     }}
-                  />
+                  >
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.artworkTitle}
+                      fill
+                      sizes="88px"
+                      style={{ objectFit: 'cover' }}
+                    />
+                  </div>
                   <div>
                     <div style={{ fontWeight: 500 }}>{item.artworkTitle}</div>
                     <div style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', marginTop: 2 }}>

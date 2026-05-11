@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
@@ -157,15 +158,22 @@ export default function CheckoutPage() {
             >
               <div
                 style={{
+                  position: 'relative',
                   width: 48,
                   height: 48,
-                  backgroundImage: `url(${item.imageUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
                   borderRadius: 2,
+                  overflow: 'hidden',
                   flex: '0 0 48px',
                 }}
-              />
+              >
+                <Image
+                  src={item.imageUrl}
+                  alt={item.artworkTitle}
+                  fill
+                  sizes="48px"
+                  style={{ objectFit: 'cover' }}
+                />
+              </div>
               <div style={{ flex: 1, fontSize: '0.85rem' }}>
                 <div style={{ fontWeight: 500 }}>{item.artworkTitle}</div>
                 <div style={{ color: 'var(--color-secondary)' }}>

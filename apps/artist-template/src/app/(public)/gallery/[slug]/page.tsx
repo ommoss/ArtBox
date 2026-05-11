@@ -1,4 +1,5 @@
 import config from '@payload-config'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
@@ -53,8 +54,9 @@ export default async function GalleryDetail({ params }: Args) {
           marginTop: 32,
         }}
       >
-        {artworks.docs.map((a) => {
+        {artworks.docs.map((a, i) => {
           const url = (a as { imageUrl?: string }).imageUrl
+          const isAboveFold = i < 4
           return (
             <Link
               key={a.id}
@@ -63,13 +65,24 @@ export default async function GalleryDetail({ params }: Args) {
             >
               <div
                 style={{
+                  position: 'relative',
                   aspectRatio: '1 / 1',
-                  background: url
-                    ? `url(${url}) center/cover`
-                    : 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
+                  background: 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
                   borderRadius: 2,
+                  overflow: 'hidden',
                 }}
-              />
+              >
+                {url ? (
+                  <Image
+                    src={url}
+                    alt={a.title as string}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
+                    style={{ objectFit: 'cover' }}
+                    priority={isAboveFold}
+                  />
+                ) : null}
+              </div>
               <h3 style={{ fontSize: '1rem', fontWeight: 500, marginTop: 10, marginBottom: 0, overflowWrap: 'anywhere' }}>
                 {a.title}
               </h3>

@@ -1,4 +1,5 @@
 import config from '@payload-config'
+import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
@@ -49,8 +50,10 @@ export default async function HomePage() {
             gap: 32,
           }}
         >
-          {galleries.docs.map((g) => {
+          {galleries.docs.map((g, i) => {
             const cover = (g as { coverImageUrl?: string }).coverImageUrl
+            // First two cards above the fold get priority for LCP.
+            const isAboveFold = i < 2
             return (
               <Link
                 key={g.id}
@@ -59,13 +62,25 @@ export default async function HomePage() {
               >
                 <div
                   style={{
+                    position: 'relative',
                     aspectRatio: '4 / 3',
-                    background: cover
-                      ? `url(${cover}) center/cover`
-                      : 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
+                    background:
+                      'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
                     borderRadius: 4,
+                    overflow: 'hidden',
                   }}
-                />
+                >
+                  {cover ? (
+                    <Image
+                      src={cover}
+                      alt={g.name as string}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      style={{ objectFit: 'cover' }}
+                      priority={isAboveFold}
+                    />
+                  ) : null}
+                </div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 500, marginTop: 16, marginBottom: 4, overflowWrap: 'anywhere' }}>
                   {g.name}
                 </h3>
