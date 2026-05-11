@@ -553,20 +553,6 @@ function estimatedShipDate(category: string): string {
   return target.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
 }
 
-// Option groups whose price modifiers shouldn't count toward unit price when
-// the group is hidden — e.g. canvas edge colour when wrap is gallery, since
-// the colour swatch isn't actually applied. Mirrors the visibility rules
-// below.
-function isGroupVisible(
-  group: PublicOptionGroup,
-  selections: Record<string, PublicOption>,
-): boolean {
-  if (group.slug === 'canvas-edge-color') {
-    return selections['canvas-wrap']?.value === 'solid'
-  }
-  return true
-}
-
 type PreviewDims = { widthPx: number; heightPx: number; enlarged: boolean }
 
 function computeDimensions(
