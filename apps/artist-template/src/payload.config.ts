@@ -35,10 +35,18 @@ export default buildConfig({
           )
         })(),
     },
-    push: true,
+    // Drizzle `push` syncs schema on every Payload init — fine in dev, but on
+    // Vercel it adds 1-3s of overhead to every serverless cold start. Gate it
+    // so it only runs locally or when explicitly requested.
+    push: process.env.NODE_ENV !== 'production' || process.env.DB_PUSH === 'true',
   }),
   sharp,
   onInit: async (payload) => {
-    await seedDemoContent(payload)
+    // The demo seed force-updates ~20 rows on every cold start. That's ~40
+    // round-trips to Neon and is the main source of slow first-paint on Vercel.
+    // Default off in production; set SEED_ON_INIT=true to re-seed on next boot.
+    if (process.env.NODE_ENV !== 'production' || process.env.SEED_ON_INIT === 'true') {
+      await seedDemoContent(payload)
+    }
   },
 })
