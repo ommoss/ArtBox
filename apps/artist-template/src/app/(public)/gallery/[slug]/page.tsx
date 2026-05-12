@@ -5,6 +5,25 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 
 export const revalidate = 300
+// Pre-render known galleries at build time; render new ones on-demand and
+// cache them after.
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  try {
+    const payload = await getPayload({ config })
+    const galleries = await payload.find({
+      collection: 'galleries',
+      where: { isPublished: { equals: true } },
+      limit: 100,
+      depth: 0,
+    })
+    return galleries.docs.map((g) => ({ slug: g.slug as string }))
+  } catch {
+    // DB unreachable at build time — fall back to fully on-demand rendering.
+    return []
+  }
+}
 
 type Args = { params: Promise<{ slug: string }> }
 

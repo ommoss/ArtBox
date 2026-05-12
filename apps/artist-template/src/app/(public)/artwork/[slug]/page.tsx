@@ -8,6 +8,22 @@ import { fetchTemplates, fulfillmentConfigured } from '@/lib/fulfillment-client'
 import ArtworkBuilder from './ArtworkBuilder'
 
 export const revalidate = 300
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  try {
+    const payload = await getPayload({ config })
+    const artworks = await payload.find({
+      collection: 'artworks',
+      where: { isPublished: { equals: true } },
+      limit: 500,
+      depth: 0,
+    })
+    return artworks.docs.map((a) => ({ slug: a.slug as string }))
+  } catch {
+    return []
+  }
+}
 
 type Args = { params: Promise<{ slug: string }> }
 
