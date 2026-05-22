@@ -25,10 +25,17 @@ export async function generateStaticParams() {
   }
 }
 
-type Args = { params: Promise<{ slug: string }> }
+const PER_PAGE = 60
 
-export default async function GalleryDetail({ params }: Args) {
+type Args = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ page?: string }>
+}
+
+export default async function GalleryDetail({ params, searchParams }: Args) {
   const { slug } = await params
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
   const payload = await getPayload({ config })
 
   const gallery = (
@@ -50,9 +57,14 @@ export default async function GalleryDetail({ params }: Args) {
       and: [{ gallery: { equals: gallery.id } }, { isPublished: { equals: true } }],
     },
     sort: 'sortOrder',
-    limit: 100,
+    limit: PER_PAGE,
+    page,
     depth: 1,
   })
+
+  const totalPages = artworks.totalPages || 1
+  const hasPrev = page > 1
+  const hasNext = page < totalPages
 
   return (
     <section style={{ padding: '64px 32px', maxWidth: 1280, margin: '0 auto' }}>
@@ -114,6 +126,45 @@ export default async function GalleryDetail({ params }: Args) {
           )
         })}
       </div>
+
+      {totalPages > 1 ? (
+        <nav
+          aria-label="Gallery pagination"
+          style={{
+            marginTop: 48,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 16,
+            color: 'var(--color-secondary)',
+            fontSize: '0.9rem',
+          }}
+        >
+          {hasPrev ? (
+            <Link
+              href={page === 2 ? `/gallery/${slug}` : `/gallery/${slug}?page=${page - 1}`}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+            >
+              ← Previous
+            </Link>
+          ) : (
+            <span style={{ opacity: 0.4 }}>← Previous</span>
+          )}
+          <span>
+            Page {page} of {totalPages} · {artworks.totalDocs} works
+          </span>
+          {hasNext ? (
+            <Link
+              href={`/gallery/${slug}?page=${page + 1}`}
+              style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+            >
+              Next →
+            </Link>
+          ) : (
+            <span style={{ opacity: 0.4 }}>Next →</span>
+          )}
+        </nav>
+      ) : null}
     </section>
   )
 }

@@ -232,6 +232,73 @@ const artworks: ArtworkSeed[] = [
   },
 ]
 
+// Generate N synthetic "volume" artworks to stress-test pagination and admin
+// performance. Gated on SEED_VOLUME_COUNT so it only runs when requested, and
+// idempotent — skips if a sample already exists.
+async function seedVolumeArtworks(
+  payload: Payload,
+  galleryIdBySlug: Map<string, number>,
+  count: number,
+) {
+  if (count <= 0) return
+  // Idempotency probe: if the last volume artwork is already there, skip.
+  const last = (
+    await payload.find({
+      collection: 'artworks',
+      where: { slug: { equals: `volume-${String(count).padStart(6, '0')}` } },
+      limit: 1,
+      depth: 0,
+    })
+  ).docs[0]
+  if (last) return
+
+  const gallerySlugs = Array.from(galleryIdBySlug.keys())
+  if (gallerySlugs.length === 0) return
+  const imageIds = artworks.map((a) => a.imageUrl)
+
+  // Find which slugs already exist so we can skip them in bulk. One query
+  // beats N existence probes by a wide margin on Neon.
+  const expectedSlugs = Array.from({ length: count }, (_, idx) =>
+    `volume-${String(idx + 1).padStart(6, '0')}`,
+  )
+  const existing = await payload.find({
+    collection: 'artworks',
+    where: { slug: { in: expectedSlugs } },
+    limit: count,
+    depth: 0,
+  })
+  const existingSlugs = new Set(existing.docs.map((d) => d.slug as string))
+
+  // Parallelize in chunks of 20 to balance throughput with Neon's connection
+  // limits. ~10s for 1000 rows.
+  const CHUNK = 20
+  for (let chunkStart = 1; chunkStart <= count; chunkStart += CHUNK) {
+    const chunkEnd = Math.min(chunkStart + CHUNK - 1, count)
+    await Promise.all(
+      Array.from({ length: chunkEnd - chunkStart + 1 }, (_, k) => {
+        const i = chunkStart + k
+        const slug = `volume-${String(i).padStart(6, '0')}`
+        if (existingSlugs.has(slug)) return Promise.resolve()
+        const gSlug = gallerySlugs[i % gallerySlugs.length]
+        const galleryId = galleryIdBySlug.get(gSlug)
+        if (!galleryId) return Promise.resolve()
+        return payload.create({
+          collection: 'artworks',
+          data: {
+            slug,
+            title: `Study ${String(i).padStart(4, '0')}`,
+            gallery: galleryId,
+            description: '',
+            imageUrl: imageIds[i % imageIds.length],
+            sortOrder: 1000 + i,
+            isPublished: true,
+          },
+        })
+      }),
+    )
+  }
+}
+
 export async function seedDemoContent(payload: Payload) {
   const galleryIdBySlug = new Map<string, number>()
 
@@ -315,5 +382,10 @@ export async function seedDemoContent(payload: Payload) {
         isPublished: true,
       },
     })
+  }
+
+  const volumeCount = parseInt(process.env.SEED_VOLUME_COUNT ?? '0', 10)
+  if (volumeCount > 0) {
+    await seedVolumeArtworks(payload, galleryIdBySlug, volumeCount)
   }
 }

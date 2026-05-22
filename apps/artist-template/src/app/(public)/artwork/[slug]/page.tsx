@@ -3,6 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 
+import {
+  filterTemplates,
+  type ArtworkOverrides,
+  type CatalogSettings,
+} from '@/lib/catalog-filter'
 import { fetchTemplates, fulfillmentConfigured } from '@/lib/fulfillment-client'
 
 import ArtworkBuilder from './ArtworkBuilder'
@@ -10,13 +15,21 @@ import ArtworkBuilder from './ArtworkBuilder'
 export const revalidate = 300
 export const dynamicParams = true
 
+// Cap build-time pre-render to a recent subset. At catalog sizes of 10k+ a
+// blanket pre-render would blow past Vercel's build budget; instead we pre-
+// render the latest few dozen so the most likely landing pages are instant,
+// and let `dynamicParams: true` handle the long tail on first hit (cached
+// after) via ISR.
+const PRERENDER_LIMIT = 50
+
 export async function generateStaticParams() {
   try {
     const payload = await getPayload({ config })
     const artworks = await payload.find({
       collection: 'artworks',
       where: { isPublished: { equals: true } },
-      limit: 500,
+      sort: '-updatedAt',
+      limit: PRERENDER_LIMIT,
       depth: 0,
     })
     return artworks.docs.map((a) => ({ slug: a.slug as string }))
@@ -46,7 +59,15 @@ export default async function ArtworkDetail({ params }: Args) {
 
   const gallery = artwork.gallery as { name?: string; slug?: string } | undefined
   const imageUrl = (artwork as { imageUrl?: string }).imageUrl ?? ''
-  const templates = await fetchTemplates()
+  const allTemplates = await fetchTemplates()
+  const catalog = (await payload
+    .findGlobal({ slug: 'catalog' })
+    .catch(() => null)) as CatalogSettings | null
+  const templates = filterTemplates(
+    allTemplates,
+    catalog,
+    artwork as unknown as ArtworkOverrides,
+  )
 
   return (
     <section style={{ padding: '48px 32px', maxWidth: 1280, margin: '0 auto' }}>

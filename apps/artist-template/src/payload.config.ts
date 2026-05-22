@@ -9,6 +9,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Galleries } from './collections/Galleries'
 import { Artworks } from './collections/Artworks'
+import { Catalog } from './globals/Catalog'
 import { seedDemoContent } from './seed/demo-content'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -18,8 +19,10 @@ export default buildConfig({
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: '— Artist Site' },
+    theme: 'light',
   },
   collections: [Users, Media, Galleries, Artworks],
+  globals: [Catalog],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
