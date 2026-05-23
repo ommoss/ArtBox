@@ -12,6 +12,7 @@ export const metadata = {
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const theme = getTheme()
   const cssVars = themeCssVars(theme) as React.CSSProperties
+  const isSidebar = theme.headerLayout === 'sidebar'
 
   return (
     <html lang="en">
@@ -22,6 +23,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           fontSize: 'var(--base-font-size)',
           margin: 0,
           background: 'var(--color-bg)',
+          backgroundImage: theme.bgTexture,
           color: 'var(--color-primary)',
         }}
       >
@@ -48,6 +50,79 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               font-family: var(--font-heading);
               font-weight: var(--weight-heading);
               letter-spacing: var(--tracking-heading);
+            }
+            .public-layout--sidebar {
+              display: grid;
+              grid-template-columns: 240px 1fr;
+              min-height: 100vh;
+            }
+            .public-layout--sidebar .public-header--sidebar {
+              flex-direction: column;
+              align-items: flex-start;
+              padding: 36px 28px;
+              gap: 28px;
+              border-bottom: none;
+              border-right: 1px solid var(--color-border);
+              position: sticky;
+              top: 0;
+              align-self: start;
+              height: 100vh;
+            }
+            .public-layout--sidebar .public-header--sidebar .public-name {
+              font-size: 1.5rem;
+              font-family: var(--font-heading);
+              font-weight: var(--weight-heading);
+              letter-spacing: var(--tracking-heading);
+              line-height: 1.1;
+            }
+            .public-layout--sidebar .public-header--sidebar .public-nav {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 14px;
+            }
+            .public-layout--sidebar .public-footer {
+              margin-top: 0;
+              padding: 24px 28px;
+              text-align: left;
+              border-top: 1px solid var(--color-border);
+            }
+            .public-layout--sidebar .theme-switcher {
+              text-align: left;
+              padding: 24px 28px 32px;
+            }
+            .public-layout--sidebar .theme-switcher-links {
+              justify-content: flex-start;
+            }
+            .public-layout--sidebar .public-aside {
+              border-right: 1px solid var(--color-border);
+              display: flex;
+              flex-direction: column;
+            }
+            @media (max-width: 768px) {
+              .public-layout--sidebar {
+                grid-template-columns: 1fr;
+              }
+              .public-layout--sidebar .public-aside {
+                border-right: none;
+              }
+              .public-layout--sidebar .public-header--sidebar {
+                flex-direction: row;
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                padding: 20px var(--page-padding);
+                gap: 16px;
+              }
+              .public-layout--sidebar .public-header--sidebar .public-nav {
+                flex-direction: row;
+              }
+              .public-layout--sidebar .public-footer {
+                text-align: center;
+              }
+              .public-layout--sidebar .theme-switcher {
+                text-align: center;
+              }
             }
             .public-nav {
               display: flex;
@@ -146,56 +221,97 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               }
             }
           `}</style>
-          <header
-            className={`public-header public-header--${theme.headerLayout}`}
-          >
-            <Link href="/" className="public-name" style={navStyle()}>
-              {theme.artistName}
-            </Link>
-            <nav className="public-nav">
-              <Link href="/gallery" style={navStyle()}>
-                Galleries
-              </Link>
-              <Link href="/about" style={navStyle()}>
-                About
-              </Link>
-              <Link href="/contact" style={navStyle()}>
-                Contact
-              </Link>
-              <CartButton color="var(--color-primary)" />
-              <Link href="/admin" style={{ ...navStyle(), opacity: 0.5 }}>
-                Admin
-              </Link>
-            </nav>
-          </header>
+          <div className={isSidebar ? 'public-layout--sidebar' : undefined}>
+            {isSidebar ? (
+              <aside className="public-aside">
+                <header className="public-header public-header--sidebar">
+                  <Link href="/" className="public-name" style={navStyle()}>
+                    {theme.artistName}
+                  </Link>
+                  {theme.tagline ? (
+                    <span
+                      style={{
+                        color: 'var(--color-secondary)',
+                        fontSize: '0.9rem',
+                        fontStyle: 'italic',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {theme.tagline}
+                    </span>
+                  ) : null}
+                  <nav className="public-nav">
+                    <Link href="/gallery" style={navStyle()}>
+                      Galleries
+                    </Link>
+                    <Link href="/about" style={navStyle()}>
+                      About
+                    </Link>
+                    <Link href="/contact" style={navStyle()}>
+                      Contact
+                    </Link>
+                    <CartButton color="var(--color-primary)" />
+                    <Link href="/admin" style={{ ...navStyle(), opacity: 0.5 }}>
+                      Admin
+                    </Link>
+                  </nav>
+                </header>
+              </aside>
+            ) : (
+              <header
+                className={`public-header public-header--${theme.headerLayout}`}
+              >
+                <Link href="/" className="public-name" style={navStyle()}>
+                  {theme.artistName}
+                </Link>
+                <nav className="public-nav">
+                  <Link href="/gallery" style={navStyle()}>
+                    Galleries
+                  </Link>
+                  <Link href="/about" style={navStyle()}>
+                    About
+                  </Link>
+                  <Link href="/contact" style={navStyle()}>
+                    Contact
+                  </Link>
+                  <CartButton color="var(--color-primary)" />
+                  <Link href="/admin" style={{ ...navStyle(), opacity: 0.5 }}>
+                    Admin
+                  </Link>
+                </nav>
+              </header>
+            )}
 
-          <main>{children}</main>
+            <div>
+              <main>{children}</main>
 
-          <footer className="public-footer">
-            <span>© {new Date().getFullYear()} {theme.artistName}</span>
-            <span style={{ opacity: 0.7 }}>Prints by Artbox Printing</span>
-          </footer>
+              <footer className="public-footer">
+                <span>© {new Date().getFullYear()} {theme.artistName}</span>
+                <span style={{ opacity: 0.7 }}>Prints by Artbox Printing</span>
+              </footer>
 
-          <div className="theme-switcher">
-            <span className="theme-switcher-label">Demo · same content, different feeling:</span>
-            <div className="theme-switcher-links">
-              {themeLinks.map((link) => {
-                const isActive = link.preset === theme.preset
-                return (
-                  <a
-                    key={link.preset}
-                    href={link.url}
-                    className={
-                      isActive
-                        ? 'theme-switcher-link theme-switcher-link--active'
-                        : 'theme-switcher-link'
-                    }
-                  >
-                    <span className="theme-switcher-link-name">{link.label}</span>
-                    <span className="theme-switcher-link-tagline">{link.tagline}</span>
-                  </a>
-                )
-              })}
+              <div className="theme-switcher">
+                <span className="theme-switcher-label">Demo · same content, different feeling:</span>
+                <div className="theme-switcher-links">
+                  {themeLinks.map((link) => {
+                    const isActive = link.preset === theme.preset
+                    return (
+                      <a
+                        key={link.preset}
+                        href={link.url}
+                        className={
+                          isActive
+                            ? 'theme-switcher-link theme-switcher-link--active'
+                            : 'theme-switcher-link'
+                        }
+                      >
+                        <span className="theme-switcher-link-name">{link.label}</span>
+                        <span className="theme-switcher-link-tagline">{link.tagline}</span>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </CartProviderWrapper>

@@ -3,7 +3,10 @@
 // a preset via the NEXT_PUBLIC_THEME env var; per-deployment overrides
 // (artist name, tagline, brand colors) come from other NEXT_PUBLIC_* vars.
 
-export type HeaderLayout = 'split' | 'centered'
+export type HeaderLayout = 'split' | 'centered' | 'sidebar'
+export type HomeLayout = 'centered' | 'hero'
+export type GalleryGridMode = 'uniform' | 'magazine' | 'album'
+export type ArtworkLayout = 'stacked' | 'asymmetric'
 
 export type Theme = {
   preset: string
@@ -33,8 +36,15 @@ export type Theme = {
   imageRadius: string
   imageShadow: string
 
-  // Header layout
+  // Layout variants — drive structural (not just stylistic) differences
+  // between presets. Editorial uses hero + magazine + asymmetric; Warm uses
+  // sidebar + album. Minimal and Atmospheric keep the uniform layout.
   headerLayout: HeaderLayout
+  homeLayout: HomeLayout
+  galleryGridMode: GalleryGridMode
+  artworkLayout: ArtworkLayout
+  // Optional background overlay (e.g. paper texture for the warm preset).
+  bgTexture?: string
 }
 
 type ThemePreset = Omit<Theme, 'artistName' | 'tagline'>
@@ -64,6 +74,9 @@ const minimal: ThemePreset = {
   imageRadius: '4px',
   imageShadow: '0 8px 24px rgba(0,0,0,0.06)',
   headerLayout: 'split',
+  homeLayout: 'centered',
+  galleryGridMode: 'uniform',
+  artworkLayout: 'stacked',
 }
 
 const editorial: ThemePreset = {
@@ -84,6 +97,9 @@ const editorial: ThemePreset = {
   imageRadius: '0px',
   imageShadow: 'none',
   headerLayout: 'centered',
+  homeLayout: 'hero',
+  galleryGridMode: 'magazine',
+  artworkLayout: 'asymmetric',
 }
 
 const atmospheric: ThemePreset = {
@@ -104,6 +120,9 @@ const atmospheric: ThemePreset = {
   imageRadius: '0px',
   imageShadow: '0 24px 48px rgba(0,0,0,0.55)',
   headerLayout: 'split',
+  homeLayout: 'centered',
+  galleryGridMode: 'uniform',
+  artworkLayout: 'stacked',
 }
 
 const warm: ThemePreset = {
@@ -123,7 +142,14 @@ const warm: ThemePreset = {
   pagePadding: '40px',
   imageRadius: '6px',
   imageShadow: '0 12px 28px rgba(61,47,35,0.14)',
-  headerLayout: 'centered',
+  headerLayout: 'sidebar',
+  homeLayout: 'centered',
+  galleryGridMode: 'album',
+  artworkLayout: 'stacked',
+  // Subtle paper-grain texture using inline SVG noise — no external asset
+  // needed. Renders as a low-contrast overlay so warm tones stay warm.
+  bgTexture:
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")",
 }
 
 export const themes: Record<string, ThemePreset> = {

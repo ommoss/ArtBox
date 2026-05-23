@@ -1,8 +1,10 @@
 import config from '@payload-config'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
+
+import GalleryGrid from '@/components/GalleryGrid'
+import { getTheme } from '@/lib/themes'
 
 export const revalidate = 300
 // Pre-render known galleries at build time; render new ones on-demand and
@@ -65,6 +67,7 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
   const totalPages = artworks.totalPages || 1
   const hasPrev = page > 1
   const hasNext = page < totalPages
+  const theme = getTheme()
 
   return (
     <section style={{ padding: '64px 32px', maxWidth: 1280, margin: '0 auto' }}>
@@ -79,53 +82,17 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
         <p style={{ color: 'var(--color-secondary)', marginBottom: 32, maxWidth: 600 }}>{gallery.description}</p>
       ) : null}
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: 24,
-          marginTop: 32,
-        }}
-      >
-        {artworks.docs.map((a, i) => {
-          const url = (a as { imageUrl?: string }).imageUrl
-          const isAboveFold = i < 4
-          return (
-            <Link
-              key={a.id}
-              href={`/artwork/${a.slug}`}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div
-                style={{
-                  position: 'relative',
-                  aspectRatio: '1 / 1',
-                  background: 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                }}
-              >
-                {url ? (
-                  <Image
-                    src={url}
-                    alt={a.title as string}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
-                    style={{ objectFit: 'cover' }}
-                    priority={isAboveFold}
-                  />
-                ) : null}
-              </div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 500, marginTop: 10, marginBottom: 0, overflowWrap: 'anywhere' }}>
-                {a.title}
-              </h3>
-              {a.year ? (
-                <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.85rem' }}>{a.year}</p>
-              ) : null}
-            </Link>
-          )
-        })}
-      </div>
+      <GalleryGrid
+        artworks={artworks.docs.map((a) => ({
+          id: a.id,
+          slug: a.slug as string,
+          title: a.title as string,
+          imageUrl: (a as { imageUrl?: string }).imageUrl,
+          year: a.year as number | null | undefined,
+          location: a.location as string | null | undefined,
+        }))}
+        mode={theme.galleryGridMode}
+      />
 
       {totalPages > 1 ? (
         <nav
