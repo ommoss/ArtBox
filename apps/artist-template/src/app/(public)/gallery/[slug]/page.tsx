@@ -58,7 +58,9 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
     where: {
       and: [{ gallery: { equals: gallery.id } }, { isPublished: { equals: true } }],
     },
-    sort: 'sortOrder',
+    // Featured first, then sortOrder. Floats featured pieces into the
+    // magazine grid's 2×2 feature slots when the theme uses that mode.
+    sort: ['-isFeatured', 'sortOrder'],
     limit: PER_PAGE,
     page,
     depth: 1,
@@ -83,14 +85,25 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
       ) : null}
 
       <GalleryGrid
-        artworks={artworks.docs.map((a) => ({
-          id: a.id,
-          slug: a.slug as string,
-          title: a.title as string,
-          imageUrl: (a as { imageUrl?: string }).imageUrl,
-          year: a.year as number | null | undefined,
-          location: a.location as string | null | undefined,
-        }))}
+        artworks={artworks.docs.map((a) => {
+          const ax = a as {
+            imageUrl?: string
+            isLimitedEdition?: boolean
+            editionSize?: number | null
+            editionsRemaining?: number | null
+          }
+          return {
+            id: a.id,
+            slug: a.slug as string,
+            title: a.title as string,
+            imageUrl: ax.imageUrl,
+            year: a.year as number | null | undefined,
+            location: a.location as string | null | undefined,
+            isLimitedEdition: ax.isLimitedEdition,
+            editionSize: ax.editionSize,
+            editionsRemaining: ax.editionsRemaining,
+          }
+        })}
         mode={theme.galleryGridMode}
       />
 

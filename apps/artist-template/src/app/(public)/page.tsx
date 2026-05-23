@@ -25,19 +25,33 @@ export default async function HomePage() {
   })
 
   // Editorial themes use a featured artwork as a full-bleed hero with title
-  // overlay. Pull one promoted piece to back the hero.
-  const heroArtwork =
-    theme.homeLayout === 'hero'
-      ? (
-          await payload.find({
-            collection: 'artworks',
-            where: { isPublished: { equals: true } },
-            sort: '-updatedAt',
-            limit: 1,
-            depth: 0,
-          })
-        ).docs[0]
-      : null
+  // overlay. Prefer an explicitly featured piece; fall back to most recent.
+  let heroArtwork: { imageUrl?: string } | undefined
+  if (theme.homeLayout === 'hero') {
+    const featured = await payload.find({
+      collection: 'artworks',
+      where: {
+        and: [
+          { isPublished: { equals: true } },
+          { isFeatured: { equals: true } },
+        ],
+      },
+      sort: '-updatedAt',
+      limit: 1,
+      depth: 0,
+    })
+    heroArtwork = featured.docs[0] as { imageUrl?: string } | undefined
+    if (!heroArtwork) {
+      const fallback = await payload.find({
+        collection: 'artworks',
+        where: { isPublished: { equals: true } },
+        sort: '-updatedAt',
+        limit: 1,
+        depth: 0,
+      })
+      heroArtwork = fallback.docs[0] as { imageUrl?: string } | undefined
+    }
+  }
 
   return (
     <div>
@@ -46,6 +60,11 @@ export default async function HomePage() {
           imageUrl={(heroArtwork as { imageUrl?: string }).imageUrl ?? ''}
           artistName={brand.artistName}
           tagline={brand.tagline}
+          editionSize={
+            (heroArtwork as { isLimitedEdition?: boolean }).isLimitedEdition
+              ? ((heroArtwork as { editionSize?: number | null }).editionSize ?? null)
+              : null
+          }
         />
       ) : theme.headerLayout === 'sidebar' ? (
         // Sidebar layouts already show the artist's name + tagline in the
@@ -133,10 +152,12 @@ function HeroBanner({
   imageUrl,
   artistName,
   tagline,
+  editionSize,
 }: {
   imageUrl: string
   artistName: string
   tagline: string
+  editionSize: number | null
 }) {
   return (
     <section
@@ -167,6 +188,25 @@ function HeroBanner({
             'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%)',
         }}
       />
+      {editionSize ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: 24,
+            right: 32,
+            padding: '4px 12px',
+            background: 'rgba(0,0,0,0.55)',
+            color: '#fff',
+            fontSize: '0.7rem',
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            fontWeight: 600,
+            border: '1px solid rgba(255,255,255,0.3)',
+          }}
+        >
+          Limited edition of {editionSize}
+        </div>
+      ) : null}
       <div
         style={{
           position: 'absolute',

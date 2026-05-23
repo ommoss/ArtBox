@@ -1,5 +1,8 @@
 'use server'
 
+import config from '@payload-config'
+import { getPayload } from 'payload'
+
 import type { IncomingOrder, IncomingOrderLine } from '@artbox/types'
 
 import type { CartItem } from './cart-context'
@@ -128,10 +131,60 @@ export async function submitMockOrder(
     return { ok: false, error: 'Fulfillment API returned no order id.', details: body }
   }
 
+  // Decrement edition counts for any limited-edition artworks in this order.
+  // Best-effort: failures here don't roll back the order — Tom can correct
+  // remaining counts in admin if needed. Race condition (two simultaneous
+  // last-edition orders both succeeding) is accepted for v1.
+  await decrementEditionsForOrder(input.items).catch((err) => {
+    console.warn('Edition decrement failed (order still succeeded):', err)
+  })
+
   return {
     ok: true,
     orderId: parsed.id,
     externalOrderId,
     totals: { subtotal, shipping, tax, total },
   }
+}
+
+async function decrementEditionsForOrder(items: CartItem[]): Promise<void> {
+  // Aggregate quantities per artworkSlug — same artwork bought twice in one
+  // order should decrement by 2.
+  const qtyBySlug = new Map<string, number>()
+  for (const item of items) {
+    if (!item.artworkSlug) continue
+    qtyBySlug.set(
+      item.artworkSlug,
+      (qtyBySlug.get(item.artworkSlug) ?? 0) + item.quantity,
+    )
+  }
+  if (qtyBySlug.size === 0) return
+
+  const payload = await getPayload({ config })
+  const found = await payload.find({
+    collection: 'artworks',
+    where: {
+      and: [
+        { slug: { in: Array.from(qtyBySlug.keys()) } },
+        { isLimitedEdition: { equals: true } },
+      ],
+    },
+    limit: qtyBySlug.size,
+    depth: 0,
+  })
+
+  await Promise.all(
+    found.docs.map((doc) => {
+      const slug = doc.slug as string
+      const remaining =
+        (doc as { editionsRemaining?: number | null }).editionsRemaining ?? 0
+      const decrement = qtyBySlug.get(slug) ?? 0
+      const next = Math.max(0, remaining - decrement)
+      return payload.update({
+        collection: 'artworks',
+        id: doc.id,
+        data: { editionsRemaining: next },
+      })
+    }),
+  )
 }

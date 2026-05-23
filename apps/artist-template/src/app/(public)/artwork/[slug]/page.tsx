@@ -83,6 +83,11 @@ export default async function ArtworkDetail({ params }: Args) {
         <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem' }}>
           {[artwork.year, artwork.location].filter(Boolean).join(' · ')}
         </p>
+        <EditionBadge
+          isLimited={Boolean((artwork as { isLimitedEdition?: boolean }).isLimitedEdition)}
+          size={(artwork as { editionSize?: number | null }).editionSize ?? null}
+          remaining={(artwork as { editionsRemaining?: number | null }).editionsRemaining ?? null}
+        />
         {artwork.description ? (
           <p style={{ marginTop: 16, maxWidth: 640, lineHeight: 1.6 }}>{artwork.description}</p>
         ) : null}
@@ -98,11 +103,50 @@ export default async function ArtworkDetail({ params }: Args) {
           imageUrl={imageUrl}
           imageTitle={artwork.title}
           artworkSlug={artwork.slug as string}
+          soldOut={
+            Boolean((artwork as { isLimitedEdition?: boolean }).isLimitedEdition) &&
+            ((artwork as { editionsRemaining?: number | null }).editionsRemaining ?? 0) <= 0
+          }
         />
       ) : (
         <p style={{ color: 'var(--color-secondary)' }}>This artwork has no image attached.</p>
       )}
     </section>
+  )
+}
+
+function EditionBadge({
+  isLimited,
+  size,
+  remaining,
+}: {
+  isLimited: boolean
+  size: number | null
+  remaining: number | null
+}) {
+  if (!isLimited || !size) return null
+  const isSoldOut = (remaining ?? 0) <= 0
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 12,
+        padding: '4px 12px',
+        background: isSoldOut ? 'var(--color-secondary)' : 'var(--color-accent)',
+        color: 'var(--color-bg)',
+        fontSize: '0.75rem',
+        textTransform: 'uppercase',
+        letterSpacing: 1.2,
+        fontWeight: 500,
+        borderRadius: 2,
+      }}
+    >
+      {isSoldOut
+        ? `Sold out · edition of ${size}`
+        : `${remaining} of ${size} remaining`}
+    </div>
   )
 }
 

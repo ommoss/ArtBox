@@ -13,6 +13,7 @@ type Props = {
   imageUrl: string
   imageTitle: string
   artworkSlug: string
+  soldOut?: boolean
 }
 
 export default function ArtworkBuilder({
@@ -20,6 +21,7 @@ export default function ArtworkBuilder({
   imageUrl,
   imageTitle,
   artworkSlug,
+  soldOut = false,
 }: Props) {
   const [activeSlug, setActiveSlug] = useState(templates[0]?.slug ?? '')
   const active = templates.find((t) => t.slug === activeSlug) ?? templates[0]
@@ -32,6 +34,28 @@ export default function ArtworkBuilder({
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     }
   }, [])
+
+  if (soldOut) {
+    return (
+      <div
+        style={{
+          padding: 32,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 8,
+          textAlign: 'center',
+        }}
+      >
+        <h2 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 500 }}>
+          This edition is sold out.
+        </h2>
+        <p style={{ color: 'var(--color-secondary)', maxWidth: 480, margin: '12px auto 0' }}>
+          All copies of this limited edition have been claimed. Browse other works
+          in the gallery or get in touch about future releases.
+        </p>
+      </div>
+    )
+  }
 
   if (!active) {
     return (

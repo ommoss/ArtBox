@@ -6,7 +6,7 @@ export const Artworks: CollectionConfig = {
   slug: 'artworks',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'gallery', 'year', 'isPublished'],
+    defaultColumns: ['title', 'gallery', 'year', 'isPublished', 'isFeatured'],
     group: 'Content',
   },
   access: {
@@ -17,6 +17,33 @@ export const Artworks: CollectionConfig = {
         : { isPublished: { equals: true } },
     update: isAuthenticated,
     delete: isAuthenticated,
+  },
+  hooks: {
+    // Initialize editionsRemaining the first time an artwork is marked as a
+    // limited edition (or its edition size changes while no orders have come
+    // in yet). Once it's been set and decremented by orders, we leave it
+    // alone — the artist can manually correct it from the admin if needed.
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const wasLimited = Boolean(originalDoc?.isLimitedEdition)
+        const isLimited = Boolean(data?.isLimitedEdition)
+        const size = Number(data?.editionSize ?? 0)
+        const remaining = data?.editionsRemaining
+
+        if (!isLimited) {
+          // Clear remaining when un-flagging so a future re-enable starts fresh.
+          if (wasLimited) data.editionsRemaining = null
+          return data
+        }
+        if (size > 0 && (remaining === null || remaining === undefined || remaining === 0)) {
+          // Auto-initialize when becoming limited or when remaining is empty.
+          // If the artwork was already limited and remaining was deliberately
+          // 0 (sold out), this re-fills it — accepted tradeoff for v1.
+          data.editionsRemaining = size
+        }
+        return data
+      },
+    ],
   },
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -59,8 +86,25 @@ export const Artworks: CollectionConfig = {
       label: 'Limited edition',
       fields: [
         { name: 'isLimitedEdition', type: 'checkbox', defaultValue: false },
-        { name: 'editionSize', type: 'number' },
-        { name: 'editionsRemaining', type: 'number' },
+        {
+          name: 'editionSize',
+          type: 'number',
+          min: 1,
+          admin: {
+            condition: (data) => Boolean(data?.isLimitedEdition),
+            description: 'Total number of prints in the edition.',
+          },
+        },
+        {
+          name: 'editionsRemaining',
+          type: 'number',
+          min: 0,
+          admin: {
+            condition: (data) => Boolean(data?.isLimitedEdition),
+            description:
+              'Auto-initialized to the edition size; decrements as customers buy. Edit to correct manually.',
+          },
+        },
       ],
     },
     {
@@ -141,11 +185,12 @@ export const Artworks: CollectionConfig = {
               type: 'select',
               required: true,
               options: [
-                { label: 'Canvas wrap', value: 'canvas-wrap' },
+                { label: 'Paper print', value: 'paper-print' },
                 { label: 'Framed print', value: 'framed-print' },
-                { label: 'Flat print', value: 'flat-print' },
+                { label: 'Canvas wrap', value: 'canvas-wrap' },
                 { label: 'Block mount', value: 'block-mount' },
-                { label: 'Card', value: 'card' },
+                { label: 'Greeting card', value: 'greeting-card' },
+                { label: 'Sticker', value: 'sticker' },
               ],
             },
             {
@@ -158,6 +203,15 @@ export const Artworks: CollectionConfig = {
       ],
     },
     { name: 'sortOrder', type: 'number', defaultValue: 0 },
+    {
+      name: 'isFeatured',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Featured artworks are surfaced in the editorial hero and float to the top of gallery grids.',
+      },
+    },
     { name: 'isPublished', type: 'checkbox', defaultValue: true },
   ],
 }

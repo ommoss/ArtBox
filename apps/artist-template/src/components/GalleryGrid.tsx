@@ -10,11 +10,96 @@ type Artwork = {
   imageUrl?: string | null
   year?: number | null
   location?: string | null
+  isLimitedEdition?: boolean | null
+  editionSize?: number | null
+  editionsRemaining?: number | null
 }
 
 type Props = {
   artworks: Artwork[]
   mode: GalleryGridMode
+}
+
+type EditionState =
+  | { kind: 'none' }
+  | { kind: 'available'; size: number }
+  | { kind: 'low'; size: number; remaining: number }
+  | { kind: 'soldOut'; size: number }
+
+function editionStateFor(a: Artwork): EditionState {
+  if (!a.isLimitedEdition || !a.editionSize) return { kind: 'none' }
+  const remaining = a.editionsRemaining ?? a.editionSize
+  if (remaining <= 0) return { kind: 'soldOut', size: a.editionSize }
+  // Low when 25% or 3-or-fewer remaining, whichever is more permissive.
+  const lowThreshold = Math.max(3, Math.floor(a.editionSize * 0.25))
+  if (remaining <= lowThreshold) {
+    return { kind: 'low', size: a.editionSize, remaining }
+  }
+  return { kind: 'available', size: a.editionSize }
+}
+
+function EditionMarker({ state }: { state: EditionState }) {
+  if (state.kind === 'none') return null
+
+  if (state.kind === 'soldOut') {
+    return (
+      <>
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'saturate(0)',
+            WebkitBackdropFilter: 'saturate(0)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '6px 16px',
+            background: 'rgba(0,0,0,0.78)',
+            color: '#fff',
+            fontSize: '0.75rem',
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            fontWeight: 600,
+            border: '1px solid rgba(255,255,255,0.25)',
+            pointerEvents: 'none',
+          }}
+        >
+          Sold out
+        </div>
+      </>
+    )
+  }
+
+  const isLow = state.kind === 'low'
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        padding: '4px 10px',
+        background: isLow ? 'var(--color-accent)' : 'rgba(0,0,0,0.72)',
+        color: '#fff',
+        fontSize: '0.7rem',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 600,
+        borderRadius: 2,
+        pointerEvents: 'none',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
+      }}
+    >
+      {isLow ? `Only ${state.remaining} left` : `Edition of ${state.size}`}
+    </div>
+  )
 }
 
 // Deterministic small rotation per index for the album mode. Same artwork
@@ -54,6 +139,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
             span.col === 2
               ? '(max-width: 768px) 100vw, 50vw'
               : '(max-width: 768px) 50vw, 25vw'
+          const edition = editionStateFor(a)
           return (
             <Link
               key={a.id}
@@ -78,6 +164,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
                   priority={isAboveFold}
                 />
               ) : null}
+              <EditionMarker state={edition} />
               <div
                 style={{
                   position: 'absolute',
@@ -121,6 +208,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
         {artworks.map((a, i) => {
           const rot = albumRotation(i)
           const isAboveFold = i < 4
+          const edition = editionStateFor(a)
           return (
             <Link
               key={a.id}
@@ -161,6 +249,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
                       priority={isAboveFold}
                     />
                   ) : null}
+                  <EditionMarker state={edition} />
                 </div>
                 <div
                   style={{
@@ -228,6 +317,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
     >
       {artworks.map((a, i) => {
         const isAboveFold = i < 4
+        const edition = editionStateFor(a)
         return (
           <Link
             key={a.id}
@@ -254,6 +344,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
                   priority={isAboveFold}
                 />
               ) : null}
+              <EditionMarker state={edition} />
             </div>
             <h3
               style={{
