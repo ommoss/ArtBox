@@ -4,6 +4,12 @@ import { getPayload } from 'payload'
 import { resolveArtistFromRequest } from '@/lib/api-auth'
 import { loadPublicTemplates } from '@/lib/template-resolver'
 
+// Always run fresh — prevents Vercel from edge-caching the templates
+// response. Bulk-price edits in /bulk-prices need to be visible to
+// artist sites on their next fetch, not after an edge TTL.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
     status,

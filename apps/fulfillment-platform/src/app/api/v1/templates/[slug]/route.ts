@@ -4,6 +4,11 @@ import { getPayload } from 'payload'
 import { resolveArtistFromRequest } from '@/lib/api-auth'
 import { loadPublicTemplate } from '@/lib/template-resolver'
 
+// Always fresh — mirrors the /api/v1/templates route. Prevents edge-
+// cached responses from masking bulk-price edits.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
     status,

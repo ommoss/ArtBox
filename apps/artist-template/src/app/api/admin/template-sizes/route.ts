@@ -16,6 +16,12 @@ import type { PublicProductTemplate } from '@artbox/types'
 // them, not after a 60s revalidate window. Higher per-call latency is
 // fine for an admin-only endpoint.
 
+// Mark the route handler as dynamic so Vercel/Next doesn't statically
+// cache the response. Without this, the route gets a stale edge cache
+// even though the underlying fetch already uses `no-store`.
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export type TemplateSize = {
   value: string
   label: string
