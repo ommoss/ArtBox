@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
-import { ProductBuilder } from '@artbox/ui'
+import { ProductBuilderV3 } from '@artbox/ui'
 import type { BuilderConfiguration, PublicProductTemplate } from '@artbox/types'
 
 import { useCart } from '@/lib/cart-context'
@@ -23,8 +23,6 @@ export default function ArtworkBuilder({
   artworkSlug,
   soldOut = false,
 }: Props) {
-  const [activeSlug, setActiveSlug] = useState(templates[0]?.slug ?? '')
-  const active = templates.find((t) => t.slug === activeSlug) ?? templates[0]
   const cart = useCart()
   const [toast, setToast] = useState<string | null>(null)
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -57,7 +55,7 @@ export default function ArtworkBuilder({
     )
   }
 
-  if (!active) {
+  if (templates.length === 0) {
     return (
       <div style={{ padding: 32, background: 'var(--color-surface)', borderRadius: 8 }}>
         <p style={{ color: 'var(--color-secondary)' }}>
@@ -74,51 +72,30 @@ export default function ArtworkBuilder({
     toastTimeoutRef.current = setTimeout(() => setToast(null), 4500)
   }
 
-  const handleAddToCart = (_cfg: BuilderConfiguration, quantity: number) => {
+  const handleAddToCart = (cfg: BuilderConfiguration, quantity: number) => {
+    // V3 picks the template internally via its Format stage, so we look it
+    // up from the configuration's templateSlug to recover the display name.
+    const template = templates.find((t) => t.slug === cfg.templateSlug)
+    const templateName = template?.name ?? cfg.templateSlug
     cart.addItem({
       artworkSlug,
       artworkTitle: imageTitle,
       imageUrl,
-      templateSlug: active.slug,
-      templateName: active.name,
-      configuration: _cfg,
+      templateSlug: cfg.templateSlug,
+      templateName,
+      configuration: cfg,
       quantity,
     })
     showToast(
       quantity === 1
-        ? `Added to cart · ${active.name}`
-        : `Added to cart · ${quantity} × ${active.name}`,
+        ? `Added to cart · ${templateName}`
+        : `Added to cart · ${quantity} × ${templateName}`,
     )
   }
 
   return (
     <div>
       <style>{`
-        .ab-tab {
-          padding: 8px 14px;
-          border: 1px solid var(--color-border);
-          border-radius: 999px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          white-space: nowrap;
-          transition: background 0.15s, border-color 0.15s;
-          min-height: 36px;
-        }
-        .ab-tab:focus { outline: none; }
-        .ab-tab:focus-visible {
-          outline: 2px solid var(--color-primary);
-          outline-offset: 2px;
-        }
-        .ab-tab:hover { border-color: var(--color-primary); }
-        .ab-tab--active {
-          background: var(--color-primary);
-          color: var(--color-bg);
-          border-color: var(--color-primary);
-        }
-        .ab-tab--inactive {
-          background: var(--color-surface);
-          color: var(--color-primary);
-        }
         .ab-toast {
           position: fixed;
           bottom: 24px;
@@ -161,7 +138,6 @@ export default function ArtworkBuilder({
           100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         @media (max-width: 768px) {
-          .ab-tab { min-height: 40px; padding: 9px 14px; }
           .ab-toast {
             bottom: 96px;
             left: 16px;
@@ -171,33 +147,12 @@ export default function ArtworkBuilder({
         }
       `}</style>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: 'wrap',
-          marginBottom: 16,
-        }}
-      >
-        {templates.map((t) => {
-          const isActive = t.slug === active.slug
-          return (
-            <button
-              key={t.slug}
-              type="button"
-              onClick={() => setActiveSlug(t.slug)}
-              className={`ab-tab ${isActive ? 'ab-tab--active' : 'ab-tab--inactive'}`}
-            >
-              {t.name}
-            </button>
-          )
-        })}
-      </div>
-
-      <ProductBuilder
-        template={active}
+      <ProductBuilderV3
+        templates={templates}
         imageUrl={imageUrl}
         imageTitle={imageTitle}
+        useStageFlow={true}
+        recommendedSelections={{ size: '16x20' }}
         onAddToCart={handleAddToCart}
       />
 

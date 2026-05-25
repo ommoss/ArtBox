@@ -1,3 +1,5 @@
+import { notFound } from 'next/navigation'
+
 import DevBuilderV2Client from './DevBuilderV2Client'
 
 export const metadata = {
@@ -8,7 +10,11 @@ export const metadata = {
 // against fixture template data so iteration doesn't depend on the
 // fulfillment API or real artworks. Pick the theme via NEXT_PUBLIC_THEME on
 // the parent deployment to see how V2 looks under each preset.
+//
+// Gated to development environment only — NODE_ENV is set at build time so
+// production builds skip prerendering this page and 404 at request time.
 export default function DevBuilderV2Page() {
+  if (process.env.NODE_ENV !== 'development') notFound()
   return (
     <section style={{ padding: '32px 16px', maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 24 }}>

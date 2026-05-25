@@ -1,12 +1,17 @@
+import { notFound } from 'next/navigation'
+
 import DevBuilderV3Client from './DevBuilderV3Client'
 
 export const metadata = {
   title: 'Builder V3 sandbox (3D)',
 }
 
-// Dev-only sandbox for the V3 product builder. Same UX as V2 but framed
-// prints render in true 3D via react-three-fiber.
+// Dev-only sandbox for the V3 product builder. Gated to development
+// environment — production builds skip prerendering and 404 at request time.
+// This also avoids the SSR-prerender errors that R3F's Canvas can throw
+// during static generation in production builds.
 export default function DevBuilderV3Page() {
+  if (process.env.NODE_ENV !== 'development') notFound()
   return (
     <section style={{ padding: '32px 16px', maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 24 }}>
