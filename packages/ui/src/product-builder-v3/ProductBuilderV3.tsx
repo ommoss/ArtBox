@@ -299,10 +299,11 @@ export default function ProductBuilderV3({
   const using3D = is3DCapable && !force2D
 
   // Auto-fallback: if 3D is selected but isn't ready within
-  // AUTO_FALLBACK_MS, switch to 2D and show a hint. Reset when the
-  // template changes (the new template gets its own grace period). The
-  // 3D renderer calls onReady once mounted with assets loaded → we cancel
-  // the timer at that point.
+  // AUTO_FALLBACK_MS, switch to 2D and show a hint. The timer is only
+  // armed when 3D goes active OR the template slug changes — NOT on
+  // every option change, otherwise it'd reset readyRef and re-arm
+  // forever, eventually firing the fallback even after onReady already
+  // arrived.
   const [autoFallbackHint, setAutoFallbackHint] = React.useState<string | null>(null)
   const readyRef = React.useRef(false)
   React.useEffect(() => {
@@ -316,7 +317,7 @@ export default function ProductBuilderV3({
       }
     }, AUTO_FALLBACK_MS)
     return () => clearTimeout(timer)
-  }, [using3D, template.slug, selections, persistForce2D])
+  }, [using3D, template.slug, persistForce2D])
 
   const handleReady = React.useCallback(() => {
     readyRef.current = true

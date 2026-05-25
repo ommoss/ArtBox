@@ -85,10 +85,10 @@ export default function BlockMountScene({
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          minPolarAngle={Math.PI / 2 - Math.PI / 8}
-          maxPolarAngle={Math.PI / 2 + Math.PI / 8}
-          minAzimuthAngle={-Math.PI / 6}
-          maxAzimuthAngle={Math.PI / 6}
+          minPolarAngle={Math.PI / 2 - Math.PI / 7.2}
+          maxPolarAngle={Math.PI / 2 + Math.PI / 7.2}
+          minAzimuthAngle={-Math.PI / 4}
+          maxAzimuthAngle={Math.PI / 4}
           rotateSpeed={0.5}
         />
       </Canvas>

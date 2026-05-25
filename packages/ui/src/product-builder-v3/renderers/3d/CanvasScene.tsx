@@ -97,10 +97,14 @@ export default function CanvasScene({
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          minPolarAngle={Math.PI / 2 - Math.PI / 8}
-          maxPolarAngle={Math.PI / 2 + Math.PI / 8}
-          minAzimuthAngle={-Math.PI / 6}
-          maxAzimuthAngle={Math.PI / 6}
+          // Expanded from ±15°/±30° → ±25°/±45° so the customer can rotate
+          // enough to see the canvas wrap on the side edges. Canvas
+          // especially benefits since the wrap variation is what the
+          // customer is comparing.
+          minPolarAngle={Math.PI / 2 - Math.PI / 7.2}
+          maxPolarAngle={Math.PI / 2 + Math.PI / 7.2}
+          minAzimuthAngle={-Math.PI / 4}
+          maxAzimuthAngle={Math.PI / 4}
           rotateSpeed={0.5}
         />
       </Canvas>
