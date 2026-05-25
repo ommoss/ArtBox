@@ -4,7 +4,7 @@ import * as React from 'react'
 
 import { Renderer25D } from '../renderers/Renderer25D'
 import { TOKENS } from '../theme-tokens'
-import type { SavedBuild, V2Template } from '../types'
+import type { SavedBuild, V2Option, V2Template } from '../types'
 
 // Sticky bottom tray showing pinned builds side-by-side. Appears only when
 // at least one build is pinned. Each card has:
@@ -101,8 +101,13 @@ export function ComparisonDrawer({
 function reconstructSelections(
   template: V2Template,
   values: Record<string, string>,
-): Record<string, ReturnType<typeof pickOption>> {
-  const sel: Record<string, ReturnType<typeof pickOption>> = {}
+): Record<string, V2Option> {
+  // Return type is strictly Record<string, V2Option> — we only insert when
+  // pickOption returns a defined value, so the record never contains
+  // undefined. Without this explicit type, TS infers the value as
+  // `V2Option | undefined` from pickOption's return, which then conflicts
+  // with computeUnitPrice's stricter signature on a strict-mode build.
+  const sel: Record<string, V2Option> = {}
   for (const group of template.optionGroups) {
     const v = values[group.slug]
     const opt = pickOption(group.options, v)

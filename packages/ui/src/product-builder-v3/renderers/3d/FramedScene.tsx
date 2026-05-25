@@ -4,7 +4,7 @@ import * as React from 'react'
 
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { SRGBColorSpace, TextureLoader } from 'three'
+import { SRGBColorSpace, type Texture, TextureLoader } from 'three'
 
 import { TOKENS } from '../../theme-tokens'
 import type { SelectionMap, V2Option, V2Template } from '../../types'
@@ -22,7 +22,7 @@ const FRAME_FACE_IN = 1.25
 // Frame depth (how far the moulding sticks out from the wall) in inches.
 const FRAME_DEPTH_IN = 1.5
 
-export default function FramedScene({ template, imageUrl, selections }: RendererProps) {
+export default function FramedScene({ template, imageUrl, selections, onReady }: RendererProps) {
   const sizeSel = findSizeSelection(template, selections)
   const widthIn = sizeSel?.widthIn ?? 16
   const heightIn = sizeSel?.heightIn ?? 20
@@ -65,12 +65,23 @@ export default function FramedScene({ template, imageUrl, selections }: Renderer
     texture.colorSpace = SRGBColorSpace
   }, [texture])
 
+  // Signal to the shell that the 3D scene has its texture and is mounting
+  // for real — used to cancel the auto-fallback-to-2D timer. By the time
+  // this effect runs, useLoader has resolved (Suspense waited above), so
+  // we're definitely past the slow-load window.
+  React.useEffect(() => {
+    onReady?.()
+  }, [onReady])
+
   return (
     <div
       style={{
-        width: canvasW,
-        height: canvasH,
-        maxWidth: '100%',
+        // Width caps at canvasW but shrinks on narrow screens (mobile).
+        // Aspect-ratio keeps the canvas square-ish even when width shrinks,
+        // so a portrait 16×20 in a 320px-wide phone viewport stays 320×(320*canvasH/canvasW).
+        width: '100%',
+        maxWidth: canvasW,
+        aspectRatio: `${canvasW} / ${canvasH}`,
         background: TOKENS.bg,
         borderRadius: TOKENS.imageRadius,
         overflow: 'hidden',
@@ -119,7 +130,10 @@ export default function FramedScene({ template, imageUrl, selections }: Renderer
   )
 }
 
-type LoadedTexture = ReturnType<typeof useLoader<typeof TextureLoader, string>>
+// Use three.js's Texture type directly. R3F 9.x's useLoader generics
+// changed order (input first, then loader); rather than thread that, just
+// type the return as Texture which is what TextureLoader produces.
+type LoadedTexture = Texture
 
 function FramedPiece({
   widthIn,

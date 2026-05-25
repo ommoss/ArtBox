@@ -31,6 +31,11 @@ export type RendererProps = {
   // strips read as broken when the piece is meant to be hanging flat on a
   // wall and viewed head-on.
   flat?: boolean
+  // Optional "I'm rendered and any required assets are loaded" callback.
+  // Renderers that need significant assets (e.g. the 3D one waiting on a
+  // texture) call this once they're showing the real piece, not a
+  // placeholder. The shell uses it to cancel its auto-fallback timer.
+  onReady?: () => void
 }
 
 export type Renderer = (props: RendererProps) => React.ReactElement

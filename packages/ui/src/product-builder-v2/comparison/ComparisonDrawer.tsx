@@ -4,7 +4,7 @@ import * as React from 'react'
 
 import { Renderer25D } from '../renderers/Renderer25D'
 import { TOKENS } from '../theme-tokens'
-import type { SavedBuild, V2Template } from '../types'
+import type { SavedBuild, V2Option, V2Template } from '../types'
 
 // Sticky bottom tray showing pinned builds side-by-side. Appears only when
 // at least one build is pinned. Each card has:
@@ -101,8 +101,11 @@ export function ComparisonDrawer({
 function reconstructSelections(
   template: V2Template,
   values: Record<string, string>,
-): Record<string, ReturnType<typeof pickOption>> {
-  const sel: Record<string, ReturnType<typeof pickOption>> = {}
+): Record<string, V2Option> {
+  // Explicit Record<string, V2Option> — TS won't infer the | undefined out
+  // of pickOption's return on its own, which then breaks computeUnitPrice
+  // on strict builds.
+  const sel: Record<string, V2Option> = {}
   for (const group of template.optionGroups) {
     const v = values[group.slug]
     const opt = pickOption(group.options, v)

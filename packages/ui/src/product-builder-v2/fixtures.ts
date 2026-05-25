@@ -27,11 +27,18 @@ export const fixtureFramedPrint: V2Template = {
       inputType: 'size',
       isRequired: true,
       options: [
+        // Portrait sizes (w < h)
         { id: id(), label: '8 × 10″', value: '8x10', priceModifierAmount: 25, widthIn: 8, heightIn: 10, sortOrder: 1 },
         { id: id(), label: '11 × 14″', value: '11x14', priceModifierAmount: 40, widthIn: 11, heightIn: 14, sortOrder: 2 },
         { id: id(), label: '16 × 20″', value: '16x20', priceModifierAmount: 65, widthIn: 16, heightIn: 20, sortOrder: 3 },
         { id: id(), label: '20 × 24″', value: '20x24', priceModifierAmount: 95, widthIn: 20, heightIn: 24, sortOrder: 4 },
         { id: id(), label: '24 × 36″', value: '24x36', priceModifierAmount: 150, widthIn: 24, heightIn: 36, sortOrder: 5 },
+        // Landscape sizes (w > h)
+        { id: id(), label: '10 × 8″', value: '10x8', priceModifierAmount: 25, widthIn: 10, heightIn: 8, sortOrder: 6 },
+        { id: id(), label: '14 × 11″', value: '14x11', priceModifierAmount: 40, widthIn: 14, heightIn: 11, sortOrder: 7 },
+        { id: id(), label: '20 × 16″', value: '20x16', priceModifierAmount: 65, widthIn: 20, heightIn: 16, sortOrder: 8 },
+        { id: id(), label: '24 × 20″', value: '24x20', priceModifierAmount: 95, widthIn: 24, heightIn: 20, sortOrder: 9 },
+        { id: id(), label: '36 × 24″', value: '36x24', priceModifierAmount: 150, widthIn: 36, heightIn: 24, sortOrder: 10 },
       ],
     },
     {
@@ -93,10 +100,16 @@ export const fixtureCanvasWrap: V2Template = {
       inputType: 'size',
       isRequired: true,
       options: [
+        // Portrait
         { id: id(), label: '12 × 16″', value: '12x16', priceModifierAmount: 30, widthIn: 12, heightIn: 16, sortOrder: 1 },
         { id: id(), label: '16 × 20″', value: '16x20', priceModifierAmount: 55, widthIn: 16, heightIn: 20, sortOrder: 2 },
         { id: id(), label: '20 × 30″', value: '20x30', priceModifierAmount: 90, widthIn: 20, heightIn: 30, sortOrder: 3 },
         { id: id(), label: '30 × 40″', value: '30x40', priceModifierAmount: 145, widthIn: 30, heightIn: 40, sortOrder: 4 },
+        // Landscape
+        { id: id(), label: '16 × 12″', value: '16x12', priceModifierAmount: 30, widthIn: 16, heightIn: 12, sortOrder: 5 },
+        { id: id(), label: '20 × 16″', value: '20x16', priceModifierAmount: 55, widthIn: 20, heightIn: 16, sortOrder: 6 },
+        { id: id(), label: '30 × 20″', value: '30x20', priceModifierAmount: 90, widthIn: 30, heightIn: 20, sortOrder: 7 },
+        { id: id(), label: '40 × 30″', value: '40x30', priceModifierAmount: 145, widthIn: 40, heightIn: 30, sortOrder: 8 },
       ],
     },
     {

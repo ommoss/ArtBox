@@ -36,6 +36,18 @@ const MOBILE_BREAKPOINT_PX = 768
 // returns true wins. 3D is scaffolded but disabled today, so 2.5D ships.
 const RENDERERS: RendererDescriptor[] = [Renderer3D, Renderer25D]
 
+// Template categories for which V3's Renderer3D actually produces a 3D
+// scene. Others fall through to 2.5D inside Renderer3D itself, so the 2D
+// toggle and auto-fallback only matter for these.
+const THREE_D_CAPABLE_CATEGORIES = new Set<string>(['framed'])
+
+// How long to wait for the 3D scene to mount (including R3F lazy chunk +
+// texture load) before automatically switching to 2.5D. Set generous so
+// users on slow connections get a chance to see 3D.
+const AUTO_FALLBACK_MS = 10000
+
+const FORCE_2D_KEY = 'artbox-builder-v3-force-2d-v1'
+
 // Only show the "View on a wall" picker for things that actually hang on a
 // wall. Stickers, greeting cards, and similar formats render the picker
 // would be confusing.
@@ -263,7 +275,67 @@ export default function ProductBuilderV3({
     )
   }
 
-  const renderer = pickRenderer()
+  // Force-2D toggle: user can opt out of 3D, OR auto-fallback kicks in
+  // on error / slow load. Persists in sessionStorage so a page reload
+  // keeps the user's preference for the session.
+  const [force2D, setForce2D] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.sessionStorage.getItem(FORCE_2D_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  const persistForce2D = React.useCallback((v: boolean) => {
+    setForce2D(v)
+    try {
+      window.sessionStorage.setItem(FORCE_2D_KEY, v ? '1' : '0')
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const is3DCapable = THREE_D_CAPABLE_CATEGORIES.has(template.category)
+  const using3D = is3DCapable && !force2D
+
+  // Auto-fallback: if 3D is selected but isn't ready within
+  // AUTO_FALLBACK_MS, switch to 2D and show a hint. Reset when the
+  // template changes (the new template gets its own grace period). The
+  // 3D renderer calls onReady once mounted with assets loaded → we cancel
+  // the timer at that point.
+  const [autoFallbackHint, setAutoFallbackHint] = React.useState<string | null>(null)
+  const readyRef = React.useRef(false)
+  React.useEffect(() => {
+    if (!using3D) return
+    readyRef.current = false
+    const timer = setTimeout(() => {
+      if (!readyRef.current) {
+        persistForce2D(true)
+        setAutoFallbackHint('3D took too long — showing 2D preview.')
+        setTimeout(() => setAutoFallbackHint(null), 5000)
+      }
+    }, AUTO_FALLBACK_MS)
+    return () => clearTimeout(timer)
+  }, [using3D, template.slug, selections, persistForce2D])
+
+  const handleReady = React.useCallback(() => {
+    readyRef.current = true
+  }, [])
+
+  const handleRendererError = React.useCallback(
+    (err: Error) => {
+      // WebGL unsupported, texture load failed, or R3F crashed. Drop to 2D
+      // and tell the user why. Never auto-recover back to 3D in this session
+      // — sessionStorage persistence avoids flicker on re-render.
+      console.warn('[V3] 3D renderer error, falling back to 2D:', err)
+      persistForce2D(true)
+      setAutoFallbackHint('3D preview unavailable — showing 2D instead.')
+      setTimeout(() => setAutoFallbackHint(null), 5000)
+    },
+    [persistForce2D],
+  )
+
+  const renderer = using3D ? pickRenderer() : Renderer25D
 
   return (
     <>
@@ -276,17 +348,38 @@ export default function ProductBuilderV3({
           ) : null}
           <div className="pbv2-preview-frame">
             <div className="pbv2-preview-center">
-              {renderer.render({
-                template,
-                imageUrl,
-                selections,
-                pxPerIn,
-                room,
-              })}
+              <RendererErrorBoundary
+                key={`${template.slug}-${using3D ? '3d' : '2d'}`}
+                onError={handleRendererError}
+              >
+                {renderer.render({
+                  template,
+                  imageUrl,
+                  selections,
+                  pxPerIn,
+                  room,
+                  onReady: using3D ? handleReady : undefined,
+                })}
+              </RendererErrorBoundary>
             </div>
           </div>
           {imageTitle ? (
             <p className="pbv2-preview-caption">{imageTitle}</p>
+          ) : null}
+          {is3DCapable ? (
+            <button
+              type="button"
+              onClick={() => persistForce2D(!force2D)}
+              className="pbv2-mode-toggle"
+              title={using3D ? 'Switch to a faster, simpler preview' : 'Try the 3D preview again'}
+            >
+              {using3D ? 'View in 2D' : 'View in 3D'}
+            </button>
+          ) : null}
+          {autoFallbackHint ? (
+            <p className="pbv2-mode-hint" role="status">
+              {autoFallbackHint}
+            </p>
           ) : null}
           <button
             type="button"
@@ -481,6 +574,31 @@ function IncludedChipsRow({
       </div>
     </div>
   )
+}
+
+// ---------------- error boundary for the renderer ----------------
+//
+// Catches WebGL initialization failures and unhandled errors thrown by the
+// 3D renderer so they don't blow up the whole builder. On error, calls
+// onError so the shell can switch to 2D.
+class RendererErrorBoundary extends React.Component<
+  { children: React.ReactNode; onError: (err: Error) => void },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error: Error) {
+    this.props.onError(error)
+  }
+  render() {
+    if (this.state.hasError) {
+      // Render nothing while waiting for parent to swap to 2D and remount.
+      return null
+    }
+    return this.props.children
+  }
 }
 
 // ---------------- option group control ----------------
@@ -699,6 +817,38 @@ const CSS = `
   font-size: 0.9rem;
   color: ${TOKENS.secondary};
   font-style: italic;
+  text-align: center;
+}
+.pbv2-mode-toggle {
+  align-self: center;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid ${TOKENS.border};
+  border-radius: 999px;
+  color: ${TOKENS.secondary};
+  font-family: ${TOKENS.fontBody};
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.pbv2-mode-toggle:hover {
+  border-color: ${TOKENS.primary};
+  color: ${TOKENS.primary};
+}
+.pbv2-mode-toggle:focus { outline: none; }
+.pbv2-mode-toggle:focus-visible {
+  outline: 2px solid ${TOKENS.primary};
+  outline-offset: 2px;
+}
+.pbv2-mode-hint {
+  align-self: center;
+  margin: 0;
+  padding: 6px 10px;
+  background: ${TOKENS.bg};
+  border: 1px solid ${TOKENS.border};
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: ${TOKENS.secondary};
   text-align: center;
 }
 .pbv2-save-compare {
