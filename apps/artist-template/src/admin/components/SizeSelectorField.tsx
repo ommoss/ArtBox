@@ -70,6 +70,10 @@ export default function SizeSelectorField({ path }: FieldProps) {
     setError(null)
     fetch(`/api/admin/template-sizes?product=${encodeURIComponent(productSlug)}`, {
       credentials: 'include',
+      // Bypass the browser HTTP cache so admins see new sizes the instant
+      // Artbox adds them. Without this, the browser may serve a cached
+      // response and the SizeSelector stays stale.
+      cache: 'no-store',
     })
       .then(async (res) => {
         if (!res.ok) {

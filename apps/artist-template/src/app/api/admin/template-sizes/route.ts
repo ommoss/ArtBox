@@ -38,7 +38,13 @@ export type TemplateSizesResponse = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      // Belt-and-suspenders: tell browser + any intermediate proxy NOT to
+      // cache. The route is already force-dynamic; this prevents the
+      // browser from serving a previously-stored response.
+      'cache-control': 'no-store, max-age=0, must-revalidate',
+    },
   })
 
 const FULFILLMENT_API_URL = process.env.FULFILLMENT_API_URL || ''
