@@ -209,9 +209,19 @@ function CanvasPiece({
 }
 
 // Build per-edge texture clones whose UV mappings show a thin strip from
-// each side of the image. Gallery wrap reuses the existing edge of the
-// front texture (image continues). Mirror wrap takes the same edge strip
-// but flips it so the seam reads as a reflection.
+// each side of the image. The strip's seam with the front face must match
+// pixel-for-pixel for the wrap to read correctly.
+//
+// Coordinate setup, after the per-edge rotations applied in CanvasPiece:
+//   - Top edge plane:    UV V=0 lies at z=+d/2 (front seam), V=1 at back
+//   - Bottom edge plane: UV V=1 lies at z=+d/2 (front seam), V=0 at back
+//   - Left edge plane:   UV U=1 lies at z=+d/2 (front seam), U=0 at back
+//   - Right edge plane:  UV U=0 lies at z=+d/2 (front seam), U=1 at back
+//
+// For "gallery" wrap, the strip away from the seam continues the image
+// past the front face's visible region. For "mirror", the strip mirrors
+// back into the visible region. The offset/repeat values below derive
+// directly from these constraints.
 function useEdgeTextures(
   baseTexture: Texture | null | undefined,
   w: number,
@@ -228,9 +238,8 @@ function useEdgeTextures(
     const imgH = img?.naturalHeight ?? img?.height
     if (!imgW || !imgH) return null
 
-    // Recompute cover-crop UV bounds so the edge strip uses the same
-    // visible region as the front face. Otherwise the edge would show
-    // pixels that the front face has already cropped out.
+    // Cover-crop bounds of the front face — the visible image region in
+    // UV space, [baseOffset, baseOffset+baseRepeat] per axis.
     const imgAspect = imgW / imgH
     const planeAspect = w / h
     let baseRepeatX: number
@@ -249,72 +258,64 @@ function useEdgeTextures(
       baseOffsetY = (1 - baseRepeatY) / 2
     }
 
-    // Strip thickness as a fraction of the front-face UV span. The edge
-    // depth `d` in scene units relative to the plane's `h` or `w` gives
-    // the right proportion.
+    // Strip thickness as a fraction of the front-face UV span.
     const stripFracY = (d / h) * baseRepeatY
     const stripFracX = (d / w) * baseRepeatX
 
-    const makeStrip = (
-      repeatX: number,
-      repeatY: number,
-      offsetX: number,
-      offsetY: number,
-      flipX = false,
-      flipY = false,
-    ): Texture => {
+    const mirror = wrapMode === 'mirror'
+
+    const clone = (offsetX: number, repeatX: number, offsetY: number, repeatY: number): Texture => {
       const t = baseTexture.clone()
       t.colorSpace = baseTexture.colorSpace
+      t.offset.set(offsetX, offsetY)
+      t.repeat.set(repeatX, repeatY)
       t.needsUpdate = true
-      t.repeat.set(repeatX * (flipX ? -1 : 1), repeatY * (flipY ? -1 : 1))
-      // When flipping, three.js mirrors around the offset; compensate so
-      // the strip stays in the visible region.
-      t.offset.set(
-        offsetX + (flipX ? repeatX : 0),
-        offsetY + (flipY ? repeatY : 0),
-      )
       return t
     }
 
-    // Mirror mode flips the strip on the axis perpendicular to the edge
-    // so the seam reads as a reflection.
-    const mirror = wrapMode === 'mirror'
+    // Front-face edge UV positions — the values the front face shows at
+    // each of its four edges. The corresponding edge plane must show the
+    // same value at the seam.
+    const frontTopV = baseOffsetY + baseRepeatY
+    const frontBottomV = baseOffsetY
+    const frontLeftU = baseOffsetX
+    const frontRightU = baseOffsetX + baseRepeatX
 
-    // Top edge of canvas → top strip of image (high V values).
-    const top = makeStrip(
+    // TOP: plane V=0 at front seam → image V = frontTopV; plane V=1 at back.
+    //   gallery → plane V=1 = frontTopV + stripFracY (continues image upward)
+    //   mirror  → plane V=1 = frontTopV - stripFracY (mirrors back inward)
+    const top = clone(
+      baseOffsetX,
       baseRepeatX,
-      stripFracY,
-      baseOffsetX,
-      baseOffsetY + baseRepeatY - stripFracY,
-      false,
-      mirror,
+      frontTopV,
+      mirror ? -stripFracY : stripFracY,
     )
-    // Bottom edge → bottom strip of image.
-    const bottom = makeStrip(
+    // BOTTOM: plane V=1 at front seam → image V = frontBottomV; plane V=0 at back.
+    //   gallery → plane V=0 = frontBottomV - stripFracY (image extends down)
+    //   mirror  → plane V=0 = frontBottomV + stripFracY (mirrors back up)
+    const bottom = clone(
+      baseOffsetX,
       baseRepeatX,
-      stripFracY,
-      baseOffsetX,
-      baseOffsetY,
-      false,
-      mirror,
+      mirror ? frontBottomV + stripFracY : frontBottomV - stripFracY,
+      mirror ? -stripFracY : stripFracY,
     )
-    // Left edge → left strip of image.
-    const left = makeStrip(
-      stripFracX,
-      baseRepeatY,
-      baseOffsetX,
+    // LEFT: plane U=1 at front seam → image U = frontLeftU; plane U=0 at back.
+    //   gallery → plane U=0 = frontLeftU - stripFracX (image extends left)
+    //   mirror  → plane U=0 = frontLeftU + stripFracX
+    const left = clone(
+      mirror ? frontLeftU + stripFracX : frontLeftU - stripFracX,
+      mirror ? -stripFracX : stripFracX,
       baseOffsetY,
-      mirror,
-      false,
+      baseRepeatY,
     )
-    // Right edge → right strip of image.
-    const right = makeStrip(
-      stripFracX,
-      baseRepeatY,
-      baseOffsetX + baseRepeatX - stripFracX,
+    // RIGHT: plane U=0 at front seam → image U = frontRightU; plane U=1 at back.
+    //   gallery → plane U=1 = frontRightU + stripFracX
+    //   mirror  → plane U=1 = frontRightU - stripFracX
+    const right = clone(
+      frontRightU,
+      mirror ? -stripFracX : stripFracX,
       baseOffsetY,
-      mirror,
-      false,
+      baseRepeatY,
     )
     return { top, bottom, left, right }
   }, [baseTexture, w, h, d, wrapMode])
