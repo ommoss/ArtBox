@@ -2,13 +2,49 @@ import type { CollectionConfig } from 'payload'
 
 import { isAdmin } from '../access/isAdmin'
 import { isStaff } from '../access/isStaff'
+import { buildConfigSummary } from '../lib/build-config-summary'
 
 export const OrderLines: CollectionConfig = {
   slug: 'order-lines',
   admin: {
-    useAsTitle: 'artistProductName',
-    defaultColumns: ['order', 'productionItem', 'quantity', 'status'],
+    useAsTitle: 'configurationSummary',
+    defaultColumns: ['configurationSummary', 'order', 'quantity', 'status'],
     group: 'Fulfillment',
+  },
+  hooks: {
+    beforeChange: [
+      // Populate the human-readable summary from the configuration JSON.
+      // Runs on every create + update so manual edits to either the
+      // template or the configuration refresh the summary. The API route
+      // hits this via payload.create() in /api/v1/orders.
+      async ({ data, originalDoc, req }) => {
+        const config = data.configuration ?? originalDoc?.configuration
+        if (!config) return data
+        let templateName: string | undefined
+        const templateRef = data.template ?? originalDoc?.template
+        const templateId =
+          templateRef && typeof templateRef === 'object'
+            ? (templateRef as { id?: number | string }).id
+            : templateRef
+        if (templateId != null) {
+          try {
+            const tmpl = await req.payload.findByID({
+              collection: 'product-templates',
+              id: templateId as number | string,
+              depth: 0,
+            })
+            templateName = (tmpl as { name?: string } | null)?.name
+          } catch {
+            // Template lookup failure → fall back to artistProductName so the
+            // summary is still useful. Logged at the payload layer already.
+          }
+        }
+        const displayName =
+          templateName ?? data.artistProductName ?? originalDoc?.artistProductName
+        data.configurationSummary = buildConfigSummary(displayName, config)
+        return data
+      },
+    ],
   },
   access: {
     create: isStaff,
@@ -42,12 +78,28 @@ export const OrderLines: CollectionConfig = {
       },
     },
     {
-      name: 'configuration',
-      type: 'json',
+      name: 'configurationSummary',
+      type: 'text',
       admin: {
+        readOnly: true,
         description:
-          'Snapshot of the customer\'s template configuration (selected options, labels, prices) at order time.',
+          'Auto-generated from the template + configuration. Shown in the list view so staff can read the build at a glance.',
       },
+    },
+    {
+      type: 'collapsible',
+      label: 'Raw configuration (debug)',
+      admin: {
+        initCollapsed: true,
+        description:
+          'Stored snapshot of the customer\'s build at order time. Normally you don\'t need this — the summary + display above show everything in human-readable form. Use this only to inspect or correct a misencoded order.',
+      },
+      fields: [
+        {
+          name: 'configuration',
+          type: 'json',
+        },
+      ],
     },
     {
       type: 'row',
