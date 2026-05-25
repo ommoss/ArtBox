@@ -30,6 +30,21 @@ export default function Page() {
       >
         Open admin →
       </Link>
+      <Link
+        href="/bulk-prices"
+        style={{
+          display: 'inline-block',
+          padding: '0.6rem 1rem',
+          marginLeft: '0.6rem',
+          background: '#fff',
+          color: '#111',
+          textDecoration: 'none',
+          border: '1px solid #ccc',
+          borderRadius: 4,
+        }}
+      >
+        Bulk price editor →
+      </Link>
     </main>
   )
 }

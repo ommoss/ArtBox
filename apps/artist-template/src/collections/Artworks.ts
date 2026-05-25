@@ -178,6 +178,8 @@ export const Artworks: CollectionConfig = {
           admin: {
             condition: (data) => Boolean(data?.overrideSizes),
             initCollapsed: true,
+            description:
+              'For each product, pick which sizes are offered. Aspect ratio is a shortcut that pre-fills the size list — useful for landscape-only or portrait-only artworks.',
           },
           fields: [
             {
@@ -197,6 +199,16 @@ export const Artworks: CollectionConfig = {
               name: 'enabledSizes',
               type: 'text',
               hasMany: true,
+              // Stored as a string array (backwards compat with the existing
+              // catalog-filter logic), but rendered via a custom component
+              // that fetches the real fulfillment sizes + offers an
+              // aspect-ratio shortcut. The default Payload hasMany text
+              // input is hidden in favour of the custom UI.
+              admin: {
+                components: {
+                  Field: '@/admin/components/SizeSelectorField#default',
+                },
+              },
             },
           ],
         },
