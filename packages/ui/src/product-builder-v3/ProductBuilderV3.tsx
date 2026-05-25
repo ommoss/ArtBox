@@ -39,7 +39,7 @@ const RENDERERS: RendererDescriptor[] = [Renderer3D, Renderer25D]
 // Template categories for which V3's Renderer3D actually produces a 3D
 // scene. Others fall through to 2.5D inside Renderer3D itself, so the 2D
 // toggle and auto-fallback only matter for these.
-const THREE_D_CAPABLE_CATEGORIES = new Set<string>(['framed'])
+const THREE_D_CAPABLE_CATEGORIES = new Set<string>(['framed', 'canvas', 'block_mount'])
 
 // How long to wait for the 3D scene to mount (including R3F lazy chunk +
 // texture load) before automatically switching to 2.5D. Set generous so
