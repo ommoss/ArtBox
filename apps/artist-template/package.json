@@ -13,6 +13,7 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.98.0",
     "@artbox/types": "workspace:*",
     "@artbox/ui": "workspace:*",
     "@payloadcms/db-postgres": "latest",

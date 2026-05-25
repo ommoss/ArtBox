@@ -1,10 +1,15 @@
 import type { Payload } from 'payload'
 
+export type ArtistEntitlements = {
+  marketingEnabled: boolean
+}
+
 export type ResolvedArtist = {
   id: number
   slug: string
   name: string
   status: string
+  entitlements: ArtistEntitlements
 }
 
 export const ARTIST_API_KEY_HEADER = 'x-artbox-api-key'
@@ -32,5 +37,10 @@ export async function resolveArtistFromRequest(
     slug: artist.slug,
     name: artist.name,
     status: artist.status,
+    entitlements: {
+      marketingEnabled: Boolean(
+        (artist as { marketingEnabled?: boolean }).marketingEnabled,
+      ),
+    },
   }
 }

@@ -10,6 +10,8 @@ import { Media } from './collections/Media'
 import { Galleries } from './collections/Galleries'
 import { Artworks } from './collections/Artworks'
 import { Catalog } from './globals/Catalog'
+import { MarketingPrompts } from './marketing/collections/MarketingPrompts'
+import { MarketingSettings } from './marketing/globals/MarketingSettings'
 import { seedDemoContent } from './seed/demo-content'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -20,9 +22,14 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: '— Artist Site' },
     theme: 'light',
+    components: {
+      // Marketing prompts surface on the admin home above the default dashboard.
+      // Hides itself automatically when the entitlement is off.
+      beforeDashboard: ['@/marketing/ui/MarketingPromptsWidget'],
+    },
   },
-  collections: [Users, Media, Galleries, Artworks],
-  globals: [Catalog],
+  collections: [Users, Media, Galleries, Artworks, MarketingPrompts],
+  globals: [Catalog, MarketingSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

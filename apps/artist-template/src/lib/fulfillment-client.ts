@@ -39,3 +39,21 @@ export async function fetchTemplate(
   )
   return data?.template ?? null
 }
+
+// Entitlements (which optional modules Artbox has enabled for this artist)
+// are read from the fulfillment platform. We cache aggressively because
+// entitlement changes are rare and not time-sensitive.
+export type ArtistEntitlements = {
+  marketingEnabled: boolean
+}
+
+const EMPTY_ENTITLEMENTS: ArtistEntitlements = {
+  marketingEnabled: false,
+}
+
+export async function fetchEntitlements(): Promise<ArtistEntitlements> {
+  const data = await getJson<{ entitlements: ArtistEntitlements }>(
+    '/api/v1/entitlements',
+  )
+  return data?.entitlements ?? EMPTY_ENTITLEMENTS
+}

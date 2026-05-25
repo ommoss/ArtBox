@@ -106,6 +106,26 @@ export const Artists: CollectionConfig = {
       ],
     },
     {
+      type: 'collapsible',
+      label: 'Module entitlements',
+      admin: {
+        description:
+          'Optional add-on modules this artist has access to. Controlled by Artbox — the artist site reads these via the entitlements endpoint and hides/shows features accordingly.',
+      },
+      fields: [
+        {
+          name: 'marketingEnabled',
+          type: 'checkbox',
+          defaultValue: false,
+          label: 'Marketing prompts & digest',
+          admin: {
+            description:
+              'Enables the marketing trigger engine, LLM caption drafts, and the weekly email digest on the artist site. Costs flow through Artbox\'s Anthropic + Resend accounts.',
+          },
+        },
+      ],
+    },
+    {
       name: 'notes',
       type: 'textarea',
     },

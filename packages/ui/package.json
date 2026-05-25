@@ -9,7 +9,15 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@artbox/types": "workspace:*"
+    "@artbox/types": "workspace:*",
+    "three": "^0.169.0",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "three": { "optional": true },
+    "@react-three/fiber": { "optional": true },
+    "@react-three/drei": { "optional": true }
   },
   "peerDependencies": {
     "react": ">=19.0.0",
