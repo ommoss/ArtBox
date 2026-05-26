@@ -129,6 +129,10 @@ function shapeTemplate(
         label: String(o.label ?? ''),
         value: String(o.value ?? ''),
         priceModifierAmount,
+        priceModifierPerSqIn:
+          typeof o.priceModifierPerSqIn === 'number' && o.priceModifierPerSqIn !== 0
+            ? o.priceModifierPerSqIn
+            : undefined,
         swatchColor: o.swatchColor ? String(o.swatchColor) : undefined,
         previewImage: o.previewImage ? String(o.previewImage) : undefined,
         widthIn,

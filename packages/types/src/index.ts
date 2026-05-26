@@ -52,7 +52,15 @@ export type PublicOption = {
   id: string | number
   label: string
   value: string
+  // Flat amount added to the template's base price when this option is
+  // selected. Always applied.
   priceModifierAmount: number
+  // Per-square-inch amount, multiplied by the SELECTED SIZE's area
+  // (widthIn × heightIn) at calculation time. Lets non-size options
+  // (mat, glass, frame moulding, stretcher depth) scale with print size.
+  // Defaults to 0 (= flat-only pricing). Size options themselves leave
+  // this at 0 — their price IS the size, not an upgrade on top.
+  priceModifierPerSqIn?: number
   swatchColor?: string
   previewImage?: string
   widthIn?: number

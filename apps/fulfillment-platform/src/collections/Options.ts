@@ -41,7 +41,19 @@ export const Options: CollectionConfig = {
       type: 'number',
       required: true,
       defaultValue: 0,
-      admin: { description: 'Amount added to base price when this option is selected (CAD).' },
+      admin: {
+        description:
+          'Flat amount added to base price when this option is selected (CAD). For options that scale with print size (mat, glass, stretcher, frame), use this for the FIXED portion and set Per-sq-in below for the variable portion.',
+      },
+    },
+    {
+      name: 'priceModifierPerSqIn',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        description:
+          'Optional per-square-inch rate applied on top of the flat amount. Effective modifier = flat + (per-sq-in × selected size area). Leave at 0 for size options and for upgrades that don\'t scale with size.',
+      },
     },
     {
       name: 'swatchColor',

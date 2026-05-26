@@ -12,7 +12,10 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "seed:landscape-sizes": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/add-landscape-sizes.ts",
-    "seed:square-panoramic-sizes": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/add-square-panoramic-sizes.ts"
+    "seed:square-panoramic-sizes": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/add-square-panoramic-sizes.ts",
+    "seed:reconcile-template-options": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/reconcile-template-options.ts",
+    "seed:inspect-size-options": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/inspect-size-options.ts",
+    "seed:import-sizes-csv": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env scripts/import-sizes-from-csv.ts"
   },
   "dependencies": {
     "@artbox/types": "workspace:*",

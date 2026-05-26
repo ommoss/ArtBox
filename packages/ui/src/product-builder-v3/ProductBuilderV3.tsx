@@ -175,15 +175,39 @@ export default function ProductBuilderV3({
     return false
   }
 
+  // Effective modifier for an option in the context of a currently-selected
+  // size: flat amount + (per-sq-in × selected size's area). Falls back to
+  // just the flat amount when no size is selected or the option has no
+  // per-sq-in rate.
+  const selectedSizeArea = React.useMemo(() => {
+    if (!template) return 0
+    const sizeGroup = template.optionGroups.find((g) => g.inputType === 'size')
+    if (!sizeGroup) return 0
+    const sel = selections[sizeGroup.slug]
+    if (!sel?.widthIn || !sel?.heightIn) return 0
+    return sel.widthIn * sel.heightIn
+  }, [template, selections])
+
+  const effectiveModifier = React.useCallback(
+    (opt: V2Option | undefined): number => {
+      if (!opt) return 0
+      const flat = opt.priceModifierAmount ?? 0
+      const perSqIn = opt.priceModifierPerSqIn ?? 0
+      if (perSqIn === 0) return flat
+      return flat + perSqIn * selectedSizeArea
+    },
+    [selectedSizeArea],
+  )
+
   const unitPrice = React.useMemo(() => {
     if (!template) return 0
     const visible = new Set(visibleGroups.map((g) => g.slug))
     const sum = Object.entries(selections).reduce((acc, [slug, opt]) => {
       if (!visible.has(slug)) return acc
-      return acc + (opt?.priceModifierAmount ?? 0)
+      return acc + effectiveModifier(opt)
     }, 0)
     return Math.round((template.basePrice + sum) * 100) / 100
-  }, [template, selections, visibleGroups])
+  }, [template, selections, visibleGroups, effectiveModifier])
 
   const totalPrice = Math.round(unitPrice * quantity * 100) / 100
 
@@ -255,13 +279,16 @@ export default function ProductBuilderV3({
   }
 
   const handleAdd = () => {
+    // Snapshot the EFFECTIVE per-option price (flat + per-sqin × size area)
+    // into the order line so the order total matches what the customer
+    // saw, regardless of pricing-formula changes later.
     const builderSelections: BuilderSelection[] = Object.entries(selections).map(
       ([groupSlug, opt]) => ({
         optionGroupSlug: groupSlug,
         optionId: opt.id,
         optionValue: opt.value,
         optionLabel: opt.label,
-        priceModifierAmount: opt.priceModifierAmount,
+        priceModifierAmount: effectiveModifier(opt),
       }),
     )
     onAddToCart?.(
@@ -482,6 +509,7 @@ export default function ProductBuilderV3({
                   options={group.options}
                   selectedId={selections[group.slug]?.id}
                   onSelect={(opt) => handleSelect(group.slug, opt)}
+                  effectiveModifier={effectiveModifier}
                 />
               ))}
             </div>
@@ -613,6 +641,7 @@ function OptionGroupControl({
   options,
   selectedId,
   onSelect,
+  effectiveModifier,
 }: {
   groupSlug: string
   groupName: string
@@ -622,6 +651,10 @@ function OptionGroupControl({
   options: V2Option[]
   selectedId: string | number | undefined
   onSelect: (opt: V2Option) => void
+  // Computes the effective price modifier for an option in the current
+  // size context. Lets us display "$X.XX" labels that already factor in
+  // per-square-inch scaling.
+  effectiveModifier: (opt: V2Option) => number
 }) {
   return (
     <div className="pbv2-group">
@@ -635,6 +668,7 @@ function OptionGroupControl({
         <div className="pbv2-swatches">
           {options.map((opt) => {
             const sel = String(opt.id) === String(selectedId)
+            const eff = effectiveModifier(opt)
             return (
               <button
                 key={opt.id}
@@ -642,11 +676,7 @@ function OptionGroupControl({
                 onClick={() => onSelect(opt)}
                 className={`pbv2-swatch ${sel ? 'pbv2-swatch--active' : ''}`}
                 style={{ background: opt.swatchColor ?? '#ddd' }}
-                title={`${opt.label}${
-                  opt.priceModifierAmount
-                    ? ` (+${opt.priceModifierAmount})`
-                    : ''
-                }`}
+                title={`${opt.label}${eff ? ` (+${fmt(eff)})` : ''}`}
                 aria-label={opt.label}
               />
             )
@@ -659,6 +689,8 @@ function OptionGroupControl({
         <div className="pbv2-sizes">
           {options.map((opt) => {
             const sel = String(opt.id) === String(selectedId)
+            // Size options use the raw priceModifierAmount — they're the
+            // size itself, not an upgrade on top of a size.
             return (
               <button
                 key={opt.id}
@@ -676,6 +708,7 @@ function OptionGroupControl({
         <div className="pbv2-radios">
           {options.map((opt) => {
             const sel = String(opt.id) === String(selectedId)
+            const eff = effectiveModifier(opt)
             return (
               <label
                 key={opt.id}
@@ -689,10 +722,8 @@ function OptionGroupControl({
                   style={{ marginRight: 8 }}
                 />
                 <span style={{ flex: 1 }}>{opt.label}</span>
-                {opt.priceModifierAmount > 0 ? (
-                  <span className="pbv2-radio-price">
-                    +{fmt(opt.priceModifierAmount)}
-                  </span>
+                {eff > 0 ? (
+                  <span className="pbv2-radio-price">+{fmt(eff)}</span>
                 ) : null}
               </label>
             )
