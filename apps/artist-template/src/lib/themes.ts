@@ -196,7 +196,11 @@ export function getTheme(): Theme {
   return {
     ...preset,
     // Default placeholder uses a historical figure so the demo content is
-    // unambiguously not a real living artist's site.
+    // unambiguously not a real living artist's site. The /about-the-demo
+    // page + the top banner (enabled via NEXT_PUBLIC_IS_DEMO=true on the
+    // 4 showcase deployments) make the "this is a sample" framing
+    // explicit. Real artist sites set NEXT_PUBLIC_ARTIST_NAME to their
+    // own name and leave NEXT_PUBLIC_IS_DEMO unset.
     artistName: process.env.NEXT_PUBLIC_ARTIST_NAME || 'Vincent van Gogh',
     tagline:
       process.env.NEXT_PUBLIC_ARTIST_TAGLINE || 'Studies in light and colour',

@@ -13,6 +13,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   const theme = getTheme()
   const cssVars = themeCssVars(theme) as React.CSSProperties
   const isSidebar = theme.headerLayout === 'sidebar'
+  // Set NEXT_PUBLIC_IS_DEMO=true on demo Vercel projects (the 4 theme
+  // showcase deployments) so the "this is a sample" banner appears. Real
+  // artist sites leave this unset.
+  const isDemo = process.env.NEXT_PUBLIC_IS_DEMO === 'true'
 
   return (
     <html lang="en">
@@ -220,7 +224,51 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 padding: 32px 20px;
               }
             }
+            .demo-banner {
+              background: var(--color-primary);
+              color: var(--color-bg);
+              padding: 8px 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
+              flex-wrap: wrap;
+              font-size: 0.85rem;
+              text-align: center;
+            }
+            .demo-banner-text {
+              opacity: 0.92;
+            }
+            .demo-banner-cta {
+              padding: 4px 12px;
+              background: var(--color-bg);
+              color: var(--color-primary);
+              border-radius: 999px;
+              text-decoration: none;
+              font-weight: 600;
+              white-space: nowrap;
+              transition: opacity 0.15s;
+            }
+            .demo-banner-cta:hover { opacity: 0.85; }
+            @media (max-width: 480px) {
+              .demo-banner {
+                font-size: 0.78rem;
+                padding: 6px 12px;
+                gap: 10px;
+              }
+              .demo-banner-cta { padding: 3px 10px; }
+            }
           `}</style>
+          {isDemo ? (
+            <div className="demo-banner">
+              <span className="demo-banner-text">
+                Sample artist site — built on the Artbox platform
+              </span>
+              <Link href="/about-the-demo" className="demo-banner-cta">
+                See how it works →
+              </Link>
+            </div>
+          ) : null}
           <div className={isSidebar ? 'public-layout--sidebar' : undefined}>
             {isSidebar ? (
               <aside className="public-aside">
