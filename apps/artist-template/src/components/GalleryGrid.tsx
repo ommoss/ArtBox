@@ -387,13 +387,14 @@ export default function GalleryGrid({ artworks, mode }: Props) {
     )
   }
 
-  // Uniform (default) — gallery-wall look used by the fine-art preset
+  // Uniform — gallery-wall look used by the fine-art preset. Generous gap and
+  // a larger minimum tile give each piece breathing room, like a hung wall.
   return (
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: 24,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: 40,
         marginTop: 32,
       }}
     >

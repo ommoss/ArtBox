@@ -87,19 +87,20 @@ const sailing: ThemePreset = {
   artworkLayout: 'stacked',
 }
 
-// Lifestyle photography (was "editorial"): magazine-style storytelling, serif
-// display, generous whitespace. Visual identity unchanged in this pass —
-// genre-specific palette/font tuning is a later phase.
+// Lifestyle photography (was "editorial"): magazine-style storytelling kept
+// from the editorial base, but reframed lighter and more modern. Display-serif
+// headings over a clean sans body is the canonical lifestyle pairing; the
+// palette is airier and the accent a warm clay rather than a literary brown.
 const lifestyle: ThemePreset = {
   preset: 'lifestyle',
   colorPrimary: '#2a2723',
   colorSecondary: 'rgba(42,39,35,0.65)',
-  colorBg: '#f8f5ef',
+  colorBg: '#faf8f3',
   colorSurface: '#ffffff',
-  colorAccent: '#7a5b3a',
+  colorAccent: '#c0674a',
   colorBorder: 'rgba(42,39,35,0.1)',
   fontHeading: DISPLAY_SERIF,
-  fontBody: SERIF_STACK,
+  fontBody: SANS_STACK,
   headingWeight: 400,
   headingTracking: '-0.005em',
   baseFontSize: '17px',
@@ -114,8 +115,9 @@ const lifestyle: ThemePreset = {
 }
 
 // Fine-art photography (was "atmospheric"): dark, cinematic, gallery-wall
-// presentation that suits limited-edition print sales. Visual identity
-// unchanged in this pass.
+// presentation that suits limited-edition print sales. The palette is already
+// ideal for this genre and is kept as-is; the genre tuning lives in the uniform
+// grid, which now uses more generous gallery-wall whitespace (GalleryGrid.tsx).
 const art: ThemePreset = {
   preset: 'art',
   colorPrimary: '#ebe8e3',
@@ -140,14 +142,15 @@ const art: ThemePreset = {
 }
 
 // Travel photography (was "warm"): sun-warmed, journal/album feel with a paper
-// grain, organized by destination. Visual identity unchanged in this pass.
+// grain, organized by destination. The warm base already fits travel well, so
+// this is a light touch — only the accent warms toward a sunset terracotta.
 const travel: ThemePreset = {
   preset: 'travel',
   colorPrimary: '#3d2f23',
   colorSecondary: 'rgba(61,47,35,0.6)',
   colorBg: '#f5ebdc',
   colorSurface: '#fbf4e9',
-  colorAccent: '#a04930',
+  colorAccent: '#bd5a2c',
   colorBorder: 'rgba(61,47,35,0.12)',
   fontHeading: SERIF_STACK,
   fontBody: SANS_STACK,
