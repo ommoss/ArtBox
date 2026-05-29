@@ -10,6 +10,7 @@ type Artwork = {
   imageUrl?: string | null
   year?: number | null
   location?: string | null
+  description?: string | null
   isLimitedEdition?: boolean | null
   editionSize?: number | null
   editionsRemaining?: number | null
@@ -120,18 +121,146 @@ function magazineSpan(i: number): { col: number; row: number } {
 }
 
 export default function GalleryGrid({ artworks, mode }: Props) {
+  if (mode === 'solo') {
+    // One piece per row at its native aspect ratio, with the piece's story
+    // beside it; rows alternate sides on desktop and stack on mobile. Native
+    // aspect uses a plain <img>: the demo's external image URLs carry no
+    // dimensions for next/image, and Unsplash already serves optimized
+    // AVIF/WebP. This is the fine-art "room to breathe" layout.
+    return (
+      <>
+        <style>{`
+          .gg-solo { display: flex; flex-direction: column; gap: 96px; margin-top: 56px; }
+          .gg-solo-row { display: flex; flex-direction: column; gap: 24px; }
+          .gg-solo-text { align-self: center; }
+          @media (min-width: 860px) {
+            .gg-solo { gap: 128px; }
+            .gg-solo-row { flex-direction: row; gap: 64px; align-items: center; }
+            .gg-solo-row--flip { flex-direction: row-reverse; }
+            .gg-solo-media { flex: 1 1 58%; min-width: 0; }
+            .gg-solo-text { flex: 1 1 42%; }
+          }
+        `}</style>
+        <div className="gg-solo">
+          {artworks.map((a, i) => {
+            const edition = editionStateFor(a)
+            const editionLabel =
+              edition.kind === 'soldOut'
+                ? `Sold out · edition of ${edition.size}`
+                : edition.kind === 'low'
+                  ? `Only ${edition.remaining} of ${edition.size} left`
+                  : edition.kind === 'available'
+                    ? `Limited edition of ${edition.size}`
+                    : null
+            const meta = [a.year, a.location].filter(Boolean).join(' · ')
+            return (
+              <Link
+                key={a.id}
+                href={`/artwork/${a.slug}`}
+                className={`gg-solo-row${i % 2 === 1 ? ' gg-solo-row--flip' : ''}`}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div className="gg-solo-media">
+                  {a.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.imageUrl}
+                      alt={a.title ?? ''}
+                      loading={i < 1 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        height: 'auto',
+                        borderRadius: 'var(--image-radius)',
+                        boxShadow: 'var(--image-shadow)',
+                      }}
+                    />
+                  ) : null}
+                </div>
+                <div className="gg-solo-text">
+                  <h3
+                    style={{
+                      fontFamily: 'var(--font-heading)',
+                      fontWeight: 'var(--weight-heading)' as unknown as number,
+                      letterSpacing: 'var(--tracking-heading)',
+                      fontSize: '1.8rem',
+                      margin: 0,
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {a.title}
+                  </h3>
+                  {meta ? (
+                    <p style={{ color: 'var(--color-secondary)', margin: '8px 0 0', fontSize: '0.9rem' }}>
+                      {meta}
+                    </p>
+                  ) : null}
+                  {a.description ? (
+                    <p style={{ margin: '20px 0 0', lineHeight: 1.7, maxWidth: 440 }}>
+                      {a.description}
+                    </p>
+                  ) : null}
+                  {editionLabel ? (
+                    <p
+                      style={{
+                        margin: '20px 0 0',
+                        fontSize: '0.75rem',
+                        letterSpacing: 1.5,
+                        textTransform: 'uppercase',
+                        color:
+                          edition.kind === 'low'
+                            ? 'var(--color-accent)'
+                            : 'var(--color-secondary)',
+                      }}
+                    >
+                      {editionLabel}
+                    </p>
+                  ) : null}
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: 24,
+                      fontSize: '0.85rem',
+                      letterSpacing: 0.3,
+                      color: 'var(--color-accent)',
+                    }}
+                  >
+                    View print →
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </>
+    )
+  }
+
   if (mode === 'magazine') {
     return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gridAutoRows: '220px',
-          gridAutoFlow: 'dense',
-          gap: 16,
-          marginTop: 32,
-        }}
-      >
+      <>
+        {/* Fixed 4-col grid can't use min(); drop to 2 cols on phones. The
+            2×2 feature spans degrade cleanly to full-width at 2 cols. */}
+        <style>{`
+          .gg-magazine { grid-template-columns: repeat(4, 1fr); }
+          @media (max-width: 768px) {
+            .gg-magazine {
+              grid-template-columns: repeat(2, 1fr);
+              grid-auto-rows: 180px;
+            }
+          }
+        `}</style>
+        <div
+          className="gg-magazine"
+          style={{
+            display: 'grid',
+            gridAutoRows: '220px',
+            gridAutoFlow: 'dense',
+            gap: 16,
+            marginTop: 32,
+          }}
+        >
         {artworks.map((a, i) => {
           const span = magazineSpan(i)
           const isAboveFold = i < 4
@@ -190,7 +319,8 @@ export default function GalleryGrid({ artworks, mode }: Props) {
             </Link>
           )
         })}
-      </div>
+        </div>
+      </>
     )
   }
 
@@ -199,7 +329,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))',
           gap: 36,
           marginTop: 40,
           paddingTop: 8,
@@ -313,7 +443,8 @@ export default function GalleryGrid({ artworks, mode }: Props) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(560px, 1fr))',
+          // min(...,100%) so a single wide tile never overflows a phone.
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(560px, 100%), 1fr))',
           gap: 40,
           marginTop: 32,
         }}
@@ -393,7 +524,7 @@ export default function GalleryGrid({ artworks, mode }: Props) {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
         gap: 40,
         marginTop: 32,
       }}

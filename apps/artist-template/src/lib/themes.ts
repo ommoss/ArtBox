@@ -5,7 +5,12 @@
 
 export type HeaderLayout = 'split' | 'centered' | 'sidebar'
 export type HomeLayout = 'centered' | 'hero' | 'carousel'
-export type GalleryGridMode = 'uniform' | 'magazine' | 'album' | 'cinematic'
+export type GalleryGridMode =
+  | 'uniform'
+  | 'magazine'
+  | 'album'
+  | 'cinematic'
+  | 'solo'
 export type ArtworkLayout = 'stacked' | 'asymmetric'
 
 export type Theme = {
@@ -114,10 +119,11 @@ const lifestyle: ThemePreset = {
   artworkLayout: 'asymmetric',
 }
 
-// Fine-art photography (was "atmospheric"): dark, cinematic, gallery-wall
-// presentation that suits limited-edition print sales. The palette is already
-// ideal for this genre and is kept as-is; the genre tuning lives in the uniform
-// grid, which now uses more generous gallery-wall whitespace (GalleryGrid.tsx).
+// Fine-art photography (was "atmospheric"): dark, cinematic presentation that
+// suits limited-edition print sales. The palette is already ideal and kept
+// as-is. Galleries use the `solo` mode — each piece shown one-per-row at its
+// native aspect ratio with its story beside it, so a wide range of work
+// (panoramas, portraits, squares) each gets room to breathe (GalleryGrid.tsx).
 const art: ThemePreset = {
   preset: 'art',
   colorPrimary: '#ebe8e3',
@@ -137,7 +143,7 @@ const art: ThemePreset = {
   imageShadow: '0 24px 48px rgba(0,0,0,0.55)',
   headerLayout: 'split',
   homeLayout: 'centered',
-  galleryGridMode: 'uniform',
+  galleryGridMode: 'solo',
   artworkLayout: 'stacked',
 }
 

@@ -99,6 +99,7 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
             imageUrl: ax.imageUrl,
             year: a.year as number | null | undefined,
             location: a.location as string | null | undefined,
+            description: a.description as string | null | undefined,
             isLimitedEdition: ax.isLimitedEdition,
             editionSize: ax.editionSize,
             editionsRemaining: ax.editionsRemaining,
