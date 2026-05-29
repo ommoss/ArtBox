@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
+import HeroCarousel from '@/components/HeroCarousel'
 import { getArtistBrand } from '@/lib/artist-config'
 import { getTheme } from '@/lib/themes'
 
@@ -53,9 +54,34 @@ export default async function HomePage() {
     }
   }
 
+  // Carousel layouts (sailing) lead with several featured pieces rotating
+  // full-bleed. Featured first, then most recent fills the rest.
+  let carouselSlides: { imageUrl: string; title?: string | null }[] = []
+  if (theme.homeLayout === 'carousel') {
+    const featured = await payload.find({
+      collection: 'artworks',
+      where: { isPublished: { equals: true } },
+      sort: ['-isFeatured', '-updatedAt'],
+      limit: 6,
+      depth: 0,
+    })
+    carouselSlides = featured.docs
+      .map((d) => ({
+        imageUrl: (d as { imageUrl?: string }).imageUrl ?? '',
+        title: (d as { title?: string | null }).title ?? null,
+      }))
+      .filter((s) => s.imageUrl)
+  }
+
   return (
     <div>
-      {theme.homeLayout === 'hero' && heroArtwork ? (
+      {theme.homeLayout === 'carousel' && carouselSlides.length > 0 ? (
+        <HeroCarousel
+          slides={carouselSlides}
+          artistName={brand.artistName}
+          tagline={brand.tagline}
+        />
+      ) : theme.homeLayout === 'hero' && heroArtwork ? (
         <HeroBanner
           imageUrl={(heroArtwork as { imageUrl?: string }).imageUrl ?? ''}
           artistName={brand.artistName}

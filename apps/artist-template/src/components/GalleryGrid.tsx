@@ -305,7 +305,89 @@ export default function GalleryGrid({ artworks, mode }: Props) {
     )
   }
 
-  // Uniform (default) — current minimal/atmospheric look
+  if (mode === 'cinematic') {
+    // Wide-aspect, large-tile layout for marine/sailing work: a 1–2 column
+    // grid of 3:2 landscape images shown big, edge-to-edge (radius/shadow come
+    // from the theme, which is 0/none for sailing), with a clean caption below.
+    return (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(560px, 1fr))',
+          gap: 40,
+          marginTop: 32,
+        }}
+      >
+        {artworks.map((a, i) => {
+          const isAboveFold = i < 2
+          const edition = editionStateFor(a)
+          return (
+            <Link
+              key={a.id}
+              href={`/artwork/${a.slug}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  aspectRatio: '3 / 2',
+                  background:
+                    'linear-gradient(135deg, #dfe6e8 0%, #c7d2d6 100%)',
+                  borderRadius: 'var(--image-radius)',
+                  overflow: 'hidden',
+                }}
+              >
+                {a.imageUrl ? (
+                  <Image
+                    src={a.imageUrl}
+                    alt={a.title ?? ''}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    style={{ objectFit: 'cover' }}
+                    priority={isAboveFold}
+                  />
+                ) : null}
+                <EditionMarker state={edition} />
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  marginTop: 12,
+                  gap: 12,
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '1.05rem',
+                    fontWeight: 500,
+                    margin: 0,
+                    overflowWrap: 'anywhere',
+                  }}
+                >
+                  {a.title}
+                </h3>
+                {a.location ? (
+                  <span
+                    style={{
+                      fontSize: '0.8rem',
+                      color: 'var(--color-secondary)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {a.location}
+                  </span>
+                ) : null}
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Uniform (default) — gallery-wall look used by the fine-art preset
   return (
     <div
       style={{

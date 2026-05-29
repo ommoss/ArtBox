@@ -2,9 +2,10 @@
 // CSS variable so the builder visually matches whichever artist theme preset
 // is active (see apps/artist-template/src/lib/themes.ts).
 //
-// The fallback values match the `minimal` preset so the component renders
+// The fallback values are a neutral light default so the component renders
 // reasonably when mounted in a context without theme vars (e.g. the
-// fulfillment-platform admin preview iframe).
+// fulfillment-platform admin preview iframe). They intentionally do not track
+// the default site preset — the iframe is theme-agnostic chrome.
 export const TOKENS = {
   // Colors
   primary: 'var(--color-primary, #1a1a1a)',
