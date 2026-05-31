@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 
 import HeroCarousel from '@/components/HeroCarousel'
+import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import { getArtistBrand } from '@/lib/artist-config'
 import { getTheme } from '@/lib/themes'
 
@@ -73,9 +74,40 @@ export default async function HomePage() {
       .filter((s) => s.imageUrl)
   }
 
+  // Globe layout (travel) pins each gallery at its coordinates. Galleries
+  // without lat/lng are skipped on the globe but still appear in the grid below.
+  const globePins: GalleryPin[] =
+    theme.homeLayout === 'globe'
+      ? galleries.docs
+          .map(
+            (g) =>
+              g as {
+                slug?: string
+                name?: string
+                lat?: number | null
+                lng?: number | null
+                coverImageUrl?: string | null
+              },
+          )
+          .filter((gx) => typeof gx.lat === 'number' && typeof gx.lng === 'number' && !!gx.slug)
+          .map((gx) => ({
+            slug: gx.slug as string,
+            name: gx.name ?? '',
+            lat: gx.lat as number,
+            lng: gx.lng as number,
+            coverImageUrl: gx.coverImageUrl ?? null,
+          }))
+      : []
+
   return (
     <div>
-      {theme.homeLayout === 'carousel' && carouselSlides.length > 0 ? (
+      {theme.homeLayout === 'globe' && globePins.length > 0 ? (
+        <GlobeHome
+          galleries={globePins}
+          accent={theme.colorAccent}
+          atmosphere={theme.colorAccent}
+        />
+      ) : theme.homeLayout === 'carousel' && carouselSlides.length > 0 ? (
         <HeroCarousel
           slides={carouselSlides}
           artistName={brand.artistName}

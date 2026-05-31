@@ -53,14 +53,16 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
 
   if (!gallery) notFound()
 
+  const theme = getTheme()
+
   const artworks = await payload.find({
     collection: 'artworks',
     where: {
       and: [{ gallery: { equals: gallery.id } }, { isPublished: { equals: true } }],
     },
-    // Featured first, then sortOrder. Floats featured pieces into the
-    // magazine grid's 2×2 feature slots when the theme uses that mode.
-    sort: ['-isFeatured', 'sortOrder'],
+    // The route map (travel) is a journey, so it follows sortOrder strictly.
+    // Other modes float featured pieces first (e.g. the magazine 2×2 slots).
+    sort: theme.galleryGridMode === 'route' ? 'sortOrder' : ['-isFeatured', 'sortOrder'],
     limit: PER_PAGE,
     page,
     depth: 1,
@@ -69,7 +71,6 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
   const totalPages = artworks.totalPages || 1
   const hasPrev = page > 1
   const hasNext = page < totalPages
-  const theme = getTheme()
 
   return (
     <section style={{ padding: '64px 32px', maxWidth: 1280, margin: '0 auto' }}>
@@ -100,12 +101,15 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
             year: a.year as number | null | undefined,
             location: a.location as string | null | undefined,
             description: a.description as string | null | undefined,
+            lat: a.lat as number | null | undefined,
+            lng: a.lng as number | null | undefined,
             isLimitedEdition: ax.isLimitedEdition,
             editionSize: ax.editionSize,
             editionsRemaining: ax.editionsRemaining,
           }
         })}
         mode={theme.galleryGridMode}
+        accent={theme.colorAccent}
       />
 
       {totalPages > 1 ? (

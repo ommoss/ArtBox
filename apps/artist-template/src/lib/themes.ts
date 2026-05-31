@@ -4,13 +4,14 @@
 // (artist name, tagline, brand colors) come from other NEXT_PUBLIC_* vars.
 
 export type HeaderLayout = 'split' | 'centered' | 'sidebar'
-export type HomeLayout = 'centered' | 'hero' | 'carousel'
+export type HomeLayout = 'centered' | 'hero' | 'carousel' | 'globe'
 export type GalleryGridMode =
   | 'uniform'
   | 'magazine'
   | 'album'
   | 'cinematic'
   | 'solo'
+  | 'route'
 export type ArtworkLayout = 'stacked' | 'asymmetric'
 
 export type Theme = {
@@ -148,8 +149,11 @@ const art: ThemePreset = {
 }
 
 // Travel photography (was "warm"): sun-warmed, journal/album feel with a paper
-// grain, organized by destination. The warm base already fits travel well, so
-// this is a light touch — only the accent warms toward a sunset terracotta.
+// grain, organized by destination. Distinctive home + gallery treatment: the
+// home is an interactive globe with each trip pinned at its real coordinates
+// (homeLayout 'globe'); inside a gallery the photos are plotted on a mini-map
+// joined by a dashed route (galleryGridMode 'route'). Both fall back gracefully
+// when coordinates or JS are absent.
 const travel: ThemePreset = {
   preset: 'travel',
   colorPrimary: '#3d2f23',
@@ -168,8 +172,8 @@ const travel: ThemePreset = {
   imageRadius: '6px',
   imageShadow: '0 12px 28px rgba(61,47,35,0.14)',
   headerLayout: 'sidebar',
-  homeLayout: 'centered',
-  galleryGridMode: 'album',
+  homeLayout: 'globe',
+  galleryGridMode: 'route',
   artworkLayout: 'stacked',
   // Subtle paper-grain texture using inline SVG noise — no external asset
   // needed. Renders as a low-contrast overlay so warm tones stay warm.

@@ -40,6 +40,21 @@ export const Galleries: CollectionConfig = {
         description: 'External cover image URL. Used if no upload is selected.',
       },
     },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'lat',
+          type: 'number',
+          admin: { description: 'Latitude. Used by the travel theme to place this gallery on the globe.' },
+        },
+        {
+          name: 'lng',
+          type: 'number',
+          admin: { description: 'Longitude. Used by the travel theme to place this gallery on the globe.' },
+        },
+      ],
+    },
     { name: 'sortOrder', type: 'number', defaultValue: 0 },
     { name: 'isPublished', type: 'checkbox', defaultValue: true },
   ],

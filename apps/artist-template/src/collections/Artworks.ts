@@ -82,6 +82,21 @@ export const Artworks: CollectionConfig = {
       },
     },
     {
+      type: 'row',
+      fields: [
+        {
+          name: 'lat',
+          type: 'number',
+          admin: { description: 'Latitude. Used by the travel theme to plot this photo on the gallery route map.' },
+        },
+        {
+          name: 'lng',
+          type: 'number',
+          admin: { description: 'Longitude. Used by the travel theme to plot this photo on the gallery route map.' },
+        },
+      ],
+    },
+    {
       type: 'collapsible',
       label: 'Limited edition',
       fields: [

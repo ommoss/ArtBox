@@ -1,7 +1,19 @@
+import { geoMercator, geoPath } from 'd3-geo'
 import Image from 'next/image'
 import Link from 'next/link'
+import { feature } from 'topojson-client'
+import worldTopo from 'world-atlas/countries-110m.json'
 
 import type { GalleryGridMode } from '@/lib/themes'
+
+// World land geometry for the travel route basemap, decoded once at module
+// load. Server-only (this is a server component) so the topojson itself never
+// ships to the client — only the small projected SVG path string does.
+const WORLD_LAND = feature(
+  worldTopo as unknown as Parameters<typeof feature>[0],
+  (worldTopo as unknown as { objects: { countries: Parameters<typeof feature>[1] } }).objects
+    .countries,
+) as unknown as GeoJSON.FeatureCollection
 
 type Artwork = {
   id: string | number
@@ -11,6 +23,8 @@ type Artwork = {
   year?: number | null
   location?: string | null
   description?: string | null
+  lat?: number | null
+  lng?: number | null
   isLimitedEdition?: boolean | null
   editionSize?: number | null
   editionsRemaining?: number | null
@@ -19,6 +33,9 @@ type Artwork = {
 type Props = {
   artworks: Artwork[]
   mode: GalleryGridMode
+  // Literal accent colour for the route map's SVG (presentation attributes
+  // don't resolve CSS var()). Falls back to currentColor.
+  accent?: string
 }
 
 type EditionState =
@@ -120,7 +137,7 @@ function magazineSpan(i: number): { col: number; row: number } {
   return { col: 1, row: 1 }
 }
 
-export default function GalleryGrid({ artworks, mode }: Props) {
+export default function GalleryGrid({ artworks, mode, accent }: Props) {
   if (mode === 'solo') {
     // One piece per row at its native aspect ratio, with the piece's story
     // beside it; rows alternate sides on desktop and stack on mobile. Native
@@ -133,12 +150,23 @@ export default function GalleryGrid({ artworks, mode }: Props) {
           .gg-solo { display: flex; flex-direction: column; gap: 96px; margin-top: 56px; }
           .gg-solo-row { display: flex; flex-direction: column; gap: 24px; }
           .gg-solo-text { align-self: center; }
+          .gg-solo-media { display: flex; justify-content: center; }
+          /* Cap on both axes so tall/large pieces never overrun the column or
+             the viewport; width:auto keeps aspect ratio true (no squish). */
+          .gg-solo-img {
+            display: block;
+            width: auto; height: auto;
+            max-width: 100%; max-height: 68vh;
+            border-radius: var(--image-radius);
+            box-shadow: var(--image-shadow);
+          }
           @media (min-width: 860px) {
             .gg-solo { gap: 128px; }
             .gg-solo-row { flex-direction: row; gap: 64px; align-items: center; }
             .gg-solo-row--flip { flex-direction: row-reverse; }
             .gg-solo-media { flex: 1 1 58%; min-width: 0; }
             .gg-solo-text { flex: 1 1 42%; }
+            .gg-solo-img { max-height: 80vh; }
           }
         `}</style>
         <div className="gg-solo">
@@ -164,17 +192,11 @@ export default function GalleryGrid({ artworks, mode }: Props) {
                   {a.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
+                      className="gg-solo-img"
                       src={a.imageUrl}
                       alt={a.title ?? ''}
                       loading={i < 1 ? 'eager' : 'lazy'}
                       decoding="async"
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: 'var(--image-radius)',
-                        boxShadow: 'var(--image-shadow)',
-                      }}
                     />
                   ) : null}
                 </div>
@@ -229,6 +251,145 @@ export default function GalleryGrid({ artworks, mode }: Props) {
                     View print →
                   </span>
                 </div>
+              </Link>
+            )
+          })}
+        </div>
+      </>
+    )
+  }
+
+  if (mode === 'route') {
+    // Travel: plot the gallery's photos on a real map (land/sea coastlines from
+    // world-atlas, projected with d3-geo) joined by a dashed route in shot
+    // order, then the photos below numbered to match. Server-rendered SVG, no
+    // client JS. The projection fits the trip's own bounds, so wide trips reveal
+    // coastline and tight ones sit on a patch of land.
+    const geo = artworks.filter(
+      (a) => typeof a.lat === 'number' && typeof a.lng === 'number',
+    )
+    const W = 800
+    const H = 380
+    const PAD = 30
+    let routeMap: { land: string; route: string; pts: { x: number; y: number; n: number }[] } | null = null
+    if (geo.length >= 1) {
+      const lats = geo.map((a) => a.lat as number)
+      const lngs = geo.map((a) => a.lng as number)
+      let minLat = Math.min(...lats)
+      let maxLat = Math.max(...lats)
+      let minLng = Math.min(...lngs)
+      let maxLng = Math.max(...lngs)
+      // Pad proportionally so the route fills the frame; a floor handles a
+      // single point or an all-in-one-spot trip.
+      const padLat = (maxLat - minLat) * 0.25 || 0.06
+      const padLng = (maxLng - minLng) * 0.25 || 0.06
+      minLat -= padLat
+      maxLat += padLat
+      minLng -= padLng
+      maxLng += padLng
+      // Fit to a MultiPoint of the padded corners, NOT a Polygon: a Polygon
+      // ring with the wrong winding is read by d3 as "everything except this
+      // box" and fits the whole globe (scale collapses). MultiPoint has no
+      // winding, so the bounding box fits correctly.
+      const fitObject: GeoJSON.MultiPoint = {
+        type: 'MultiPoint',
+        coordinates: [
+          [minLng, minLat],
+          [maxLng, maxLat],
+        ],
+      }
+      const projection = geoMercator().fitExtent([[PAD, PAD], [W - PAD, H - PAD]], fitObject)
+      projection.clipExtent([[0, 0], [W, H]])
+      const toPath = geoPath(projection)
+      const land = toPath(WORLD_LAND) || ''
+      const pts = geo.map((a, i) => {
+        const xy = projection([a.lng as number, a.lat as number])
+        return { x: xy ? xy[0] : 0, y: xy ? xy[1] : 0, n: i + 1 }
+      })
+      const route = pts
+        .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+        .join(' ')
+      routeMap = { land, route, pts }
+    }
+    const routeAccent = accent || 'currentColor'
+    return (
+      <>
+        <style>{`
+          .gg-route-map { width: 100%; aspect-ratio: 800 / 380; border: 1px solid var(--color-border); border-radius: var(--image-radius); margin: 24px 0 40px; display: block; overflow: hidden; }
+          .gg-route-sea { fill: #cddde2; }
+          .gg-route-land { fill: #efe6d4; stroke: rgba(90,70,50,0.30); stroke-width: 0.6; stroke-linejoin: round; }
+          .gg-route-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 24px; }
+          .gg-route-badge { position: absolute; top: 10px; left: 10px; width: 26px; height: 26px; border-radius: 999px; background: var(--color-accent); color: #fff; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+        `}</style>
+        {routeMap ? (
+          <svg
+            className="gg-route-map"
+            viewBox={`0 0 ${W} ${H}`}
+            role="img"
+            aria-label="Map of this gallery's route"
+          >
+            <rect x={0} y={0} width={W} height={H} className="gg-route-sea" />
+            {routeMap.land ? <path className="gg-route-land" d={routeMap.land} /> : null}
+            {routeMap.pts.length >= 2 ? (
+              <path
+                d={routeMap.route}
+                fill="none"
+                stroke={routeAccent}
+                strokeWidth={2.5}
+                strokeDasharray="7 6"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                opacity={0.9}
+              />
+            ) : null}
+            {routeMap.pts.map((p) => (
+              <g key={p.n}>
+                <circle cx={p.x} cy={p.y} r={12} fill={routeAccent} stroke="#fff" strokeWidth={1.5} />
+                <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
+                  {p.n}
+                </text>
+              </g>
+            ))}
+          </svg>
+        ) : null}
+        <div className="gg-route-grid">
+          {artworks.map((a, i) => {
+            const isAboveFold = i < 4
+            return (
+              <Link
+                key={a.id}
+                href={`/artwork/${a.slug}`}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '4 / 3',
+                    background: 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
+                    borderRadius: 'var(--image-radius)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {a.imageUrl ? (
+                    <Image
+                      src={a.imageUrl}
+                      alt={a.title ?? ''}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      style={{ objectFit: 'cover' }}
+                      priority={isAboveFold}
+                    />
+                  ) : null}
+                  <span className="gg-route-badge">{i + 1}</span>
+                </div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 500, marginTop: 10, marginBottom: 0, overflowWrap: 'anywhere' }}>
+                  {a.title}
+                </h3>
+                {a.location ? (
+                  <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.85rem' }}>
+                    {a.location}
+                  </p>
+                ) : null}
               </Link>
             )
           })}

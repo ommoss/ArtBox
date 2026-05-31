@@ -21,17 +21,25 @@
     "@payloadcms/richtext-lexical": "latest",
     "@payloadcms/ui": "latest",
     "cross-env": "^7.0.3",
+    "d3-geo": "^3.1.1",
     "graphql": "^16.9.0",
     "next": "~15.4.11",
     "payload": "latest",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sharp": "^0.33.5"
+    "react-globe.gl": "^2.38.0",
+    "sharp": "^0.33.5",
+    "three": "^0.169.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.169.0",
+    "@types/topojson-client": "^3.1.5",
     "typescript": "^5.7.0"
   }
 }
