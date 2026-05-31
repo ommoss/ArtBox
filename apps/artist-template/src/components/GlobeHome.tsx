@@ -117,17 +117,18 @@ export default function GlobeHome({
     cfg()
   }, [])
 
-  // A ball-head map pin built along +Y: a thin stem and a larger sphere head.
-  // The objects layer's objectFacesSurface orients local +Y radially outward,
-  // so the pin stands up on the globe. Unlit materials so it shows regardless
-  // of scene lighting.
+  // A ball-head map pin built along +Z. The objects layer's objectFacesSurface
+  // orients local +Z radially outward (verified against three-globe's rotation:
+  // local +Z maps to the surface normal), so a +Z pin stands up off the globe.
+  // Unlit materials so it shows regardless of scene lighting.
   const buildPin = useCallback(() => {
     const group = new THREE.Group()
     const stemGeo = new THREE.CylinderGeometry(0.55, 0.55, 8, 12)
-    stemGeo.translate(0, 4, 0)
+    stemGeo.rotateX(Math.PI / 2) // cylinder axis Y -> Z
+    stemGeo.translate(0, 0, 4) // base at surface, extends outward
     const stem = new THREE.Mesh(stemGeo, new THREE.MeshBasicMaterial({ color: '#dcdcdc' }))
     const headGeo = new THREE.SphereGeometry(2.8, 20, 20)
-    headGeo.translate(0, 9, 0)
+    headGeo.translate(0, 0, 9)
     const head = new THREE.Mesh(headGeo, new THREE.MeshBasicMaterial({ color: accent }))
     group.add(stem, head)
     return group

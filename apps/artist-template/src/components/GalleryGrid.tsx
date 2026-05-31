@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { feature } from 'topojson-client'
 import worldTopo from 'world-atlas/countries-110m.json'
 
+import { RouteDecor, regionForCoords, type MapRegion } from './route-map-decor'
 import type { GalleryGridMode } from '@/lib/themes'
 
 // World land geometry for the travel route basemap, decoded once at module
@@ -271,7 +272,12 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
     const W = 800
     const H = 380
     const PAD = 30
-    let routeMap: { land: string; route: string; pts: { x: number; y: number; n: number }[] } | null = null
+    let routeMap: {
+      land: string
+      route: string
+      pts: { x: number; y: number; n: number }[]
+      region: MapRegion
+    } | null = null
     if (geo.length >= 1) {
       const lats = geo.map((a) => a.lat as number)
       const lngs = geo.map((a) => a.lng as number)
@@ -309,15 +315,19 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
       const route = pts
         .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
         .join(' ')
-      routeMap = { land, route, pts }
+      const region = regionForCoords(
+        lats.reduce((s, v) => s + v, 0) / lats.length,
+        lngs.reduce((s, v) => s + v, 0) / lngs.length,
+      )
+      routeMap = { land, route, pts, region }
     }
     const routeAccent = accent || 'currentColor'
     return (
       <>
         <style>{`
           .gg-route-map { width: 100%; aspect-ratio: 800 / 380; border: 1px solid var(--color-border); border-radius: var(--image-radius); margin: 24px 0 40px; display: block; overflow: hidden; }
-          .gg-route-sea { fill: #cddde2; }
-          .gg-route-land { fill: #efe6d4; stroke: rgba(90,70,50,0.30); stroke-width: 0.6; stroke-linejoin: round; }
+          .gg-route-sea { fill: #c0cabb; }
+          .gg-route-land { fill: #e7d7b0; stroke: #6b5538; stroke-opacity: 0.5; stroke-width: 0.8; stroke-linejoin: round; }
           .gg-route-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 24px; }
           .gg-route-badge { position: absolute; top: 10px; left: 10px; width: 26px; height: 26px; border-radius: 999px; background: var(--color-accent); color: #fff; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
         `}</style>
@@ -326,10 +336,20 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
             className="gg-route-map"
             viewBox={`0 0 ${W} ${H}`}
             role="img"
-            aria-label="Map of this gallery's route"
+            aria-label="Antique map of this gallery's route"
           >
+            <defs>
+              <filter id="rmPaper" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n" />
+                <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.2  0 0 0 0.5 0" />
+              </filter>
+            </defs>
             <rect x={0} y={0} width={W} height={H} className="gg-route-sea" />
             {routeMap.land ? <path className="gg-route-land" d={routeMap.land} /> : null}
+            {/* aged paper grain over land + sea */}
+            <rect x={0} y={0} width={W} height={H} filter="url(#rmPaper)" opacity={0.12} />
+            {/* region-themed antique motifs (sea serpents, galleons, wind-faces…) */}
+            <RouteDecor region={routeMap.region} w={W} h={H} />
             {routeMap.pts.length >= 2 ? (
               <path
                 d={routeMap.route}
@@ -339,17 +359,20 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
                 strokeDasharray="7 6"
                 strokeLinejoin="round"
                 strokeLinecap="round"
-                opacity={0.9}
+                opacity={0.92}
               />
             ) : null}
             {routeMap.pts.map((p) => (
               <g key={p.n}>
-                <circle cx={p.x} cy={p.y} r={12} fill={routeAccent} stroke="#fff" strokeWidth={1.5} />
+                <circle cx={p.x} cy={p.y} r={12} fill={routeAccent} stroke="#f3ead2" strokeWidth={1.8} />
                 <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
                   {p.n}
                 </text>
               </g>
             ))}
+            {/* double frame border */}
+            <rect x={6} y={6} width={W - 12} height={H - 12} fill="none" stroke="#6b5538" strokeOpacity={0.5} strokeWidth={1.5} />
+            <rect x={11} y={11} width={W - 22} height={H - 22} fill="none" stroke="#6b5538" strokeOpacity={0.3} strokeWidth={0.6} />
           </svg>
         ) : null}
         <div className="gg-route-grid">
