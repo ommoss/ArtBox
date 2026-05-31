@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import * as THREE from 'three'
 
 // Interactive 3D globe home for the travel preset. Each trip is a pin at its
 // real coordinates; hovering shows the gallery's cover, clicking opens it (or a
@@ -116,6 +117,22 @@ export default function GlobeHome({
     cfg()
   }, [])
 
+  // A ball-head map pin built along +Y: a thin stem and a larger sphere head.
+  // The objects layer's objectFacesSurface orients local +Y radially outward,
+  // so the pin stands up on the globe. Unlit materials so it shows regardless
+  // of scene lighting.
+  const buildPin = useCallback(() => {
+    const group = new THREE.Group()
+    const stemGeo = new THREE.CylinderGeometry(0.55, 0.55, 8, 12)
+    stemGeo.translate(0, 4, 0)
+    const stem = new THREE.Mesh(stemGeo, new THREE.MeshBasicMaterial({ color: '#dcdcdc' }))
+    const headGeo = new THREE.SphereGeometry(2.8, 20, 20)
+    headGeo.translate(0, 9, 0)
+    const head = new THREE.Mesh(headGeo, new THREE.MeshBasicMaterial({ color: accent }))
+    group.add(stem, head)
+    return group
+  }, [accent])
+
   return (
     <section
       ref={wrapRef}
@@ -132,15 +149,13 @@ export default function GlobeHome({
           showAtmosphere
           atmosphereColor={atmosphere}
           atmosphereAltitude={0.18}
-          pointsData={clusters as unknown as object[]}
-          pointLat={(d: object) => (d as Cluster).lat}
-          pointLng={(d: object) => (d as Cluster).lng}
-          pointColor={() => accent}
-          pointAltitude={0.12}
-          pointRadius={1.6}
-          pointResolution={24}
-          pointsMerge={false}
-          pointLabel={(d: object) => {
+          objectsData={clusters as unknown as object[]}
+          objectLat={(d: object) => (d as Cluster).lat}
+          objectLng={(d: object) => (d as Cluster).lng}
+          objectAltitude={0}
+          objectFacesSurface={true}
+          objectThreeObject={() => buildPin()}
+          objectLabel={(d: object) => {
             // Hover tooltip: the gallery's cover image (or a montage for a
             // cluster) plus its name.
             const c = d as Cluster
@@ -157,12 +172,12 @@ export default function GlobeHome({
               `</div>`
             )
           }}
-          onPointHover={(pt: object | null) => {
+          onObjectHover={(obj: object | null) => {
             // Pause auto-rotation while a pin is hovered.
             const controls = instanceRef.current?.controls?.()
-            if (controls) controls.autoRotate = !pt
+            if (controls) controls.autoRotate = !obj
           }}
-          onPointClick={(d: object) => {
+          onObjectClick={(d: object) => {
             const c = d as Cluster
             if (c.galleries.length === 1) router.push(`/gallery/${c.galleries[0].slug}`)
             else setActive(c)
