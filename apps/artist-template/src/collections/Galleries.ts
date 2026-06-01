@@ -41,6 +41,14 @@ export const Galleries: CollectionConfig = {
       },
     },
     {
+      name: 'mapImageUrl',
+      type: 'text',
+      admin: {
+        description:
+          'Optional AI-generated antique map image, used as the travel route backdrop. Falls back to the drawn coastline map when empty.',
+      },
+    },
+    {
       type: 'row',
       fields: [
         {

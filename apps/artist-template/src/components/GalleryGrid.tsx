@@ -37,6 +37,9 @@ type Props = {
   // Literal accent colour for the route map's SVG (presentation attributes
   // don't resolve CSS var()). Falls back to currentColor.
   accent?: string
+  // Optional AI-generated antique map image. When set, it becomes the route
+  // map's backdrop (route overlaid); otherwise the drawn d3 coastline map is used.
+  mapImageUrl?: string
 }
 
 type EditionState =
@@ -138,7 +141,7 @@ function magazineSpan(i: number): { col: number; row: number } {
   return { col: 1, row: 1 }
 }
 
-export default function GalleryGrid({ artworks, mode, accent }: Props) {
+export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Props) {
   if (mode === 'solo') {
     // One piece per row at its native aspect ratio, with the piece's story
     // beside it; rows alternate sides on desktop and stack on mobile. Native
@@ -307,7 +310,8 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
       const projection = geoMercator().fitExtent([[PAD, PAD], [W - PAD, H - PAD]], fitObject)
       projection.clipExtent([[0, 0], [W, H]])
       const toPath = geoPath(projection)
-      const land = toPath(WORLD_LAND) || ''
+      // Skip the world-land path when an AI map image will be the backdrop.
+      const land = mapImageUrl ? '' : toPath(WORLD_LAND) || ''
       const pts = geo.map((a, i) => {
         const xy = projection([a.lng as number, a.lat as number])
         return { x: xy ? xy[0] : 0, y: xy ? xy[1] : 0, n: i + 1 }
@@ -344,12 +348,26 @@ export default function GalleryGrid({ artworks, mode, accent }: Props) {
                 <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.2  0 0 0 0.5 0" />
               </filter>
             </defs>
-            <rect x={0} y={0} width={W} height={H} className="gg-route-sea" />
-            {routeMap.land ? <path className="gg-route-land" d={routeMap.land} /> : null}
-            {/* aged paper grain over land + sea */}
-            <rect x={0} y={0} width={W} height={H} filter="url(#rmPaper)" opacity={0.12} />
-            {/* region-themed antique motifs (sea serpents, galleons, wind-faces…) */}
-            <RouteDecor region={routeMap.region} w={W} h={H} />
+            {mapImageUrl ? (
+              // AI-generated antique map fills the frame; route overlays on top.
+              <image
+                href={mapImageUrl}
+                x={0}
+                y={0}
+                width={W}
+                height={H}
+                preserveAspectRatio="xMidYMid slice"
+              />
+            ) : (
+              <>
+                <rect x={0} y={0} width={W} height={H} className="gg-route-sea" />
+                {routeMap.land ? <path className="gg-route-land" d={routeMap.land} /> : null}
+                {/* aged paper grain over land + sea */}
+                <rect x={0} y={0} width={W} height={H} filter="url(#rmPaper)" opacity={0.12} />
+                {/* region-themed antique motifs (sea serpents, galleons, wind-faces…) */}
+                <RouteDecor region={routeMap.region} w={W} h={H} />
+              </>
+            )}
             {routeMap.pts.length >= 2 ? (
               <path
                 d={routeMap.route}

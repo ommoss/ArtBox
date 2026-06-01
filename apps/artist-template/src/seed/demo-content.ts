@@ -39,6 +39,7 @@ type GallerySeed = {
   name: string
   description: string
   coverImageUrl: string
+  mapImageUrl?: string
   sortOrder: number
   // Optional geo coordinates — used by the travel preset's globe home to place
   // each gallery as a pin. Other presets leave these unset.
@@ -1903,6 +1904,7 @@ export async function seedDemoContent(payload: Payload) {
           name: g.name,
           description: g.description,
           coverImageUrl: g.coverImageUrl,
+          mapImageUrl: g.mapImageUrl,
           sortOrder: g.sortOrder,
           isPublished: true,
           lat: g.lat,
@@ -1918,6 +1920,7 @@ export async function seedDemoContent(payload: Payload) {
         name: g.name,
         description: g.description,
         coverImageUrl: g.coverImageUrl,
+        mapImageUrl: g.mapImageUrl,
         sortOrder: g.sortOrder,
         isPublished: true,
         lat: g.lat,

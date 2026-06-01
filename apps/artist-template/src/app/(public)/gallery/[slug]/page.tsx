@@ -110,6 +110,7 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
         })}
         mode={theme.galleryGridMode}
         accent={theme.colorAccent}
+        mapImageUrl={(gallery as { mapImageUrl?: string | null }).mapImageUrl ?? undefined}
       />
 
       {totalPages > 1 ? (
