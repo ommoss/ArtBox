@@ -1884,6 +1884,27 @@ async function seedVolumeArtworks(
 
 export async function seedDemoContent(payload: Payload) {
   const { galleries, artworks } = contentSetForTheme()
+
+  // Safety: if the database already holds galleries and NONE of them belong to
+  // this theme's content set, it's another preset's database — bail out rather
+  // than pollute it. This is what stops `NEXT_PUBLIC_THEME=travel pnpm dev`
+  // (run without overriding DATABASE_URI) from seeding travel galleries into
+  // the sailing DB. Re-seeding the same theme, or seeding an empty DB, proceeds.
+  const mySlugs = new Set(galleries.map((g) => g.slug))
+  const existing = await payload.find({ collection: 'galleries', limit: 100, depth: 0 })
+  if (
+    existing.docs.length > 0 &&
+    !existing.docs.some((g) => mySlugs.has(g.slug as string))
+  ) {
+    console.warn(
+      `[seed] Skipped: the database already contains galleries from a different preset ` +
+        `(${existing.docs.map((g) => g.slug).join(', ')}), not the ` +
+        `'${(process.env.NEXT_PUBLIC_THEME || 'sailing').toLowerCase()}' set. ` +
+        `Point DATABASE_URI at the right branch or clear it before seeding.`,
+    )
+    return
+  }
+
   const galleryIdBySlug = new Map<string, number>()
 
   for (const g of galleries) {
