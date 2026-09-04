@@ -79,7 +79,18 @@ export default async function ArtworkDetail({ params }: Args) {
       </Link>
 
       <header style={{ marginTop: 16, marginBottom: 32 }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 500, marginBottom: 6, overflowWrap: 'anywhere' }}>{artwork.title}</h1>
+        <h1
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--weight-heading)' as unknown as number,
+            letterSpacing: 'var(--tracking-heading)',
+            fontSize: '1.8rem',
+            marginBottom: 6,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {artwork.title}
+        </h1>
         <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem' }}>
           {[artwork.year, artwork.location].filter(Boolean).join(' · ')}
         </p>
@@ -111,6 +122,19 @@ export default async function ArtworkDetail({ params }: Args) {
       ) : (
         <p style={{ color: 'var(--color-secondary)' }}>This artwork has no image attached.</p>
       )}
+
+      {/* Secondary path for buyers who won't commit from a configurator alone
+          (the large-format sellers all pair "add to cart" with a human). */}
+      <p style={{ marginTop: 20, fontSize: '0.9rem', color: 'var(--color-secondary)' }}>
+        Not sure about size or framing?{' '}
+        <Link
+          href={`/contact?subject=${encodeURIComponent(`Question about "${artwork.title}"`)}`}
+          style={{ color: 'var(--color-primary)', textDecoration: 'none', borderBottom: '1px solid var(--color-border)' }}
+        >
+          Ask about this piece
+        </Link>
+        {' '}and we&apos;ll come back with a recommendation.
+      </p>
     </section>
   )
 }
@@ -140,7 +164,7 @@ function EditionBadge({
         textTransform: 'uppercase',
         letterSpacing: 1.2,
         fontWeight: 500,
-        borderRadius: 2,
+        borderRadius: 'var(--image-radius)',
       }}
     >
       {isSoldOut
@@ -155,12 +179,12 @@ function FulfillmentNotConfiguredBanner() {
     <div
       style={{
         padding: 16,
-        background: '#fff7e6',
-        border: '1px solid #f1c97e',
-        borderRadius: 4,
+        background: 'color-mix(in srgb, var(--color-accent) 12%, var(--color-surface))',
+        border: '1px solid color-mix(in srgb, var(--color-accent) 45%, transparent)',
+        borderRadius: 'var(--control-radius)',
         marginBottom: 24,
         fontSize: '0.9rem',
-        color: '#7a5a14',
+        color: 'var(--color-primary)',
       }}
     >
       <strong>Builder not connected.</strong> Set{' '}

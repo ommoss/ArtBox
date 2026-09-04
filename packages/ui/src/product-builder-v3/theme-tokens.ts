@@ -1,4 +1,4 @@
-// Theme tokens consumed by V2 builder. Every visible property derives from a
+// Theme tokens consumed by the V3 builder. Every visible property derives from a
 // CSS variable so the builder visually matches whichever artist theme preset
 // is active (see apps/artist-template/src/lib/themes.ts).
 //
@@ -26,6 +26,11 @@ export const TOKENS = {
   // thumbnails on the host site.
   imageRadius: 'var(--image-radius, 4px)',
   imageShadow: 'var(--image-shadow, 0 8px 24px rgba(0,0,0,0.06))',
+
+  // Corner radius for interactive controls (buttons, cards, inputs). Pills
+  // (999px) and circles stay as-is; this is for the rectangular controls
+  // so a sharp-cornered art theme doesn't get rounded buttons.
+  controlRadius: 'var(--control-radius, 4px)',
 
   // Spacing
   pagePadding: 'var(--page-padding, 32px)',

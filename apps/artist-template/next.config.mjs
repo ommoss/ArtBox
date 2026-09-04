@@ -2,6 +2,9 @@ import { withPayload } from '@payloadcms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Lets a second local dev server (another theme + database branch) run
+  // alongside the first without the two corrupting one shared .next cache.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   transpilePackages: ['@artbox/ui', '@artbox/types'],
   images: {
     remotePatterns: [

@@ -2,13 +2,28 @@
 
 import * as React from 'react'
 
-import { Canvas, useLoader } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { SRGBColorSpace, type Texture, TextureLoader } from 'three'
+import type { Texture } from 'three'
 
 import { TOKENS } from '../../theme-tokens'
-import type { SelectionMap, V2Option, V2Template } from '../../types'
 import type { RendererProps } from '../types'
+
+import {
+  CameraRig,
+  CANVAS_PROPS,
+  FOV_DEG,
+  ORBIT_LIMITS,
+  SCENE_UNITS_PER_INCH,
+  SceneLighting,
+  canvasPx,
+  coverCrop,
+  findSizeSelection,
+  fitCameraZ,
+  useArtworkTexture,
+  useMaxAnisotropy,
+  usePrintTexture,
+} from './scene-shared'
 
 // 3D canvas-wrap scene. The print is the front face of a box-like canvas
 // stretched on wooden stretcher bars; the 4 side edges show the wrap
@@ -17,7 +32,7 @@ import type { RendererProps } from '../types'
 // Implementation: 5 plane meshes — front + 4 edges — composed into a box.
 // Avoids BoxGeometry's UV gymnastics for the edge-wrap variations.
 
-const SCENE_UNITS_PER_INCH = 1 / 20
+type WrapMode = 'gallery' | 'mirror' | 'solid'
 
 export default function CanvasScene({
   template,
@@ -33,35 +48,24 @@ export default function CanvasScene({
   const edgeColorOpt = selections['canvas-edge-color']
 
   const depthIn = stretcher?.value === '1.5in' ? 1.5 : 0.75
-  const wrapMode = (wrap?.value ?? 'gallery') as 'gallery' | 'mirror' | 'solid'
+  const wrapMode = (wrap?.value ?? 'gallery') as WrapMode
   const edgeColor = edgeColorOpt?.swatchColor ?? '#1a2840'
 
-  const canvasW = Math.min(680, Math.max(540, Math.round(widthIn * 22)))
-  const canvasH = Math.min(680, Math.max(540, Math.round(heightIn * 22)))
+  const { canvasW, canvasH } = canvasPx(widthIn, heightIn)
+  const cameraZ = fitCameraZ(
+    widthIn * SCENE_UNITS_PER_INCH,
+    heightIn * SCENE_UNITS_PER_INCH,
+    canvasW,
+    canvasH,
+  )
 
-  // Camera distance: default to z=1.8 (matches FramedScene), back off when
-  // the canvas piece (print + side wrap) exceeds the default's framing.
-  const DEFAULT_Z = 1.8
-  const FOV_DEG = 50
-  const printWUnits = widthIn * SCENE_UNITS_PER_INCH
-  const printHUnits = heightIn * SCENE_UNITS_PER_INCH
-  const depthUnits = depthIn * SCENE_UNITS_PER_INCH
-  const halfFovRad = (FOV_DEG / 2) * (Math.PI / 180)
-  const aspect = canvasW / canvasH
-  const MARGIN = 1.3
-  const zFitH = (printHUnits * MARGIN) / (2 * Math.tan(halfFovRad))
-  const zFitW = (printWUnits * MARGIN) / (2 * Math.tan(halfFovRad) * aspect)
-  const cameraZ = Math.max(DEFAULT_Z, zFitH, zFitW)
-
-  const texture = useLoader(TextureLoader, imageUrl)
-  React.useEffect(() => {
-    if (!texture) return
-    texture.colorSpace = SRGBColorSpace
-  }, [texture])
+  const texture = useArtworkTexture(imageUrl)
 
   React.useEffect(() => {
     onReady?.()
   }, [onReady])
+
+  const d = depthIn * SCENE_UNITS_PER_INCH
 
   return (
     <div
@@ -75,15 +79,9 @@ export default function CanvasScene({
         boxShadow: TOKENS.imageShadow,
       }}
     >
-      <Canvas
-        key={Math.round(cameraZ * 100)}
-        camera={{ position: [0, 0, cameraZ], fov: FOV_DEG }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <hemisphereLight args={['#ffffff', '#5a5a5a', 1.0]} />
-        <directionalLight position={[-3, 4, 5]} intensity={0.9} />
-        <ambientLight intensity={0.6} />
+      <Canvas {...CANVAS_PROPS} camera={{ position: [0, 0, cameraZ], fov: FOV_DEG }}>
+        <CameraRig z={cameraZ} />
+        <SceneLighting wallZ={-d / 2} />
 
         <CanvasPiece
           widthIn={widthIn}
@@ -94,19 +92,9 @@ export default function CanvasScene({
           edgeColor={edgeColor}
         />
 
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          // Expanded from ±15°/±30° → ±25°/±45° so the customer can rotate
-          // enough to see the canvas wrap on the side edges. Canvas
-          // especially benefits since the wrap variation is what the
-          // customer is comparing.
-          minPolarAngle={Math.PI / 2 - Math.PI / 7.2}
-          maxPolarAngle={Math.PI / 2 + Math.PI / 7.2}
-          minAzimuthAngle={-Math.PI / 4}
-          maxAzimuthAngle={Math.PI / 4}
-          rotateSpeed={0.5}
-        />
+        {/* Orbit range is wide enough (±45° azimuth) to see the wrap on the
+            side edges — that's what the customer is comparing here. */}
+        <OrbitControls {...ORBIT_LIMITS} />
       </Canvas>
     </div>
   )
@@ -124,33 +112,14 @@ function CanvasPiece({
   heightIn: number
   depthIn: number
   texture: Texture
-  wrapMode: 'gallery' | 'mirror' | 'solid'
+  wrapMode: WrapMode
   edgeColor: string
 }) {
   const w = widthIn * SCENE_UNITS_PER_INCH
   const h = heightIn * SCENE_UNITS_PER_INCH
   const d = depthIn * SCENE_UNITS_PER_INCH
 
-  // Cover-crop the print texture onto the front face.
-  React.useEffect(() => {
-    if (!texture) return
-    const img = texture.image as
-      | { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }
-      | undefined
-    const imgW = img?.naturalWidth ?? img?.width
-    const imgH = img?.naturalHeight ?? img?.height
-    if (!imgW || !imgH) return
-    const imgAspect = imgW / imgH
-    const planeAspect = w / h
-    if (imgAspect > planeAspect) {
-      texture.repeat.set(planeAspect / imgAspect, 1)
-      texture.offset.set((1 - planeAspect / imgAspect) / 2, 0)
-    } else {
-      texture.repeat.set(1, imgAspect / planeAspect)
-      texture.offset.set(0, (1 - imgAspect / planeAspect) / 2)
-    }
-    texture.needsUpdate = true
-  }, [texture, w, h])
+  usePrintTexture(texture, w, h)
 
   // Per-edge textures for gallery and mirror wraps. Each is a clone of the
   // print texture with repeat/offset set to show a thin strip from one
@@ -160,49 +129,46 @@ function CanvasPiece({
   // For solid wrap, edges use a flat material with the customer's chosen
   // edge color — no texture clone needed.
   const edgeTextures = useEdgeTextures(texture, w, h, d, wrapMode)
+  // Free the GPU copies when the clones are replaced or the piece unmounts.
+  React.useEffect(() => {
+    if (!edgeTextures) return
+    const clones = Object.values(edgeTextures)
+    return () => clones.forEach((t) => t.dispose())
+  }, [edgeTextures])
+
+  const edgeMaterial = (tex: Texture | undefined) =>
+    wrapMode === 'solid' || !tex ? (
+      <meshStandardMaterial color={edgeColor} roughness={0.85} />
+    ) : (
+      <meshBasicMaterial map={tex} />
+    )
 
   return (
     <group>
       {/* Front face — the print */}
-      <mesh position={[0, 0, d / 2]}>
+      <mesh position={[0, 0, d / 2]} castShadow>
         <planeGeometry args={[w, h]} />
         <meshBasicMaterial map={texture} />
       </mesh>
       {/* Top edge */}
-      <mesh position={[0, h / 2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, h / 2, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <planeGeometry args={[w, d]} />
-        {wrapMode === 'solid' || !edgeTextures ? (
-          <meshStandardMaterial color={edgeColor} roughness={0.85} />
-        ) : (
-          <meshBasicMaterial map={edgeTextures.top} />
-        )}
+        {edgeMaterial(edgeTextures?.top)}
       </mesh>
       {/* Bottom edge */}
-      <mesh position={[0, -h / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -h / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <planeGeometry args={[w, d]} />
-        {wrapMode === 'solid' || !edgeTextures ? (
-          <meshStandardMaterial color={edgeColor} roughness={0.85} />
-        ) : (
-          <meshBasicMaterial map={edgeTextures.bottom} />
-        )}
+        {edgeMaterial(edgeTextures?.bottom)}
       </mesh>
       {/* Left edge */}
-      <mesh position={[-w / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[-w / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]} castShadow>
         <planeGeometry args={[d, h]} />
-        {wrapMode === 'solid' || !edgeTextures ? (
-          <meshStandardMaterial color={edgeColor} roughness={0.85} />
-        ) : (
-          <meshBasicMaterial map={edgeTextures.left} />
-        )}
+        {edgeMaterial(edgeTextures?.left)}
       </mesh>
       {/* Right edge */}
-      <mesh position={[w / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh position={[w / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
         <planeGeometry args={[d, h]} />
-        {wrapMode === 'solid' || !edgeTextures ? (
-          <meshStandardMaterial color={edgeColor} roughness={0.85} />
-        ) : (
-          <meshBasicMaterial map={edgeTextures.right} />
-        )}
+        {edgeMaterial(edgeTextures?.right)}
       </mesh>
     </group>
   )
@@ -223,40 +189,18 @@ function CanvasPiece({
 // back into the visible region. The offset/repeat values below derive
 // directly from these constraints.
 function useEdgeTextures(
-  baseTexture: Texture | null | undefined,
+  baseTexture: Texture,
   w: number,
   h: number,
   d: number,
-  wrapMode: 'gallery' | 'mirror' | 'solid',
+  wrapMode: WrapMode,
 ): { top: Texture; bottom: Texture; left: Texture; right: Texture } | null {
+  const anisotropy = useMaxAnisotropy()
   return React.useMemo(() => {
-    if (!baseTexture || wrapMode === 'solid') return null
-    const img = baseTexture.image as
-      | { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }
-      | undefined
-    const imgW = img?.naturalWidth ?? img?.width
-    const imgH = img?.naturalHeight ?? img?.height
-    if (!imgW || !imgH) return null
-
-    // Cover-crop bounds of the front face — the visible image region in
-    // UV space, [baseOffset, baseOffset+baseRepeat] per axis.
-    const imgAspect = imgW / imgH
-    const planeAspect = w / h
-    let baseRepeatX: number
-    let baseRepeatY: number
-    let baseOffsetX: number
-    let baseOffsetY: number
-    if (imgAspect > planeAspect) {
-      baseRepeatX = planeAspect / imgAspect
-      baseRepeatY = 1
-      baseOffsetX = (1 - baseRepeatX) / 2
-      baseOffsetY = 0
-    } else {
-      baseRepeatX = 1
-      baseRepeatY = imgAspect / planeAspect
-      baseOffsetX = 0
-      baseOffsetY = (1 - baseRepeatY) / 2
-    }
+    if (wrapMode === 'solid') return null
+    const base = coverCrop(baseTexture, w, h)
+    if (!base) return null
+    const { repeatX: baseRepeatX, repeatY: baseRepeatY, offsetX: baseOffsetX, offsetY: baseOffsetY } = base
 
     // Strip thickness as a fraction of the front-face UV span.
     const stripFracY = (d / h) * baseRepeatY
@@ -267,6 +211,7 @@ function useEdgeTextures(
     const clone = (offsetX: number, repeatX: number, offsetY: number, repeatY: number): Texture => {
       const t = baseTexture.clone()
       t.colorSpace = baseTexture.colorSpace
+      t.anisotropy = anisotropy
       t.offset.set(offsetX, offsetY)
       t.repeat.set(repeatX, repeatY)
       t.needsUpdate = true
@@ -284,12 +229,7 @@ function useEdgeTextures(
     // TOP: plane V=0 at front seam → image V = frontTopV; plane V=1 at back.
     //   gallery → plane V=1 = frontTopV + stripFracY (continues image upward)
     //   mirror  → plane V=1 = frontTopV - stripFracY (mirrors back inward)
-    const top = clone(
-      baseOffsetX,
-      baseRepeatX,
-      frontTopV,
-      mirror ? -stripFracY : stripFracY,
-    )
+    const top = clone(baseOffsetX, baseRepeatX, frontTopV, mirror ? -stripFracY : stripFracY)
     // BOTTOM: plane V=1 at front seam → image V = frontBottomV; plane V=0 at back.
     //   gallery → plane V=0 = frontBottomV - stripFracY (image extends down)
     //   mirror  → plane V=0 = frontBottomV + stripFracY (mirrors back up)
@@ -311,24 +251,7 @@ function useEdgeTextures(
     // RIGHT: plane U=0 at front seam → image U = frontRightU; plane U=1 at back.
     //   gallery → plane U=1 = frontRightU + stripFracX
     //   mirror  → plane U=1 = frontRightU - stripFracX
-    const right = clone(
-      frontRightU,
-      mirror ? -stripFracX : stripFracX,
-      baseOffsetY,
-      baseRepeatY,
-    )
+    const right = clone(frontRightU, mirror ? -stripFracX : stripFracX, baseOffsetY, baseRepeatY)
     return { top, bottom, left, right }
-  }, [baseTexture, w, h, d, wrapMode])
-}
-
-function findSizeSelection(
-  template: V2Template,
-  selections: SelectionMap,
-): V2Option | null {
-  for (const group of template.optionGroups) {
-    if (group.inputType !== 'size') continue
-    const sel = selections[group.slug]
-    if (sel && (sel.widthIn || sel.heightIn)) return sel
-  }
-  return null
+  }, [baseTexture, w, h, d, wrapMode, anisotropy])
 }

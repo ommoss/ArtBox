@@ -37,41 +37,38 @@ export function StageSize({
   const selectedId = selections[sizeGroup.slug]?.id
 
   return (
-    <>
-      <style>{CSS}</style>
-      <div className="pbv2-size-stage">
-        {sizeGroup.helpText ? (
-          <p className="pbv2-size-help">{sizeGroup.helpText}</p>
-        ) : null}
-        <div className="pbv2-size-grid">
-          {sizeGroup.options.map((opt) => {
-            const sel = String(opt.id) === String(selectedId)
-            const dims = formatDimsLabel(opt)
-            const real = realDimsLabel(opt)
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => onSelect(sizeGroup, opt)}
-                onMouseEnter={() => onHover?.(opt)}
-                onMouseLeave={() => onHover?.(null)}
-                onFocus={() => onHover?.(opt)}
-                onBlur={() => onHover?.(null)}
-                className={`pbv2-size-card ${sel ? 'pbv2-size-card--active' : ''}`}
-              >
-                <div className="pbv2-size-card-main">{dims}</div>
-                {real && real !== dims ? (
-                  <div className="pbv2-size-card-real">{real}</div>
-                ) : null}
-                <div className="pbv2-size-card-price">
-                  +{fmt(opt.priceModifierAmount)}
-                </div>
-              </button>
-            )
-          })}
-        </div>
+    <div className="pbv2-size-stage">
+      {sizeGroup.helpText ? (
+        <p className="pbv2-size-help">{sizeGroup.helpText}</p>
+      ) : null}
+      <div className="pbv2-size-grid">
+        {sizeGroup.options.map((opt) => {
+          const sel = String(opt.id) === String(selectedId)
+          const dims = formatDimsLabel(opt)
+          const real = realDimsLabel(opt)
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onSelect(sizeGroup, opt)}
+              onMouseEnter={() => onHover?.(opt)}
+              onMouseLeave={() => onHover?.(null)}
+              onFocus={() => onHover?.(opt)}
+              onBlur={() => onHover?.(null)}
+              className={`pbv2-size-card ${sel ? 'pbv2-size-card--active' : ''}`}
+            >
+              <div className="pbv2-size-card-main">{dims}</div>
+              {real && real !== dims ? (
+                <div className="pbv2-size-card-real">{real}</div>
+              ) : null}
+              <div className="pbv2-size-card-price">
+                +{fmt(opt.priceModifierAmount)}
+              </div>
+            </button>
+          )
+        })}
       </div>
-    </>
+    </div>
   )
 }
 
@@ -87,7 +84,8 @@ function realDimsLabel(opt: V2Option): string | null {
   return `${opt.widthIn}" × ${opt.heightIn}"`
 }
 
-const CSS = `
+// Injected once by the shell's single <style> (see ProductBuilderV3.tsx).
+export const STAGE_SIZE_CSS = `
 .pbv2-size-stage {
   display: flex;
   flex-direction: column;
@@ -111,7 +109,7 @@ const CSS = `
   padding: 14px 10px;
   background: ${TOKENS.surface};
   border: 1px solid ${TOKENS.border};
-  border-radius: 6px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   font-family: ${TOKENS.fontBody};
   color: ${TOKENS.primary};

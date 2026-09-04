@@ -12,7 +12,7 @@ export default async function OrderConfirmation({ searchParams }: Args) {
           width: 56,
           height: 56,
           borderRadius: '50%',
-          background: '#1a7f46',
+          background: 'var(--color-accent)',
           color: '#fff',
           fontSize: '1.5rem',
           margin: '0 auto 24px',
@@ -29,7 +29,7 @@ export default async function OrderConfirmation({ searchParams }: Args) {
 
       {ref ? (
         <p style={{ color: 'var(--color-primary)', fontSize: '1rem' }}>
-          Reference: <code style={{ background: 'var(--color-surface)', padding: '2px 6px', borderRadius: 3, border: '1px solid var(--color-border)' }}>{ref}</code>
+          Reference: <code style={{ background: 'var(--color-surface)', padding: '2px 6px', borderRadius: 'var(--control-radius)', border: '1px solid var(--color-border)' }}>{ref}</code>
         </p>
       ) : null}
 
@@ -51,7 +51,7 @@ export default async function OrderConfirmation({ searchParams }: Args) {
           background: 'var(--color-primary)',
           color: 'var(--color-bg)',
           textDecoration: 'none',
-          borderRadius: 4,
+          borderRadius: 'var(--control-radius)',
         }}
       >
         Continue browsing

@@ -114,7 +114,7 @@ function EditionMarker({ state }: { state: EditionState }) {
         letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 600,
-        borderRadius: 2,
+        borderRadius: 'var(--image-radius)',
         pointerEvents: 'none',
         boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
       }}
@@ -406,7 +406,7 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                   style={{
                     position: 'relative',
                     aspectRatio: '4 / 3',
-                    background: 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
+                    background: 'var(--color-surface)',
                     borderRadius: 'var(--image-radius)',
                     overflow: 'hidden',
                   }}
@@ -566,7 +566,7 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                     position: 'relative',
                     aspectRatio: '1 / 1',
                     background:
-                      'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
+                      'var(--color-surface)',
                     overflow: 'hidden',
                     marginBottom: 12,
                   }}
@@ -645,9 +645,10 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
       <div
         style={{
           display: 'grid',
-          // min(...,100%) so a single wide tile never overflows a phone.
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(560px, 100%), 1fr))',
-          gap: 40,
+          // ~3 across on desktop, 2 on tablet, 1 on phone; min(...,100%) so a
+          // single wide tile never overflows a small screen.
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(380px, 100%), 1fr))',
+          gap: 28,
           marginTop: 32,
         }}
       >
@@ -665,7 +666,7 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                   position: 'relative',
                   aspectRatio: '3 / 2',
                   background:
-                    'linear-gradient(135deg, #dfe6e8 0%, #c7d2d6 100%)',
+                    'var(--color-surface)',
                   borderRadius: 'var(--image-radius)',
                   overflow: 'hidden',
                 }}
@@ -675,7 +676,7 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                     src={a.imageUrl}
                     alt={a.title ?? ''}
                     fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 33vw"
                     style={{ objectFit: 'cover' }}
                     priority={isAboveFold}
                   />
@@ -745,8 +746,8 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                 position: 'relative',
                 aspectRatio: '1 / 1',
                 background:
-                  'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
-                borderRadius: 2,
+                  'var(--color-surface)',
+                borderRadius: 'var(--image-radius)',
                 overflow: 'hidden',
               }}
             >

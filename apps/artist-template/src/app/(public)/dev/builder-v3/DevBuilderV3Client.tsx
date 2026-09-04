@@ -46,6 +46,7 @@ export default function DevBuilderV3Client() {
         imageUrl={FIXTURE_IMAGE_URL}
         imageTitle={FIXTURE_IMAGE_TITLE}
         useStageFlow={stageFlow}
+        syncUrl={stageFlow}
         // Default to a mid-range size (16×20) instead of the first option
         // (8×10). The 3D preview reads better at this scale, and 16×20 is
         // the most common gallery print size.

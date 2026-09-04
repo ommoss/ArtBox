@@ -36,19 +36,16 @@ export function StageCustomize({
   }
 
   return (
-    <>
-      <style>{CSS}</style>
-      <div className="pbv2-customize">
-        {groups.map((group) => (
-          <CustomizeGroup
-            key={group.slug}
-            group={group}
-            selectedId={selections[group.slug]?.id}
-            onSelect={(opt) => onSelect(group, opt)}
-          />
-        ))}
-      </div>
-    </>
+    <div className="pbv2-customize">
+      {groups.map((group) => (
+        <CustomizeGroup
+          key={group.slug}
+          group={group}
+          selectedId={selections[group.slug]?.id}
+          onSelect={(opt) => onSelect(group, opt)}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -132,7 +129,8 @@ function CustomizeGroup({
   )
 }
 
-const CSS = `
+// Injected once by the shell's single <style> (see ProductBuilderV3.tsx).
+export const STAGE_CUSTOMIZE_CSS = `
 .pbv2-customize {
   display: flex;
   flex-direction: column;
@@ -197,7 +195,7 @@ const CSS = `
   border: 1px solid ${TOKENS.border};
   background: ${TOKENS.surface};
   color: ${TOKENS.primary};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   font-family: ${TOKENS.fontBody};
 }

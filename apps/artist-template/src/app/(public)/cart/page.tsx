@@ -40,7 +40,7 @@ export default function CartPage() {
                     padding: 16,
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
-                    borderRadius: 4,
+                    borderRadius: 'var(--control-radius)',
                   }}
                 >
                   <div
@@ -48,7 +48,7 @@ export default function CartPage() {
                       position: 'relative',
                       width: 88,
                       height: 88,
-                      borderRadius: 2,
+                      borderRadius: 'var(--image-radius)',
                       overflow: 'hidden',
                       flex: '0 0 88px',
                     }}
@@ -103,7 +103,7 @@ export default function CartPage() {
                           width: 56,
                           padding: '4px 6px',
                           border: '1px solid var(--color-border)',
-                          borderRadius: 4,
+                          borderRadius: 'var(--control-radius)',
                           background: 'var(--color-surface)',
                           color: 'var(--color-primary)',
                         }}
@@ -114,7 +114,7 @@ export default function CartPage() {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#c33',
+                          color: 'var(--color-accent)',
                           fontSize: '0.85rem',
                           cursor: 'pointer',
                           padding: 0,
@@ -138,7 +138,7 @@ export default function CartPage() {
               padding: 20,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',
-              borderRadius: 4,
+              borderRadius: 'var(--control-radius)',
             }}
           >
             <div
@@ -163,7 +163,7 @@ export default function CartPage() {
                 background: 'var(--color-primary)',
                 color: 'var(--color-bg)',
                 textDecoration: 'none',
-                borderRadius: 4,
+                borderRadius: 'var(--control-radius)',
                 textAlign: 'center' as const,
                 fontSize: '1rem',
               }}

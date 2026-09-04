@@ -98,11 +98,11 @@ export default function CheckoutPage() {
         <div
           style={{
             padding: 16,
-            background: '#fff7e6',
-            border: '1px solid #f1c97e',
-            borderRadius: 4,
+            background: 'color-mix(in srgb, var(--color-accent) 12%, var(--color-surface))',
+            border: '1px solid color-mix(in srgb, var(--color-accent) 45%, transparent)',
+            borderRadius: 'var(--control-radius)',
             fontSize: '0.9rem',
-            color: '#7a5a14',
+            color: 'var(--color-primary)',
           }}
         >
           <strong>Mock checkout.</strong> No payment is captured. Clicking below will record a
@@ -113,10 +113,10 @@ export default function CheckoutPage() {
           <div
             style={{
               padding: 16,
-              background: '#fdecea',
-              border: '1px solid #e3848a',
-              borderRadius: 4,
-              color: '#9b1f24',
+              background: 'rgba(200, 40, 40, 0.1)',
+              border: '1px solid rgba(200, 40, 40, 0.45)',
+              borderRadius: 'var(--control-radius)',
+              color: 'var(--color-primary)',
               fontSize: '0.9rem',
             }}
           >
@@ -132,7 +132,7 @@ export default function CheckoutPage() {
             background: pending ? 'var(--color-secondary)' : 'var(--color-primary)',
             color: 'var(--color-bg)',
             border: 'none',
-            borderRadius: 4,
+            borderRadius: 'var(--control-radius)',
             cursor: pending ? 'wait' : 'pointer',
             fontSize: '1rem',
           }}
@@ -145,7 +145,7 @@ export default function CheckoutPage() {
         <h2 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
           Order summary
         </h2>
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 4, padding: 16 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--control-radius)', padding: 16 }}>
           {items.map((item) => (
             <div
               key={item.id}
@@ -161,7 +161,7 @@ export default function CheckoutPage() {
                   position: 'relative',
                   width: 48,
                   height: 48,
-                  borderRadius: 2,
+                  borderRadius: 'var(--image-radius)',
                   overflow: 'hidden',
                   flex: '0 0 48px',
                 }}
@@ -219,7 +219,7 @@ function Field({
         style={{
           padding: '8px 10px',
           border: '1px solid var(--color-border)',
-          borderRadius: 4,
+          borderRadius: 'var(--control-radius)',
           fontSize: '1rem',
           background: 'var(--color-surface)',
           color: 'var(--color-primary)',
@@ -248,7 +248,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 
 const fieldset: React.CSSProperties = {
   border: '1px solid var(--color-border)',
-  borderRadius: 4,
+  borderRadius: 'var(--control-radius)',
   padding: 16,
   display: 'flex',
   flexDirection: 'column',

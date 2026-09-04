@@ -4,17 +4,17 @@ import * as React from 'react'
 
 import type { BuilderConfiguration, BuilderSelection } from '@artbox/types'
 
-import { ComparisonDrawer } from './comparison/ComparisonDrawer'
+import { COMPARISON_DRAWER_CSS, ComparisonDrawer } from './comparison/ComparisonDrawer'
 import { usePinnedBuilds } from './comparison/use-pinned-builds'
 import { computeIncludedChips } from './lib/included-chips'
 import { Renderer25D } from './renderers/Renderer25D'
 import { Renderer3D } from './renderers/Renderer3D'
 import type { RendererDescriptor } from './renderers/types'
-import { RoomPicker } from './room-preview/RoomPicker'
-import { StageCustomize } from './stages/StageCustomize'
-import { StageFormat } from './stages/StageFormat'
-import { StageProgress } from './stages/StageProgress'
-import { StageSize } from './stages/StageSize'
+import { ROOM_PICKER_CSS, RoomPicker } from './room-preview/RoomPicker'
+import { STAGE_CUSTOMIZE_CSS, StageCustomize } from './stages/StageCustomize'
+import { STAGE_FORMAT_CSS, StageFormat } from './stages/StageFormat'
+import { STAGE_PROGRESS_CSS, StageProgress } from './stages/StageProgress'
+import { STAGE_SIZE_CSS, StageSize } from './stages/StageSize'
 import { TOKENS } from './theme-tokens'
 import type {
   BuilderStage,
@@ -32,8 +32,13 @@ const PX_PER_IN_DESKTOP = 15
 const PX_PER_IN_MOBILE = 11
 const MOBILE_BREAKPOINT_PX = 768
 
+// Horizontal room the 2.5D renderer needs around the print itself: frame
+// moulding + mat on both sides, the perspective depth strip, and the tilt.
+// Used to shrink pxPerIn so a 36×24 never gets clipped by the preview frame.
+const PREVIEW_CHROME_PX = 90
+
 // Available renderers in priority order. First one whose `isAvailable()`
-// returns true wins. 3D is scaffolded but disabled today, so 2.5D ships.
+// returns true wins.
 const RENDERERS: RendererDescriptor[] = [Renderer3D, Renderer25D]
 
 // Template categories for which V3's Renderer3D actually produces a 3D
@@ -90,8 +95,9 @@ type Props = {
   // Whether to use the stage-based flow. When false, all options are shown
   // at once (V1-equivalent UX, transitional fallback).
   useStageFlow?: boolean
-  // Whether to sync builder state to the URL querystring. Defaults to the
-  // value of useStageFlow (shareable URLs are part of the stage-flow feature).
+  // Whether to sync builder state to the URL querystring (shareable build
+  // links). Off by default: an embed on a marketing home must not rewrite
+  // "/" to "/?t=…". The artwork page opts in explicitly.
   syncUrl?: boolean
   onAddToCart?: (cfg: BuilderConfiguration, quantity: number) => void
 }
@@ -105,10 +111,10 @@ export default function ProductBuilderV3({
   recommendedSelections,
   initialRoom = null,
   useStageFlow = false,
-  syncUrl,
+  syncUrl = false,
   onAddToCart,
 }: Props) {
-  const urlSyncEnabled = syncUrl ?? useStageFlow
+  const urlSyncEnabled = syncUrl
   const [room, setRoom] = React.useState<RoomBackground | null>(initialRoom)
   const [templateSlug, setTemplateSlug] = React.useState<string>(
     initialTemplateSlug ?? templates[0]?.slug ?? '',
@@ -151,6 +157,50 @@ export default function ProductBuilderV3({
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  // Measure the preview frame so the 2.5D piece can be scaled down to fit
+  // instead of being clipped (overflow: hidden) or scrolled. Width is the
+  // only constraint — the frame grows vertically.
+  const previewFrameRef = React.useRef<HTMLDivElement | null>(null)
+  const [previewInnerW, setPreviewInnerW] = React.useState<number | null>(null)
+  React.useEffect(() => {
+    const el = previewFrameRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const measure = () => {
+      const cs = getComputedStyle(el)
+      const inner = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      setPreviewInnerW(inner > 0 ? inner : null)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Warm the 3D chunk (three + R3F + drei) once the page is idle so the
+  // first switch to a 3D-capable format doesn't stall on the download.
+  // Skipped when the customer has opted out of 3D for the session.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    let forced = false
+    try {
+      forced = window.sessionStorage.getItem(FORCE_2D_KEY) === '1'
+    } catch {
+      // ignore
+    }
+    if (forced || !Renderer3D.preload) return
+    const preload = Renderer3D.preload
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(preload)
+      return () => w.cancelIdleCallback?.(id)
+    }
+    const id = setTimeout(preload, 1500)
+    return () => clearTimeout(id)
+  }, [])
+
   const visibleGroups = template
     ? template.optionGroups.filter((g) => isGroupVisible(g.slug, selections))
     : []
@@ -179,14 +229,26 @@ export default function ProductBuilderV3({
   // size: flat amount + (per-sq-in × selected size's area). Falls back to
   // just the flat amount when no size is selected or the option has no
   // per-sq-in rate.
-  const selectedSizeArea = React.useMemo(() => {
-    if (!template) return 0
+  const selectedSize = React.useMemo(() => {
+    if (!template) return null
     const sizeGroup = template.optionGroups.find((g) => g.inputType === 'size')
-    if (!sizeGroup) return 0
+    if (!sizeGroup) return null
     const sel = selections[sizeGroup.slug]
-    if (!sel?.widthIn || !sel?.heightIn) return 0
-    return sel.widthIn * sel.heightIn
+    if (!sel?.widthIn || !sel?.heightIn) return null
+    return { widthIn: sel.widthIn, heightIn: sel.heightIn }
   }, [template, selections])
+  const selectedSizeArea = selectedSize ? selectedSize.widthIn * selectedSize.heightIn : 0
+
+  // pxPerIn actually handed to the renderer: the breakpoint value, reduced
+  // when the selected width (plus frame/mat/strip chrome) wouldn't fit the
+  // measured preview frame. Small prints keep true relative scale; only the
+  // ones that would clip get squeezed.
+  const fittedPxPerIn = React.useMemo(() => {
+    if (!previewInnerW || !selectedSize) return pxPerIn
+    const usable = previewInnerW - PREVIEW_CHROME_PX
+    if (usable <= 0) return pxPerIn
+    return Math.min(pxPerIn, usable / selectedSize.widthIn)
+  }, [pxPerIn, previewInnerW, selectedSize])
 
   const effectiveModifier = React.useCallback(
     (opt: V2Option | undefined): number => {
@@ -302,9 +364,12 @@ export default function ProductBuilderV3({
     )
   }
 
-  // Force-2D toggle: user can opt out of 3D, OR auto-fallback kicks in
-  // on error / slow load. Persists in sessionStorage so a page reload
-  // keeps the user's preference for the session.
+  // Two separate reasons to be in 2D:
+  //   - force2D: the customer clicked "View in 2D". Persisted in
+  //     sessionStorage so a reload keeps their choice for the session.
+  //   - autoFallback: 3D errored or took too long. Session-state only, and
+  //     cleared on template switch so a one-off slow texture load doesn't
+  //     pin the customer to 2D for the rest of their visit.
   const [force2D, setForce2D] = React.useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     try {
@@ -321,49 +386,60 @@ export default function ProductBuilderV3({
       // ignore
     }
   }, [])
+  const [autoFallback, setAutoFallback] = React.useState(false)
+  React.useEffect(() => {
+    setAutoFallback(false)
+  }, [template.slug])
 
   const is3DCapable = THREE_D_CAPABLE_CATEGORIES.has(template.category)
-  const using3D = is3DCapable && !force2D
+  const using3D = is3DCapable && !force2D && !autoFallback
+  // Only the 2.5D renderer can composite into a room photo, so an active
+  // room always routes there — otherwise the wall picker silently no-ops.
+  const show3D = using3D && !room
 
-  // Auto-fallback: if 3D is selected but isn't ready within
-  // AUTO_FALLBACK_MS, switch to 2D and show a hint. The timer is only
-  // armed when 3D goes active OR the template slug changes — NOT on
-  // every option change, otherwise it'd reset readyRef and re-arm
-  // forever, eventually firing the fallback even after onReady already
-  // arrived.
+  // Auto-fallback: if 3D is showing but isn't ready within AUTO_FALLBACK_MS,
+  // switch to 2D and show a hint. The timer is only armed when 3D actually
+  // mounts OR the template slug changes — NOT on every option change,
+  // otherwise it'd reset readyRef and re-arm forever, eventually firing
+  // the fallback even after onReady already arrived.
   const [autoFallbackHint, setAutoFallbackHint] = React.useState<string | null>(null)
   const readyRef = React.useRef(false)
   React.useEffect(() => {
-    if (!using3D) return
+    if (!show3D) return
     readyRef.current = false
     const timer = setTimeout(() => {
       if (!readyRef.current) {
-        persistForce2D(true)
+        setAutoFallback(true)
         setAutoFallbackHint('3D took too long — showing 2D preview.')
         setTimeout(() => setAutoFallbackHint(null), 5000)
       }
     }, AUTO_FALLBACK_MS)
     return () => clearTimeout(timer)
-  }, [using3D, template.slug, persistForce2D])
+  }, [show3D, template.slug])
 
   const handleReady = React.useCallback(() => {
     readyRef.current = true
   }, [])
 
-  const handleRendererError = React.useCallback(
-    (err: Error) => {
-      // WebGL unsupported, texture load failed, or R3F crashed. Drop to 2D
-      // and tell the user why. Never auto-recover back to 3D in this session
-      // — sessionStorage persistence avoids flicker on re-render.
-      console.warn('[V3] 3D renderer error, falling back to 2D:', err)
-      persistForce2D(true)
-      setAutoFallbackHint('3D preview unavailable — showing 2D instead.')
-      setTimeout(() => setAutoFallbackHint(null), 5000)
-    },
-    [persistForce2D],
-  )
+  const handleRendererError = React.useCallback((err: Error) => {
+    // WebGL unsupported, texture load failed, or R3F crashed. Drop to 2D
+    // and tell the user why. The next template switch retries 3D.
+    console.warn('[V3] 3D renderer error, falling back to 2D:', err)
+    setAutoFallback(true)
+    setAutoFallbackHint('3D preview unavailable — showing 2D instead.')
+    setTimeout(() => setAutoFallbackHint(null), 5000)
+  }, [])
 
-  const renderer = using3D ? pickRenderer() : Renderer25D
+  const handleModeToggle = () => {
+    if (using3D) {
+      persistForce2D(true)
+    } else {
+      persistForce2D(false)
+      setAutoFallback(false)
+    }
+  }
+
+  const renderer = show3D ? pickRenderer() : Renderer25D
 
   return (
     <>
@@ -374,19 +450,19 @@ export default function ProductBuilderV3({
           (!useStageFlow || stage !== 'format') ? (
             <RoomPicker active={room} onChange={setRoom} />
           ) : null}
-          <div className="pbv2-preview-frame">
+          <div className="pbv2-preview-frame" ref={previewFrameRef}>
             <div className="pbv2-preview-center">
               <RendererErrorBoundary
-                key={`${template.slug}-${using3D ? '3d' : '2d'}`}
+                key={`${template.slug}-${show3D ? '3d' : '2d'}`}
                 onError={handleRendererError}
               >
                 {renderer.render({
                   template,
                   imageUrl,
                   selections,
-                  pxPerIn,
+                  pxPerIn: fittedPxPerIn,
                   room,
-                  onReady: using3D ? handleReady : undefined,
+                  onReady: show3D ? handleReady : undefined,
                 })}
               </RendererErrorBoundary>
             </div>
@@ -394,10 +470,10 @@ export default function ProductBuilderV3({
           {imageTitle ? (
             <p className="pbv2-preview-caption">{imageTitle}</p>
           ) : null}
-          {is3DCapable ? (
+          {is3DCapable && !room ? (
             <button
               type="button"
-              onClick={() => persistForce2D(!force2D)}
+              onClick={handleModeToggle}
               className="pbv2-mode-toggle"
               title={using3D ? 'Switch to a faster, simpler preview' : 'Try the 3D preview again'}
             >
@@ -420,9 +496,9 @@ export default function ProductBuilderV3({
         </div>
 
         <div className="pbv2-controls">
-          {/* Template selector — temporary horizontal tabs until Phase B
-              replaces this with the StageFormat picker. */}
-          {templates.length > 1 ? (
+          {/* Template selector tabs — only for the all-at-once flow. In
+              stage mode the Format stage is the picker. */}
+          {!useStageFlow && templates.length > 1 ? (
             <div className="pbv2-tabs">
               {templates.map((t) => {
                 const active = t.slug === template.slug
@@ -529,36 +605,41 @@ export default function ProductBuilderV3({
             />
           </div>
 
-          <div className="pbv2-total">
-            <div>
-              <div className="pbv2-meta">Unit price</div>
-              <div className="pbv2-unit">{fmt(unitPrice)}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="pbv2-meta">Total</div>
-              <div className="pbv2-grand">{fmt(totalPrice)}</div>
-            </div>
-          </div>
-
-          {/* "What's included" chips — concrete value items below the price.
-              Generated from category + current selections so the chips
-              update when the customer toggles options (e.g. UV glass). */}
+          {/* "What's included" chips — concrete value items next to the
+              price. Generated from category + current selections so the
+              chips update when the customer toggles options (e.g. UV glass). */}
           <IncludedChipsRow template={template} selections={selections} />
 
-          <div className="pbv2-action-row">
-            <button type="button" onClick={handleAdd} className="pbv2-cta">
-              Add to cart →
-            </button>
-            {urlSyncEnabled ? (
-              <button
-                type="button"
-                onClick={handleCopyShareLink}
-                className="pbv2-secondary"
-                title="Copy a shareable link for this exact build"
-              >
-                {copyHint ?? 'Share'}
+          {/* Price + CTA. Sticks to the bottom of the viewport on phones so
+              the total and Add-to-cart stay reachable while scrolling the
+              option list above. */}
+          <div className="pbv2-checkout">
+            <div className="pbv2-total">
+              <div>
+                <div className="pbv2-meta">Unit price</div>
+                <div className="pbv2-unit">{fmt(unitPrice)}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="pbv2-meta">Total</div>
+                <div className="pbv2-grand">{fmt(totalPrice)}</div>
+              </div>
+            </div>
+
+            <div className="pbv2-action-row">
+              <button type="button" onClick={handleAdd} className="pbv2-cta">
+                Add to cart →
               </button>
-            ) : null}
+              {urlSyncEnabled ? (
+                <button
+                  type="button"
+                  onClick={handleCopyShareLink}
+                  className="pbv2-secondary"
+                  title="Copy a shareable link for this exact build"
+                >
+                  {copyHint ?? 'Share'}
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
@@ -798,7 +879,7 @@ function reconcile(
 const emptyStateStyle: React.CSSProperties = {
   padding: 32,
   background: TOKENS.surface,
-  borderRadius: 8,
+  borderRadius: TOKENS.controlRadius,
   textAlign: 'center',
   color: TOKENS.secondary,
 }
@@ -806,7 +887,11 @@ const emptyStateStyle: React.CSSProperties = {
 // All visual properties bind to theme tokens (see ./theme-tokens.ts) so the
 // builder matches whatever artist preset is active. No hardcoded colors,
 // fonts, radii, or shadows below this point.
-const CSS = `
+//
+// The stage / picker / drawer components export their CSS rather than
+// rendering their own <style>, so the whole builder injects exactly one
+// style element regardless of which stage is showing.
+const SHELL_CSS = `
 .pbv2-shell {
   display: grid;
   grid-template-columns: minmax(280px, 1.2fr) minmax(280px, 1fr);
@@ -829,6 +914,10 @@ const CSS = `
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  /* Grid items default to min-width:auto, which lets a wide 2.5D piece push
+     the column (and the whole shell) past the viewport. Pin the column to
+     its track; the frame below clips instead. */
+  min-width: 0;
 }
 .pbv2-preview-frame {
   width: 100%;
@@ -839,10 +928,17 @@ const CSS = `
   justify-content: center;
   padding: 32px;
   border-radius: ${TOKENS.imageRadius};
-  overflow: auto;
+  /* Never a nested scrollbar: the shell shrinks pxPerIn to fit instead. */
+  overflow: hidden;
 }
 .pbv2-preview-center {
   position: relative;
+  /* Full frame width so the 3D canvas (width:100%, max-width, aspect-ratio)
+     and the room composite (max-width:100%) size against the frame rather
+     than shrink-wrapping to nothing. */
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .pbv2-preview-caption {
   margin: 0;
@@ -878,7 +974,7 @@ const CSS = `
   padding: 6px 10px;
   background: ${TOKENS.bg};
   border: 1px solid ${TOKENS.border};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   font-size: 0.75rem;
   color: ${TOKENS.secondary};
   text-align: center;
@@ -909,6 +1005,7 @@ const CSS = `
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 .pbv2-tabs {
   display: flex;
@@ -965,7 +1062,7 @@ const CSS = `
 }
 .pbv2-stage-back, .pbv2-stage-next {
   padding: 10px 16px;
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   font-family: ${TOKENS.fontBody};
   font-size: 0.9rem;
@@ -1053,7 +1150,7 @@ const CSS = `
   border: 1px solid ${TOKENS.border};
   background: ${TOKENS.surface};
   color: ${TOKENS.primary};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   text-align: center;
   font-family: ${TOKENS.fontBody};
@@ -1078,7 +1175,7 @@ const CSS = `
   border: 1px solid ${TOKENS.border};
   background: ${TOKENS.surface};
   color: ${TOKENS.primary};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   font-family: ${TOKENS.fontBody};
 }
@@ -1104,8 +1201,13 @@ const CSS = `
   border: 1px solid ${TOKENS.border};
   background: ${TOKENS.surface};
   color: ${TOKENS.primary};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   font-family: ${TOKENS.fontBody};
+}
+.pbv2-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .pbv2-total {
   display: flex;
@@ -1165,7 +1267,7 @@ const CSS = `
   background: ${TOKENS.primary};
   color: ${TOKENS.bg};
   border: none;
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   font-size: 1rem;
   font-family: ${TOKENS.fontBody};
   cursor: pointer;
@@ -1177,7 +1279,7 @@ const CSS = `
   background: ${TOKENS.surface};
   color: ${TOKENS.primary};
   border: 1px solid ${TOKENS.border};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   font-size: 0.85rem;
   font-family: ${TOKENS.fontBody};
   cursor: pointer;
@@ -1207,5 +1309,31 @@ const CSS = `
   }
   .pbv2-size { padding: 14px 10px !important; min-height: 48px !important; }
   .pbv2-radio { padding: 14px !important; min-height: 48px !important; }
+  .pbv2-checkout {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    gap: 10px;
+    margin: 0 -16px -16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: ${TOKENS.surface};
+    border-top: 1px solid ${TOKENS.border};
+    box-shadow: 0 -8px 24px ${TOKENS.border};
+  }
+  .pbv2-checkout .pbv2-total {
+    padding-top: 0;
+    border-top: none;
+  }
+  .pbv2-checkout .pbv2-grand { font-size: 1.25rem; }
 }
 `
+
+const CSS = [
+  SHELL_CSS,
+  STAGE_PROGRESS_CSS,
+  STAGE_FORMAT_CSS,
+  STAGE_SIZE_CSS,
+  STAGE_CUSTOMIZE_CSS,
+  ROOM_PICKER_CSS,
+  COMPARISON_DRAWER_CSS,
+].join('\n')

@@ -4,7 +4,9 @@ import Link from 'next/link'
 
 import { useCart } from '@/lib/cart-context'
 
-export default function CartButton({ color }: { color: string }) {
+// Inherits the header's current text colour so it stays legible when the
+// glass header switches to white chrome over a hero.
+export default function CartButton() {
   const { itemCount, hydrated } = useCart()
   return (
     <Link
@@ -13,7 +15,7 @@ export default function CartButton({ color }: { color: string }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        color,
+        color: 'inherit',
         textDecoration: 'none',
         fontSize: '0.95rem',
       }}
@@ -22,13 +24,13 @@ export default function CartButton({ color }: { color: string }) {
       {hydrated && itemCount > 0 ? (
         <span
           style={{
-            background: color,
-            color: '#fff',
+            border: '1px solid currentColor',
+            color: 'inherit',
             borderRadius: 999,
-            padding: '2px 8px',
+            padding: '1px 8px',
             fontSize: '0.75rem',
             fontWeight: 600,
-            lineHeight: 1.2,
+            lineHeight: 1.3,
             minWidth: 18,
             textAlign: 'center' as const,
           }}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
-export default function ContactForm() {
+export default function ContactForm({ defaultSubject = '' }: { defaultSubject?: string }) {
   const [sent, setSent] = useState(false)
   const [pending, startTransition] = useTransition()
 
@@ -20,12 +20,12 @@ export default function ContactForm() {
       <div
         style={{
           padding: 20,
-          background: '#f0f9f4',
-          border: '1px solid #b0d8be',
-          borderRadius: 4,
+          background: 'color-mix(in srgb, var(--color-accent) 12%, var(--color-surface))',
+          border: '1px solid color-mix(in srgb, var(--color-accent) 45%, transparent)',
+          borderRadius: 'var(--control-radius)',
         }}
       >
-        <p style={{ margin: 0, color: '#1a7f46', fontWeight: 500 }}>
+        <p style={{ margin: 0, color: 'var(--color-primary)', fontWeight: 500 }}>
           Thanks — we&apos;ll be in touch shortly.
         </p>
         <p style={{ marginTop: 6, marginBottom: 0, color: 'var(--color-secondary)', fontSize: '0.85rem' }}>
@@ -40,7 +40,7 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Field label="Your name" name="name" required />
       <Field label="Email" name="email" type="email" required />
-      <Field label="Subject" name="subject" />
+      <Field label="Subject" name="subject" defaultValue={defaultSubject} />
       <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem' }}>
         Message
         <textarea
@@ -49,8 +49,8 @@ export default function ContactForm() {
           required
           style={{
             padding: '8px 10px',
-            border: '1px solid #ccc',
-            borderRadius: 4,
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--control-radius)',
             fontSize: '1rem',
             fontFamily: 'inherit',
             resize: 'vertical',
@@ -65,7 +65,7 @@ export default function ContactForm() {
           background: pending ? 'var(--color-secondary)' : 'var(--color-primary)',
           color: 'var(--color-bg)',
           border: 'none',
-          borderRadius: 4,
+          borderRadius: 'var(--control-radius)',
           cursor: pending ? 'wait' : 'pointer',
           fontSize: '1rem',
           alignSelf: 'flex-start',
@@ -82,7 +82,9 @@ function Field({
   name,
   type = 'text',
   required,
+  defaultValue,
 }: {
+  defaultValue?: string
   label: string
   name: string
   type?: string
@@ -92,13 +94,14 @@ function Field({
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem' }}>
       {label}
       <input
+        defaultValue={defaultValue}
         type={type}
         name={name}
         required={required}
         style={{
           padding: '8px 10px',
           border: '1px solid var(--color-border)',
-          borderRadius: 4,
+          borderRadius: 'var(--control-radius)',
           fontSize: '1rem',
           background: 'var(--color-surface)',
           color: 'var(--color-primary)',

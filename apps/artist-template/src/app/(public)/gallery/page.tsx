@@ -40,8 +40,9 @@ export default async function GalleriesIndex() {
                 style={{
                   position: 'relative',
                   aspectRatio: '4 / 3',
-                  background: 'linear-gradient(135deg, #e8e6df 0%, #d6d3c8 100%)',
-                  borderRadius: 4,
+                  background: 'var(--color-surface)',
+                  borderRadius: 'var(--image-radius)',
+                  boxShadow: 'var(--image-shadow)',
                   overflow: 'hidden',
                 }}
               >

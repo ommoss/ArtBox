@@ -2,7 +2,12 @@ import { getArtistBrand } from '@/lib/artist-config'
 
 import ContactForm from './ContactForm'
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ subject?: string }>
+}) {
+  const { subject } = await searchParams
   const brand = getArtistBrand()
   const handle = brand.artistName.toLowerCase().replace(/\s+/g, '')
 
@@ -24,7 +29,7 @@ export default function ContactPage() {
           alignItems: 'start',
         }}
       >
-        <ContactForm />
+        <ContactForm defaultSubject={subject ?? ''} />
 
         <div style={{ fontSize: '0.95rem', lineHeight: 1.8 }}>
           <h3

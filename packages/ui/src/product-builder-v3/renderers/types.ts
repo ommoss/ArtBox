@@ -41,8 +41,9 @@ export type RendererProps = {
 export type Renderer = (props: RendererProps) => React.ReactElement
 
 // Capabilities a renderer can advertise. The shell uses these to pick the
-// best available renderer for a given device. Today only 2.5D ships; 3D is
-// scaffolded but disabled.
+// best available renderer for a given device. Only the 2.5D renderer can
+// composite into a room photo; the shell routes to it whenever a room is
+// active.
 export type RendererCapability = 'depth-strips' | 'photo-corners' | 'orbit-3d' | 'room-composite'
 
 export type RendererDescriptor = {
@@ -53,4 +54,7 @@ export type RendererDescriptor = {
   // until the R3F integration lands.
   isAvailable: () => boolean
   render: Renderer
+  // Optional: warm any lazy chunks this renderer needs (the 3D renderer's
+  // three/R3F scenes). The shell calls it on idle after mount.
+  preload?: () => void
 }

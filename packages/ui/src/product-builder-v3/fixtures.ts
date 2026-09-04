@@ -2,7 +2,7 @@ import type { V2Template } from './types'
 
 // Hand-crafted templates that mirror the shape returned by the fulfillment
 // API's /api/v1/templates endpoint. Used by:
-//   - the /dev/builder-v2 sandbox route
+//   - the /dev/builder-v3 sandbox route and the marketing home demo
 //   - unit/Storybook-style demos
 //   - tests
 //

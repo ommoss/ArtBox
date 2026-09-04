@@ -36,7 +36,6 @@ export function ComparisonDrawer({
 
   return (
     <>
-      <style>{CSS}</style>
       <div className="pbv2-cmp" role="region" aria-label="Pinned builds for comparison">
         <div className="pbv2-cmp-head">
           <span className="pbv2-cmp-title">
@@ -159,7 +158,8 @@ function buildSummary(
   return parts.join(' · ') || '—'
 }
 
-const CSS = `
+// Injected once by the shell's single <style> (see ProductBuilderV3.tsx).
+export const COMPARISON_DRAWER_CSS = `
 .pbv2-cmp {
   position: sticky;
   bottom: 0;
@@ -168,7 +168,9 @@ const CSS = `
   z-index: 90;
   background: ${TOKENS.surface};
   border-top: 1px solid ${TOKENS.border};
-  box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+  /* Elevation in the theme's border colour: reads as a soft shadow on light
+     themes and a light halo on dark ones, where a black shadow vanishes. */
+  box-shadow: 0 -8px 24px ${TOKENS.border};
   font-family: ${TOKENS.fontBody};
   padding: 12px 16px;
   display: flex;
@@ -204,7 +206,7 @@ const CSS = `
   flex: 0 0 auto;
   background: ${TOKENS.bg};
   border: 1px solid ${TOKENS.border};
-  border-radius: 6px;
+  border-radius: ${TOKENS.controlRadius};
   overflow: hidden;
   width: 180px;
 }

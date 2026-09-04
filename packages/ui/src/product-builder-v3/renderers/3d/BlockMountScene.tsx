@@ -2,19 +2,31 @@
 
 import * as React from 'react'
 
-import { Canvas, useLoader } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { SRGBColorSpace, type Texture, TextureLoader } from 'three'
+import type { Texture } from 'three'
 
 import { TOKENS } from '../../theme-tokens'
-import type { SelectionMap, V2Option, V2Template } from '../../types'
 import type { RendererProps } from '../types'
+
+import {
+  CameraRig,
+  CANVAS_PROPS,
+  FOV_DEG,
+  ORBIT_LIMITS,
+  SCENE_UNITS_PER_INCH,
+  SceneLighting,
+  canvasPx,
+  findSizeSelection,
+  fitCameraZ,
+  useArtworkTexture,
+  usePrintTexture,
+} from './scene-shared'
 
 // 3D block-mount scene. Real block mounts have the print laminated to the
 // top face of a 3/4" birch ply slab — no border around the print, just a
 // wood edge visible from the side. The customer picks an edge stain.
 
-const SCENE_UNITS_PER_INCH = 1 / 20
 const BLOCK_DEPTH_IN = 0.75
 
 export default function BlockMountScene({
@@ -29,29 +41,21 @@ export default function BlockMountScene({
   const edgeOpt = selections['block-edge']
   const edgeColor = edgeOpt?.swatchColor ?? '#c19a6b'
 
-  const canvasW = Math.min(680, Math.max(540, Math.round(widthIn * 22)))
-  const canvasH = Math.min(680, Math.max(540, Math.round(heightIn * 22)))
+  const { canvasW, canvasH } = canvasPx(widthIn, heightIn)
+  const cameraZ = fitCameraZ(
+    widthIn * SCENE_UNITS_PER_INCH,
+    heightIn * SCENE_UNITS_PER_INCH,
+    canvasW,
+    canvasH,
+  )
 
-  const DEFAULT_Z = 1.8
-  const FOV_DEG = 50
-  const printWUnits = widthIn * SCENE_UNITS_PER_INCH
-  const printHUnits = heightIn * SCENE_UNITS_PER_INCH
-  const halfFovRad = (FOV_DEG / 2) * (Math.PI / 180)
-  const aspect = canvasW / canvasH
-  const MARGIN = 1.3
-  const zFitH = (printHUnits * MARGIN) / (2 * Math.tan(halfFovRad))
-  const zFitW = (printWUnits * MARGIN) / (2 * Math.tan(halfFovRad) * aspect)
-  const cameraZ = Math.max(DEFAULT_Z, zFitH, zFitW)
-
-  const texture = useLoader(TextureLoader, imageUrl)
-  React.useEffect(() => {
-    if (!texture) return
-    texture.colorSpace = SRGBColorSpace
-  }, [texture])
+  const texture = useArtworkTexture(imageUrl)
 
   React.useEffect(() => {
     onReady?.()
   }, [onReady])
+
+  const d = BLOCK_DEPTH_IN * SCENE_UNITS_PER_INCH
 
   return (
     <div
@@ -65,15 +69,9 @@ export default function BlockMountScene({
         boxShadow: TOKENS.imageShadow,
       }}
     >
-      <Canvas
-        key={Math.round(cameraZ * 100)}
-        camera={{ position: [0, 0, cameraZ], fov: FOV_DEG }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <hemisphereLight args={['#ffffff', '#5a5a5a', 1.0]} />
-        <directionalLight position={[-3, 4, 5]} intensity={0.9} />
-        <ambientLight intensity={0.6} />
+      <Canvas {...CANVAS_PROPS} camera={{ position: [0, 0, cameraZ], fov: FOV_DEG }}>
+        <CameraRig z={cameraZ} />
+        <SceneLighting wallZ={-d / 2} />
 
         <BlockPiece
           widthIn={widthIn}
@@ -82,15 +80,7 @@ export default function BlockMountScene({
           edgeColor={edgeColor}
         />
 
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          minPolarAngle={Math.PI / 2 - Math.PI / 7.2}
-          maxPolarAngle={Math.PI / 2 + Math.PI / 7.2}
-          minAzimuthAngle={-Math.PI / 4}
-          maxAzimuthAngle={Math.PI / 4}
-          rotateSpeed={0.5}
-        />
+        <OrbitControls {...ORBIT_LIMITS} />
       </Canvas>
     </div>
   )
@@ -111,25 +101,7 @@ function BlockPiece({
   const h = heightIn * SCENE_UNITS_PER_INCH
   const d = BLOCK_DEPTH_IN * SCENE_UNITS_PER_INCH
 
-  React.useEffect(() => {
-    if (!texture) return
-    const img = texture.image as
-      | { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }
-      | undefined
-    const imgW = img?.naturalWidth ?? img?.width
-    const imgH = img?.naturalHeight ?? img?.height
-    if (!imgW || !imgH) return
-    const imgAspect = imgW / imgH
-    const planeAspect = w / h
-    if (imgAspect > planeAspect) {
-      texture.repeat.set(planeAspect / imgAspect, 1)
-      texture.offset.set((1 - planeAspect / imgAspect) / 2, 0)
-    } else {
-      texture.repeat.set(1, imgAspect / planeAspect)
-      texture.offset.set(0, (1 - imgAspect / planeAspect) / 2)
-    }
-    texture.needsUpdate = true
-  }, [texture, w, h])
+  usePrintTexture(texture, w, h)
 
   // Edge: wood stain colour matching the customer's pick. Higher roughness
   // than canvas (wood has grain, not weave) and a slight darken at the
@@ -139,39 +111,27 @@ function BlockPiece({
   return (
     <group>
       {/* Top (front-facing) face — the print */}
-      <mesh position={[0, 0, d / 2]}>
+      <mesh position={[0, 0, d / 2]} castShadow>
         <planeGeometry args={[w, h]} />
         <meshBasicMaterial map={texture} />
       </mesh>
       {/* Edges — wood stain */}
-      <mesh position={[0, h / 2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, h / 2, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
         <planeGeometry args={[w, d]} />
         {edgeMat}
       </mesh>
-      <mesh position={[0, -h / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -h / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <planeGeometry args={[w, d]} />
         {edgeMat}
       </mesh>
-      <mesh position={[-w / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[-w / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]} castShadow>
         <planeGeometry args={[d, h]} />
         {edgeMat}
       </mesh>
-      <mesh position={[w / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh position={[w / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
         <planeGeometry args={[d, h]} />
         {edgeMat}
       </mesh>
     </group>
   )
-}
-
-function findSizeSelection(
-  template: V2Template,
-  selections: SelectionMap,
-): V2Option | null {
-  for (const group of template.optionGroups) {
-    if (group.inputType !== 'size') continue
-    const sel = selections[group.slug]
-    if (sel && (sel.widthIn || sel.heightIn)) return sel
-  }
-  return null
 }

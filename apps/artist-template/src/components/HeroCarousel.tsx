@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 // Full-bleed hero carousel for the sailing preset. Marine/regatta sites lead
@@ -14,7 +15,12 @@ import { useEffect, useState } from 'react'
 //     always-available pause control. The crossfade itself is suppressed when
 //     reduced motion is requested.
 
-type Slide = { imageUrl: string; title?: string | null }
+type Slide = {
+  imageUrl: string
+  title?: string | null
+  slug?: string | null
+  editionSize?: number | null
+}
 
 const INTERVAL_MS = 6000
 
@@ -58,6 +64,7 @@ export default function HeroCarousel({
 
   const go = (next: number) =>
     setIndex(((next % slides.length) + slides.length) % slides.length)
+  const current = slides[index]
 
   return (
     <section
@@ -146,6 +153,40 @@ export default function HeroCarousel({
           >
             {tagline}
           </p>
+        ) : null}
+        {/* Edition line + single CTA for the active slide, the way large-format
+            limited-edition sellers lead (one release, one button). */}
+        {current?.slug ? (
+          <div
+            style={{
+              marginTop: 22,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 18,
+              flexWrap: 'wrap',
+              pointerEvents: 'auto',
+            }}
+          >
+            <Link
+              href={`/artwork/${current.slug}`}
+              style={{
+                padding: '12px 22px',
+                background: '#fff',
+                color: '#111',
+                borderRadius: 'var(--control-radius)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                letterSpacing: 0.3,
+              }}
+            >
+              {current.editionSize ? 'Secure your edition' : 'View this piece'}
+            </Link>
+            <span style={{ fontSize: '0.9rem', opacity: 0.9, textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>
+              {current.title}
+              {current.editionSize ? ` · Limited edition of ${current.editionSize}` : ''}
+            </span>
+          </div>
         ) : null}
       </div>
 

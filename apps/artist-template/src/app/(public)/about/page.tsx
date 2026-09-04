@@ -26,7 +26,8 @@ export default function AboutPage() {
           style={{
             position: 'relative',
             aspectRatio: '4 / 5',
-            borderRadius: 4,
+            borderRadius: 'var(--image-radius)',
+            boxShadow: 'var(--image-shadow)',
             overflow: 'hidden',
           }}
         >

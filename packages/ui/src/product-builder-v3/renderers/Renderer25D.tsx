@@ -265,7 +265,10 @@ function DepthStrips({
           height: stripThickness,
           transformOrigin: 'top',
           transform: 'perspective(1400px) rotateX(-30deg)',
-          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.14)',
+          // Inset only: the strip's own edge shading (physical). The cast
+          // shadow comes from the print's theme-aware imageShadow, so
+          // nothing here goes black-on-black on a dark theme.
+          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.18)',
           overflow: 'hidden',
           pointerEvents: 'none',
           borderRadius: 2,
@@ -284,7 +287,7 @@ function DepthStrips({
           width: stripThickness,
           transformOrigin: 'left',
           transform: 'perspective(1400px) rotateY(30deg)',
-          boxShadow: 'inset 1px 0 3px rgba(0,0,0,0.18), 4px 0 10px rgba(0,0,0,0.14)',
+          boxShadow: 'inset 1px 0 3px rgba(0,0,0,0.18)',
           overflow: 'hidden',
           pointerEvents: 'none',
           borderRadius: 2,
@@ -659,8 +662,9 @@ function BlockMountRender({
         width: widthPx,
         height: heightPx,
         position: 'relative',
-        boxShadow:
-          '3px 3px 0 0 rgba(0,0,0,0.18), 5px 5px 0 0 rgba(0,0,0,0.14), 0 16px 28px rgba(0,0,0,0.2)',
+        // Hard offsets = the slab's side (physical); the soft cast shadow is
+        // the theme's so it survives dark backgrounds.
+        boxShadow: `3px 3px 0 0 rgba(0,0,0,0.18), 5px 5px 0 0 rgba(0,0,0,0.14), ${TOKENS.imageShadow}`,
         // Block mounts are cut square — sharp 90° edges, no radius.
         borderRadius: 0,
       }}
@@ -808,7 +812,7 @@ function StickerRender({
         // Tilt slightly for that peeled-sticker feel; subtler in compact mode
         // so it doesn't collide with neighbouring cards.
         transform: compact ? 'rotate(-3deg)' : 'rotate(-2deg)',
-        boxShadow: '0 10px 20px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.08)',
+        boxShadow: TOKENS.imageShadow,
       }}
     >
       <img
@@ -844,7 +848,7 @@ function CardRender({
         width: widthPx,
         height: heightPx,
         position: 'relative',
-        boxShadow: '0 14px 28px rgba(0,0,0,0.22), 0 2px 0 rgba(0,0,0,0.18)',
+        boxShadow: TOKENS.imageShadow,
         borderRadius: 2,
       }}
     >
@@ -963,6 +967,9 @@ function RoomComposite({
   // offsetWidth is the layout box, not affected by CSS transform, so there's
   // no feedback loop between scale and measurement.
   const [naturalSize, setNaturalSize] = React.useState<{ w: number; h: number } | null>(null)
+  // The room shrinks below ROOM_W on narrow screens (max-width: 100%), so
+  // track its real width and keep the piece the same fraction of it.
+  const [roomW, setRoomW] = React.useState(ROOM_W)
   React.useLayoutEffect(() => {
     if (!innerRef.current) return
     const child = innerRef.current.firstElementChild as HTMLElement | null
@@ -970,15 +977,17 @@ function RoomComposite({
     const measure = () => {
       if (child.offsetWidth === 0) return
       setNaturalSize({ w: child.offsetWidth, h: child.offsetHeight })
+      if (containerRef.current) setRoomW(containerRef.current.clientWidth || ROOM_W)
     }
     measure()
     // Observe layout-box changes so swapping templates updates the scale.
     const ro = new ResizeObserver(measure)
     ro.observe(child)
+    if (containerRef.current) ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [room.imageUrl])
 
-  const baseScale = naturalSize ? (ROOM_W * DEFAULT_FRAME_FRACTION) / naturalSize.w : DEFAULT_FRAME_FRACTION
+  const baseScale = naturalSize ? (roomW * DEFAULT_FRAME_FRACTION) / naturalSize.w : DEFAULT_FRAME_FRACTION
   const finalScale = baseScale * zoom
 
   // Background: prefer CSS gradient (solid-color wall preset) when set,
@@ -998,8 +1007,8 @@ function RoomComposite({
       style={{
         position: 'relative',
         width: ROOM_W,
-        height: ROOM_H,
         maxWidth: '100%',
+        aspectRatio: `${ROOM_W} / ${ROOM_H}`,
         borderRadius: TOKENS.imageRadius,
         overflow: 'hidden',
         boxShadow: TOKENS.imageShadow,
@@ -1081,7 +1090,7 @@ function RoomComposite({
 const zoomBtnStyle: React.CSSProperties = {
   width: 32,
   height: 32,
-  borderRadius: 4,
+  borderRadius: TOKENS.controlRadius,
   border: 'none',
   background: 'rgba(0,0,0,0.6)',
   color: '#fff',

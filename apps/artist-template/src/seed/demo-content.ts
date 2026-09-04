@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { resolvePresetName } from '@/lib/themes'
+
 // Demo content for the artist template.
 //
 // All imageUrl values here point to web-resolution images (~1200px wide) — this
@@ -554,6 +556,327 @@ const sailingArtworks: ArtworkSeed[] = [
     year: 2022,
     location: 'Strait of Juan de Fuca',
     imageUrl: u('1620149088397-8e168aab25c6', ART_PARAMS),
+    sortOrder: 4,
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Wildlife set: large-format limited-edition wildlife prints — African
+// Savanna, Arctic & Boreal, Birds in Flight, Ocean Giants, Forest & Mountain.
+// Every image ID was downloaded and visually confirmed to be a real photo of
+// the animal it claims (captive / fenced / composite shots were dropped).
+// Orientation is noted per image because the home carousel is full-bleed
+// wide. Six pieces featured (all landscape), three limited editions.
+// ---------------------------------------------------------------------------
+
+const wildlifeGalleries: GallerySeed[] = [
+  {
+    slug: 'savanna',
+    name: 'African Savanna',
+    description: 'Big cats, elephants and the plains game of East and Southern Africa.',
+    coverImageUrl: u('1759352370603-eeb21e082e74', COVER_PARAMS), // landscape 3:2
+    sortOrder: 1,
+  },
+  {
+    slug: 'arctic',
+    name: 'Arctic & Boreal',
+    description: 'Polar bears, foxes, wolves and penguins at the cold ends of the earth.',
+    coverImageUrl: u('1553425300-8bd56360f8eb', COVER_PARAMS), // landscape 5:3
+    sortOrder: 2,
+  },
+  {
+    slug: 'birds',
+    name: 'Birds in Flight',
+    description: 'Raptors, owls and seabirds caught on the wing.',
+    coverImageUrl: u('1696831387716-bf78923df0bf', COVER_PARAMS), // landscape 16:9
+    sortOrder: 3,
+  },
+  {
+    slug: 'ocean',
+    name: 'Ocean Giants',
+    description: 'Humpbacks and orcas from the Salish Sea to the Pacific.',
+    coverImageUrl: u('1568430462989-44163eb1752f', COVER_PARAMS), // landscape 3:2
+    sortOrder: 4,
+  },
+  {
+    slug: 'forest',
+    name: 'Forest & Mountain',
+    description: 'Bears, moose and red deer of the northern woods.',
+    coverImageUrl: u('1634193944924-18f637999e59', COVER_PARAMS), // landscape 3:2
+    sortOrder: 5,
+  },
+]
+
+const wildlifeArtworks: ArtworkSeed[] = [
+  // African Savanna
+  {
+    slug: 'the-walk',
+    title: 'The Walk',
+    galleryslug: 'savanna',
+    description: 'A big male crosses open grass on his morning patrol.',
+    year: 2024,
+    location: 'Maasai Mara, Kenya',
+    imageUrl: u('1759352370603-eeb21e082e74', ART_PARAMS), // landscape 3:2
+    sortOrder: 1,
+    isFeatured: true,
+  },
+  {
+    slug: 'crossing-the-mara',
+    title: 'Crossing the Mara',
+    galleryslug: 'savanna',
+    description: 'A family of elephants moves across the plain under a bank of haze.',
+    year: 2023,
+    location: 'Maasai Mara, Kenya',
+    imageUrl: u('1481464904474-a575a33b44a0', ART_PARAMS), // landscape 3:2
+    sortOrder: 2,
+    isFeatured: true,
+  },
+  {
+    slug: 'leopard-at-rest',
+    title: 'Leopard at Rest',
+    galleryslug: 'savanna',
+    description: 'Draped over a marula branch in the last warm light.',
+    year: 2024,
+    location: 'Sabi Sand, South Africa',
+    imageUrl: u('1758626736091-53981cc9a1d4', ART_PARAMS), // landscape 3:2
+    sortOrder: 3,
+    isLimitedEdition: true,
+    editionSize: 50,
+  },
+  {
+    slug: 'ngorongoro-light',
+    title: 'Ngorongoro Light',
+    galleryslug: 'savanna',
+    description: 'Zebra graze the crater floor as sun breaks through the storm.',
+    year: 2022,
+    location: 'Ngorongoro Crater, Tanzania',
+    imageUrl: u('1566296524462-e0a341bf65e6', ART_PARAMS), // landscape 3:2
+    sortOrder: 4,
+  },
+  {
+    slug: 'backlit',
+    title: 'Backlit',
+    galleryslug: 'savanna',
+    description: 'A cheetah turns into the low sun on the Kalahari edge.',
+    year: 2023,
+    location: 'Kgalagadi, South Africa',
+    imageUrl: u('1551969014-7d2c4cddf0b6', ART_PARAMS), // landscape 8:5
+    sortOrder: 5,
+  },
+  {
+    slug: 'etosha-dusk',
+    title: 'Etosha Dusk',
+    galleryslug: 'savanna',
+    description: 'One giraffe against the orange sky after sundown.',
+    year: 2022,
+    location: 'Etosha, Namibia',
+    imageUrl: u('1597419957697-30385606b5b4', ART_PARAMS), // landscape 16:9
+    sortOrder: 6,
+  },
+
+  // Arctic & Boreal
+  {
+    slug: 'two-on-the-floe',
+    title: 'Two on the Floe',
+    galleryslug: 'arctic',
+    description: 'A pair of young bears on pack ice north of Spitsbergen.',
+    year: 2023,
+    location: 'Svalbard, Norway',
+    imageUrl: u('1553425300-8bd56360f8eb', ART_PARAMS), // landscape 5:3
+    sortOrder: 1,
+    isFeatured: true,
+  },
+  {
+    slug: 'swimmer',
+    title: 'Swimmer',
+    galleryslug: 'arctic',
+    description: 'A polar bear crosses a fjord between floes.',
+    year: 2023,
+    location: 'Svalbard, Norway',
+    imageUrl: u('1536164832230-6c238c58f740', ART_PARAMS), // landscape 3:2
+    sortOrder: 2,
+  },
+  {
+    slug: 'white-fox',
+    title: 'White Fox',
+    galleryslug: 'arctic',
+    description: 'An arctic fox in winter coat sits out a squall.',
+    year: 2024,
+    location: 'Hornstrandir, Iceland',
+    imageUrl: u('1484312152213-d713e8b7c053', ART_PARAMS), // landscape 3:2
+    sortOrder: 3,
+  },
+  {
+    slug: 'the-pack',
+    title: 'The Pack',
+    galleryslug: 'arctic',
+    description: 'Grey wolves run a snowy slope through bare hardwoods.',
+    year: 2022,
+    location: 'Laurentians, Québec',
+    imageUrl: u('1552249007-6759fe2742b6', ART_PARAMS), // landscape 10:7
+    sortOrder: 4,
+  },
+  {
+    slug: 'king-colony',
+    title: 'King Colony',
+    galleryslug: 'arctic',
+    description: 'King penguins and their brown chicks below the glacier at Gold Harbour.',
+    year: 2023,
+    location: 'South Georgia',
+    imageUrl: u('1551986782-9fa82053c9b9', ART_PARAMS), // landscape 3:2
+    sortOrder: 5,
+    isLimitedEdition: true,
+    editionSize: 100,
+  },
+
+  // Birds in Flight
+  {
+    slug: 'bald-eagle',
+    title: 'Bald Eagle',
+    galleryslug: 'birds',
+    description: 'Wings full spread against a flat winter sky.',
+    year: 2024,
+    location: 'Homer, Alaska',
+    imageUrl: u('1696831387716-bf78923df0bf', ART_PARAMS), // landscape 16:9
+    sortOrder: 1,
+    isFeatured: true,
+  },
+  {
+    slug: 'the-strike',
+    title: 'The Strike',
+    galleryslug: 'birds',
+    description: 'Talons down a moment before the eagle hits the water.',
+    year: 2023,
+    location: 'Mississippi River, Iowa',
+    imageUrl: u('1643772352873-f9608f7370be', ART_PARAMS), // landscape 4:3
+    sortOrder: 2,
+  },
+  {
+    slug: 'hover',
+    title: 'Hover',
+    galleryslug: 'birds',
+    description: 'A barn owl holds over rough grass, listening.',
+    year: 2024,
+    location: 'Norfolk, England',
+    imageUrl: u('1710965084640-2e1a4bdfff9c', ART_PARAMS), // landscape 3:2
+    sortOrder: 3,
+  },
+  {
+    slug: 'snowy-owl-in-fog',
+    title: 'Snowy Owl in Fog',
+    galleryslug: 'birds',
+    description: 'Banking through sea fog over the winter marsh.',
+    year: 2023,
+    location: 'Boundary Bay, BC',
+    imageUrl: u('1636962027983-500f19243325', ART_PARAMS), // landscape 3:2
+    sortOrder: 4,
+    isLimitedEdition: true,
+    editionSize: 75,
+  },
+  {
+    slug: 'puffin-landing',
+    title: 'Puffin, Landing',
+    galleryslug: 'birds',
+    description: 'Feet out and braking hard above the burrow.',
+    year: 2024,
+    location: 'Skomer Island, Wales',
+    imageUrl: u('1717682273671-e611475e7101', ART_PARAMS), // near-square 5:4
+    sortOrder: 5,
+  },
+
+  // Ocean Giants
+  {
+    slug: 'breach',
+    title: 'Breach',
+    galleryslug: 'ocean',
+    description: 'A humpback clears the water on a flat calm afternoon.',
+    year: 2023,
+    location: 'Stellwagen Bank, Massachusetts',
+    imageUrl: u('1568430462989-44163eb1752f', ART_PARAMS), // landscape 3:2
+    sortOrder: 1,
+    isFeatured: true,
+  },
+  {
+    slug: 'johnstone-strait',
+    title: 'Johnstone Strait',
+    galleryslug: 'ocean',
+    description: 'An orca breaches off the forested shore at dawn.',
+    year: 2024,
+    location: 'Johnstone Strait, BC',
+    imageUrl: u('1543431910-f9f3c6ad97c0', ART_PARAMS), // landscape 16:9
+    sortOrder: 2,
+    isFeatured: true,
+  },
+  {
+    slug: 'fluke',
+    title: 'Fluke',
+    galleryslug: 'ocean',
+    description: 'A humpback sounds beneath the West Maui mountains.',
+    year: 2022,
+    location: 'Maui, Hawaii',
+    imageUrl: u('1450045439515-ff27c2f2e6b1', ART_PARAMS), // landscape 3:2
+    sortOrder: 3,
+  },
+  {
+    slug: 'pod',
+    title: 'Pod',
+    galleryslug: 'ocean',
+    description: 'Four orcas surface together on grey water, seen from above.',
+    year: 2023,
+    location: 'Skjervøy, Norway',
+    imageUrl: u('1598202604734-f6fcd12b2384', ART_PARAMS), // landscape 3:2
+    sortOrder: 4,
+  },
+  {
+    slug: 'salish-sea',
+    title: 'Salish Sea',
+    galleryslug: 'ocean',
+    description: 'A lone bull crosses toward the Olympic shore.',
+    year: 2024,
+    location: 'Haro Strait, BC',
+    imageUrl: u('1558900958-468345a79eaf', ART_PARAMS), // landscape 8:5
+    sortOrder: 5,
+  },
+
+  // Forest & Mountain
+  {
+    slug: 'brooks-falls',
+    title: 'Brooks Falls',
+    galleryslug: 'forest',
+    description: 'Three brown bears wait on the lip of the falls for the salmon run.',
+    year: 2023,
+    location: 'Katmai, Alaska',
+    imageUrl: u('1634193944924-18f637999e59', ART_PARAMS), // landscape 3:2
+    sortOrder: 1,
+  },
+  {
+    slug: 'salmon-run',
+    title: 'Salmon Run',
+    galleryslug: 'forest',
+    description: 'A grizzly works the shallows in September light.',
+    year: 2024,
+    location: 'Bute Inlet, BC',
+    imageUrl: u('1696785561770-324a5bd4cc9a', ART_PARAMS), // landscape 5:3
+    sortOrder: 2,
+  },
+  {
+    slug: 'bull-moose',
+    title: 'Bull Moose',
+    galleryslug: 'forest',
+    description: 'Bedded in autumn willow with a full rack.',
+    year: 2023,
+    location: 'Kananaskis, Alberta',
+    imageUrl: u('1549471013-3364d7220b75', ART_PARAMS), // landscape 3:2
+    sortOrder: 3,
+  },
+  {
+    slug: 'first-snow',
+    title: 'First Snow',
+    galleryslug: 'forest',
+    description: 'A red stag stands out the first fall of the winter.',
+    year: 2022,
+    location: 'Richmond Park, London',
+    imageUrl: u('1543756605-a90da919605a', ART_PARAMS), // landscape 3:2
     sortOrder: 4,
   },
 ]
@@ -1790,6 +2113,10 @@ const sailing: ContentSet = {
   galleries: sailingGalleries,
   artworks: sailingArtworks,
 }
+const wildlife: ContentSet = {
+  galleries: wildlifeGalleries,
+  artworks: wildlifeArtworks,
+}
 const lifestyle: ContentSet = {
   galleries: lifestyleGalleries,
   artworks: lifestyleArtworks,
@@ -1806,8 +2133,8 @@ const travel: ContentSet = {
 // Pick the content set for this deployment's theme. Sailing is the default;
 // presets without their own set yet fall back to the neutral content.
 function contentSetForTheme(): ContentSet {
-  const theme = (process.env.NEXT_PUBLIC_THEME || 'sailing').toLowerCase()
-  if (theme === 'sailing') return sailing
+  const theme = resolvePresetName(process.env.NEXT_PUBLIC_THEME)
+  if (theme === 'wildlife') return wildlife
   if (theme === 'lifestyle') return lifestyle
   if (theme === 'art') return art
   if (theme === 'travel') return travel
@@ -1899,7 +2226,7 @@ export async function seedDemoContent(payload: Payload) {
     console.warn(
       `[seed] Skipped: the database already contains galleries from a different preset ` +
         `(${existing.docs.map((g) => g.slug).join(', ')}), not the ` +
-        `'${(process.env.NEXT_PUBLIC_THEME || 'sailing').toLowerCase()}' set. ` +
+        `'${resolvePresetName(process.env.NEXT_PUBLIC_THEME)}' set. ` +
         `Point DATABASE_URI at the right branch or clear it before seeding.`,
     )
     return

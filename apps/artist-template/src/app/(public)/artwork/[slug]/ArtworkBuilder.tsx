@@ -152,6 +152,9 @@ export default function ArtworkBuilder({
         imageUrl={imageUrl}
         imageTitle={imageTitle}
         useStageFlow={true}
+        // Shareable build URLs (?t=…&size=…) on the artwork page only; the
+        // builder defaults to no URL sync so embeds don't rewrite the path.
+        syncUrl={true}
         recommendedSelections={{ size: '16x20' }}
         onAddToCart={handleAddToCart}
       />

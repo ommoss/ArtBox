@@ -108,7 +108,7 @@ export function useSyncBuilderUrl({
 }
 
 // Read once on mount, returns null if SSR. Caller is expected to feed this
-// into ProductBuilderV2's `initialTemplateSlug` + `initialSelectionValues`
+// into ProductBuilderV3's `initialTemplateSlug` + `initialSelectionValues`
 // props.
 export function useInitialBuilderUrlState(): BuilderUrlState | null {
   const [state, setState] = React.useState<BuilderUrlState | null>(null)

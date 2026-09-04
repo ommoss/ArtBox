@@ -33,20 +33,17 @@ export function StageFormat({
   onPick: (template: V2Template) => void
 }) {
   return (
-    <>
-      <style>{CSS}</style>
-      <div className="pbv2-format-grid" role="radiogroup" aria-label="Product format">
-        {templates.map((template) => (
-          <FormatCard
-            key={template.slug}
-            template={template}
-            imageUrl={imageUrl}
-            active={template.slug === activeSlug}
-            onPick={() => onPick(template)}
-          />
-        ))}
-      </div>
-    </>
+    <div className="pbv2-format-grid" role="radiogroup" aria-label="Product format">
+      {templates.map((template) => (
+        <FormatCard
+          key={template.slug}
+          template={template}
+          imageUrl={imageUrl}
+          active={template.slug === activeSlug}
+          onPick={() => onPick(template)}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -126,7 +123,9 @@ function FormatCard({
   )
 }
 
-const CSS = `
+// Injected once by the shell's single <style> (see ProductBuilderV3.tsx),
+// not per render of this component.
+export const STAGE_FORMAT_CSS = `
 .pbv2-format-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -139,7 +138,7 @@ const CSS = `
   padding: 0;
   background: ${TOKENS.surface};
   border: 1px solid ${TOKENS.border};
-  border-radius: 8px;
+  border-radius: ${TOKENS.controlRadius};
   cursor: pointer;
   text-align: left;
   font-family: ${TOKENS.fontBody};

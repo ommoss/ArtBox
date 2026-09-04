@@ -51,7 +51,6 @@ export function RoomPicker({ active, onChange }: Props) {
 
   return (
     <>
-      <style>{CSS}</style>
       <div className="pbv2-room-picker">
         <div className="pbv2-room-picker-head">
           <span className="pbv2-room-picker-label">View on a wall</span>
@@ -137,15 +136,22 @@ export function RoomPicker({ active, onChange }: Props) {
   )
 }
 
-const CSS = `
+// Injected once by the shell's single <style> (see ProductBuilderV3.tsx).
+export const ROOM_PICKER_CSS = `
 .pbv2-room-picker {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Fill the preview column so the chip strip scrolls inside the picker
+     instead of the picker growing to the strip's full width and pushing
+     the page sideways on phones. */
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   padding: 12px;
   background: ${TOKENS.surface};
   border: 1px solid ${TOKENS.border};
-  border-radius: 6px;
+  border-radius: ${TOKENS.controlRadius};
   font-family: ${TOKENS.fontBody};
 }
 .pbv2-room-picker-head {
@@ -181,7 +187,7 @@ const CSS = `
   min-width: 72px;
   height: 56px;
   border: 1px solid ${TOKENS.border};
-  border-radius: 4px;
+  border-radius: ${TOKENS.controlRadius};
   background: ${TOKENS.bg};
   color: ${TOKENS.primary};
   font-size: 0.8rem;
