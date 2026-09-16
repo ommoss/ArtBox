@@ -8,10 +8,10 @@ import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import HeroCarousel from '@/components/HeroCarousel'
 import JourneyHero from '@/components/JourneyHero'
 import DemoBand from '@/components/services/DemoBand'
-import MarketingHero, { type DemoCover } from '@/components/services/MarketingHero'
+import MarketingHero from '@/components/services/MarketingHero'
 import ServicesHome, { type GalleryCard } from '@/components/services/ServicesHome'
 import { getArtistBrand } from '@/lib/artist-config'
-import { DEMO_PRESETS, getTheme, isDemo, resolveSite, withSite, type Site } from '@/lib/site'
+import { getTheme, isDemo, resolveSite, withSite, type Site } from '@/lib/site'
 
 // Cache rendered pages for 5 minutes. CMS edits propagate within that window
 // — fine for a gallery site where new work goes up rarely. Big win over
@@ -304,30 +304,24 @@ function FeaturedStrip({ artworks }: { artworks: ArtworkRow[] }) {
   )
 }
 
-// Marketing root: one deployment, one URL. Lead image from each demo feeds
-// the hero mosaic and the builder embed.
+// Marketing root: one deployment, one URL. The hero shows captured tops of
+// the demo sites; the builder embed previews on a featured demo piece.
 async function MarketingHome() {
   const payload = await getPayload({ config })
-  const covers: DemoCover[] = await Promise.all(
-    DEMO_PRESETS.map(async (preset) => {
-      const demoSite: Site = { key: preset, kind: 'demo', preset }
-      const r = await payload.find({
-        collection: 'artworks',
-        where: withSite(demoSite, { isPublished: { equals: true } }),
-        sort: ['-isFeatured', '-updatedAt'],
-        limit: 1,
-        depth: 0,
-      })
-      const a = r.docs[0] as unknown as ArtworkRow | undefined
-      return { preset, imageUrl: a?.imageUrl ?? null }
-    }),
-  )
-  const lead = covers.find((c) => c.imageUrl)
+  const demoSite: Site = { key: 'wildlife', kind: 'demo', preset: 'wildlife' }
+  const r = await payload.find({
+    collection: 'artworks',
+    where: withSite(demoSite, { isPublished: { equals: true } }),
+    sort: ['-isFeatured', '-updatedAt'],
+    limit: 1,
+    depth: 0,
+  })
+  const lead = r.docs[0] as unknown as ArtworkRow | undefined
   const homeSite: Site = { key: 'home', kind: 'home', preset: 'wildlife' }
   return (
     <div>
       <div className="site-hero" data-hero>
-        <MarketingHero covers={covers} />
+        <MarketingHero />
       </div>
       <ServicesHome
         variant="home"
@@ -337,7 +331,7 @@ async function MarketingHome() {
           lead?.imageUrl ||
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=75'
         }
-        builderImageTitle="Featured work"
+        builderImageTitle={lead?.title || 'Featured work'}
       />
     </div>
   )
