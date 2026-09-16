@@ -1,21 +1,25 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useActionState } from 'react'
 
-export default function ContactForm({ defaultSubject = '' }: { defaultSubject?: string }) {
-  const [sent, setSent] = useState(false)
-  const [pending, startTransition] = useTransition()
+import { BotGuard } from '@/components/services/InquiryForm'
+import { submitInquiry, type InquiryState } from '@/lib/inquiry-actions'
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    startTransition(async () => {
-      // Demo: simulate a network round-trip without sending anything.
-      await new Promise((r) => setTimeout(r, 500))
-      setSent(true)
-    })
-  }
+const initial: InquiryState = { ok: false }
 
-  if (sent) {
+// Contact form on demo and artist sites. Posts to the same inquiries
+// collection and mailbox as the intake form, tagged with the site it came
+// from, so a prospect poking at a demo still reaches a person.
+export default function ContactForm({
+  defaultSubject = '',
+  source,
+}: {
+  defaultSubject?: string
+  source: string
+}) {
+  const [state, action, pending] = useActionState(submitInquiry, initial)
+
+  if (state.ok) {
     return (
       <div
         style={{
@@ -28,16 +32,14 @@ export default function ContactForm({ defaultSubject = '' }: { defaultSubject?: 
         <p style={{ margin: 0, color: 'var(--color-primary)', fontWeight: 500 }}>
           Thanks — we&apos;ll be in touch shortly.
         </p>
-        <p style={{ marginTop: 6, marginBottom: 0, color: 'var(--color-secondary)', fontSize: '0.85rem' }}>
-          (Demo only — no message was actually sent. Real form will route to the artist&apos;s
-          email of choice.)
-        </p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <input type="hidden" name="source" value={source} />
+      <BotGuard />
       <Field label="Your name" name="name" required />
       <Field label="Email" name="email" type="email" required />
       <Field label="Subject" name="subject" defaultValue={defaultSubject} />
@@ -54,9 +56,16 @@ export default function ContactForm({ defaultSubject = '' }: { defaultSubject?: 
             fontSize: '1rem',
             fontFamily: 'inherit',
             resize: 'vertical',
+            background: 'var(--color-surface)',
+            color: 'var(--color-primary)',
           }}
         />
       </label>
+      {state.error ? (
+        <p role="alert" style={{ margin: 0, color: 'var(--color-accent)', fontSize: '0.9rem' }}>
+          {state.error}
+        </p>
+      ) : null}
       <button
         type="submit"
         disabled={pending}

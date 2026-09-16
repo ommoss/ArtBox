@@ -9,6 +9,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Galleries } from './collections/Galleries'
 import { Artworks } from './collections/Artworks'
+import { Inquiries } from './collections/Inquiries'
 import { Catalog } from './globals/Catalog'
 import { MarketingPrompts } from './marketing/collections/MarketingPrompts'
 import { MarketingSettings } from './marketing/globals/MarketingSettings'
@@ -28,7 +29,7 @@ export default buildConfig({
       beforeDashboard: ['@/marketing/ui/MarketingPromptsWidget'],
     },
   },
-  collections: [Users, Media, Galleries, Artworks, MarketingPrompts],
+  collections: [Users, Media, Galleries, Artworks, Inquiries, MarketingPrompts],
   globals: [Catalog, MarketingSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

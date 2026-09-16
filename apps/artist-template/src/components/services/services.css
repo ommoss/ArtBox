@@ -436,3 +436,201 @@
     grid-column: auto;
   }
 }
+
+/* ------------------------------------------------------------------
+   Intake form (root CTA) + demo band (foot of a demo home)
+   ------------------------------------------------------------------ */
+
+.inq {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.inq label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+  opacity: 0.9;
+}
+.inq input,
+.inq select,
+.inq textarea {
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--color-primary);
+  background: var(--color-bg);
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+}
+.inq input:focus,
+.inq select:focus,
+.inq textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.inq textarea {
+  resize: vertical;
+}
+.inq-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.inq-row--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.inq-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.inq-fine {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+.inq-error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-accent);
+}
+.inq-done strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+}
+.inq-done p {
+  margin: 0;
+  opacity: 0.85;
+}
+.svc-cta--form {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: start;
+}
+.svc-cta--form .svc-btn {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  border-color: var(--color-bg);
+}
+.svc-cta__mail {
+  display: block;
+  margin-top: 18px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+.svc-cta__mail a {
+  color: inherit;
+}
+
+.demo-band {
+  margin-top: clamp(64px, 9vw, 128px);
+  padding: clamp(32px, 5vw, 56px) var(--page-padding);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.demo-band__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+.demo-band__title {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-heading);
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+.demo-band__lede {
+  margin: 0;
+  color: var(--color-secondary);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.demo-band__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Featured strip on artist / demo homes */
+.feat {
+  max-width: var(--max-width);
+  margin: clamp(56px, 8vw, 96px) auto 0;
+  padding: 0 var(--page-padding);
+}
+.feat__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.feat__head h2 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-heading);
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  margin: 0;
+}
+.feat__head a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.feat__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 24px;
+}
+.feat__card {
+  text-decoration: none;
+  color: inherit;
+}
+.feat__img {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  background: var(--color-surface);
+  border-radius: var(--image-radius);
+  box-shadow: var(--image-shadow);
+  overflow: hidden;
+}
+.feat__title {
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+.feat__meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .svc-cta--form,
+  .demo-band__inner {
+    grid-template-columns: 1fr;
+  }
+  .demo-band__actions {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 640px) {
+  .inq-row,
+  .inq-row--3 {
+    grid-template-columns: 1fr;
+  }
+}

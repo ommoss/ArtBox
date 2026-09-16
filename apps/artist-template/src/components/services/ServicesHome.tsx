@@ -5,6 +5,7 @@ import { demoLinks } from '@/lib/site'
 import { themes, type Theme } from '@/lib/themes'
 
 import DemoBuilder from './DemoBuilder'
+import InquiryForm from './InquiryForm'
 import {
   COMMISSION,
   CONTACT_EMAIL,
@@ -222,20 +223,18 @@ export default function ServicesHome({
         </ul>
       </section>
 
-      <section className="svc-cta" id="contact">
+      <section className="svc-cta svc-cta--form" id="contact">
         <div>
           <h2 className="svc-h2">Get your own site.</h2>
           <p>
-            Email a link to your portfolio: Instagram, an existing site, or a folder of work. You
-            get a draft deployment in your look to review before any commitment.
+            Tell us what you shoot and where the work lives today. You get a draft site in your
+            look to review before anything is agreed.
           </p>
+          <span className="svc-cta__mail">
+            Prefer email? <a href={mailto(`${PLATFORM_NAME} artist site inquiry`)}>{CONTACT_EMAIL}</a>
+          </span>
         </div>
-        <div className="svc-cta__actions">
-          <a className="svc-btn" href={mailto(`${PLATFORM_NAME} artist site inquiry`)}>
-            Email us about your site
-          </a>
-          <span className="svc-cta__email">{CONTACT_EMAIL}</span>
-        </div>
+        <InquiryForm source={`intake:${variant}`} />
       </section>
     </div>
   )

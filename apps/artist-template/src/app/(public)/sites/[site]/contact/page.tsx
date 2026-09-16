@@ -11,7 +11,8 @@ export default async function ContactPage({
   searchParams: Promise<{ subject?: string }>
 }) {
   const { subject } = await searchParams
-  const brand = getArtistBrand(resolveSite((await params).site))
+  const site = resolveSite((await params).site)
+  const brand = getArtistBrand(site)
   const handle = brand.artistName.toLowerCase().replace(/\s+/g, '')
 
   return (
@@ -32,7 +33,7 @@ export default async function ContactPage({
           alignItems: 'start',
         }}
       >
-        <ContactForm defaultSubject={subject ?? ''} />
+        <ContactForm defaultSubject={subject ?? ''} source={`contact:${site.key}`} />
 
         <div style={{ fontSize: '0.95rem', lineHeight: 1.8 }}>
           <h3

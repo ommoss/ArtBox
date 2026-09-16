@@ -7,6 +7,7 @@ import GalleryWallHero from '@/components/GalleryWallHero'
 import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import HeroCarousel from '@/components/HeroCarousel'
 import JourneyHero from '@/components/JourneyHero'
+import DemoBand from '@/components/services/DemoBand'
 import MarketingHero, { type DemoCover } from '@/components/services/MarketingHero'
 import ServicesHome, { type GalleryCard } from '@/components/services/ServicesHome'
 import { getArtistBrand } from '@/lib/artist-config'
@@ -61,7 +62,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
     collection: 'artworks',
     where: withSite(site, { isPublished: { equals: true } }),
     sort: ['-isFeatured', '-updatedAt'],
-    limit: theme.homeLayout === 'carousel' ? 6 : 1,
+    limit: 6,
     depth: 0,
   })
   const leadRows = leadQuery.docs as unknown as ArtworkRow[]
@@ -213,66 +214,93 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
         </section>
       ) : null}
 
-      {demo ? (
-        <ServicesHome
-          variant="demo"
-          theme={theme}
-          galleries={galleryCards}
-          builderImageUrl={
-            lead?.imageUrl ||
-            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=75'
-          }
-          builderImageTitle={lead?.title || 'Featured work'}
-        />
-      ) : (
-        <section style={{ padding: '0 var(--page-padding)', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 600, marginBottom: 24 }}>
-            Galleries
-          </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
-              gap: 32,
-            }}
-          >
-            {galleryCards.map((g, i) => (
-              <Link key={g.id} href={`/gallery/${g.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div
-                  style={{
-                    position: 'relative',
-                    aspectRatio: '4 / 3',
-                    background: 'var(--color-surface)',
-                    borderRadius: 'var(--image-radius)',
-                    boxShadow: 'var(--image-shadow)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {g.coverImageUrl ? (
-                    <Image
-                      src={g.coverImageUrl}
-                      alt={g.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      style={{ objectFit: 'cover' }}
-                      priority={i < 2}
-                    />
-                  ) : null}
-                </div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 500, marginTop: 16, marginBottom: 4, overflowWrap: 'anywhere' }}>
-                  {g.name}
-                </h3>
-                {g.description ? (
-                  <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem', overflowWrap: 'anywhere' }}>
-                    {g.description}
-                  </p>
+      <section style={{ padding: '0 var(--page-padding)', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 600, marginBottom: 24 }}>
+          Galleries
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
+            gap: 32,
+          }}
+        >
+          {galleryCards.map((g, i) => (
+            <Link key={g.id} href={`/gallery/${g.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div
+                style={{
+                  position: 'relative',
+                  aspectRatio: '4 / 3',
+                  background: 'var(--color-surface)',
+                  borderRadius: 'var(--image-radius)',
+                  boxShadow: 'var(--image-shadow)',
+                  overflow: 'hidden',
+                }}
+              >
+                {g.coverImageUrl ? (
+                  <Image
+                    src={g.coverImageUrl}
+                    alt={g.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: 'cover' }}
+                    priority={i < 2}
+                  />
                 ) : null}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 500, marginTop: 16, marginBottom: 4, overflowWrap: 'anywhere' }}>
+                {g.name}
+              </h3>
+              {g.description ? (
+                <p style={{ color: 'var(--color-secondary)', margin: 0, fontSize: '0.95rem', overflowWrap: 'anywhere' }}>
+                  {g.description}
+                </p>
+              ) : null}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <FeaturedStrip artworks={leadRows} />
+
+      {demo ? <DemoBand /> : null}
     </div>
+  )
+}
+
+// Featured and limited-edition pieces, the way print sellers lead: title,
+// edition line, straight into the piece.
+function FeaturedStrip({ artworks }: { artworks: ArtworkRow[] }) {
+  const rows = artworks.filter((a) => a.imageUrl && a.slug)
+  if (rows.length === 0) return null
+  return (
+    <section className="feat" aria-label="Featured work">
+      <div className="feat__head">
+        <h2>Featured work</h2>
+        <Link href="/gallery">All galleries</Link>
+      </div>
+      <div className="feat__grid">
+        {rows.map((a) => (
+          <Link key={a.slug} href={`/artwork/${a.slug}`} className="feat__card">
+            <div className="feat__img">
+              <Image
+                src={a.imageUrl as string}
+                alt={a.title ?? ''}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
+            <span className="feat__title">{a.title}</span>
+            <span className="feat__meta">
+              {a.isLimitedEdition && a.editionSize
+                ? `Limited edition of ${a.editionSize}`
+                : [a.location, a.year].filter(Boolean).join(', ') || 'Open edition'}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }
 
