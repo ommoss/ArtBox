@@ -16,7 +16,8 @@ import type { Where } from 'payload'
 
 import { DEFAULT_PRESET, resolvePresetName, themes, type Theme } from './themes'
 
-export const MULTI_SITE = process.env.MULTI_SITE === 'true'
+// Tolerant on purpose: dashboards produce 'True', 'TRUE', '1' and stray spaces.
+export const MULTI_SITE = /^(true|1|yes|on)$/i.test((process.env.MULTI_SITE || '').trim())
 export const SITE_DOMAIN = process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3001'
 export const HOME_KEY = 'home'
 
