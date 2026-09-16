@@ -6,6 +6,7 @@ import { themes, type Theme } from '@/lib/themes'
 
 import DemoBuilder from './DemoBuilder'
 import {
+  COMMISSION,
   CONTACT_EMAIL,
   FULFILMENT_CITY,
   FULFILMENT_PARTNER,
@@ -195,8 +196,8 @@ export default function ServicesHome({
         <span className="svc-kicker">Pricing</span>
         <h2 className="svc-h2">The more you sell, the less you pay us.</h2>
         <p className="svc-lede">
-          A monthly platform fee that steps down with your print sales, and a one-time setup fee.
-          Production is at cost; the markup is yours.
+          A monthly platform fee that steps down with your print sales, a {COMMISSION} commission on
+          each sale, and a one-time setup fee. Production is at cost; the markup above it is yours.
         </p>
         <ul className="svc-tiers">
           {pricingTiers.map((t) => (

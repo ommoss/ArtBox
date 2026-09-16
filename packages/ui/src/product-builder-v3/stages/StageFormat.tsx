@@ -128,8 +128,10 @@ function FormatCard({
 export const STAGE_FORMAT_CSS = `
 .pbv2-format-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  /* Three across in a ~450px controls column, two on a phone. Keeps the
+     format stage about as tall as the preview instead of twice it. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
 }
 .pbv2-format-card {
   display: flex;
@@ -162,7 +164,7 @@ export const STAGE_FORMAT_CSS = `
 }
 .pbv2-format-card-preview {
   width: 100%;
-  height: 140px;
+  height: 112px;
   background: ${TOKENS.bg};
   display: flex;
   align-items: center;
@@ -175,13 +177,13 @@ export const STAGE_FORMAT_CSS = `
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 14px 16px;
+  padding: 10px 12px 12px;
 }
 .pbv2-format-card-name {
   font-family: ${TOKENS.fontHeading};
   font-weight: ${TOKENS.weightHeading};
   letter-spacing: ${TOKENS.trackingHeading};
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 .pbv2-format-card-price {
   font-size: 0.85rem;

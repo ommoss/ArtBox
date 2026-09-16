@@ -452,8 +452,11 @@ body.header-glass .site-hero::before {
   background: rgba(255, 255, 255, 0.06);
   display: block;
 }
-.mkt-hero__tile:nth-child(2),
-.mkt-hero__tile:nth-child(3) {
+.mkt-hero__mosaic {
+  align-items: start;
+}
+/* Right-hand column sits a touch lower; both tiles shift so nothing overlaps. */
+.mkt-hero__tile:nth-child(even) {
   transform: translateY(18px);
 }
 .mkt-hero__tile-label {
@@ -472,8 +475,7 @@ body.header-glass .site-hero::before {
   .mkt-hero__inner {
     grid-template-columns: 1fr;
   }
-  .mkt-hero__tile:nth-child(2),
-  .mkt-hero__tile:nth-child(3) {
+  .mkt-hero__tile:nth-child(even) {
     transform: none;
   }
 }

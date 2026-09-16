@@ -908,7 +908,8 @@ const SHELL_CSS = `
 }
 .pbv2-preview {
   position: sticky;
-  top: 16px;
+  /* Clear the host site's sticky header when it publishes --header-h. */
+  top: calc(var(--header-h, 0px) + 16px);
   align-self: flex-start;
   display: flex;
   flex-direction: column;
