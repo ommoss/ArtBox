@@ -61,3 +61,13 @@ Done locally, uncommitted:
 Dev note: next.config now honours NEXT_DIST_DIR so a second dev server (other theme + branch) can run on 3002 with NEXT_DIST_DIR=.next-alt without corrupting .next.
 
 Remaining: seed wildlife DB; rename Vercel projects/env (NEXT_PUBLIC_IS_DEMO=true on all four, NEXT_PUBLIC_ARTIST_NAME unset, themeLinks URLs updated); real pricing numbers; gallery-card "from" prices (needs template pricing per site); owned demo image for the builder; wedding preset (deferred).
+
+## 2026-09-15: one deployment, subdomains
+
+Decisions: single Vercel project + single Neon DB; marketing root at mosseditions.com, demos at wildlife./lifestyle./art./travel.mosseditions.com; no Helcim on demos (pricing is a conversation, checkout stays the labelled mock); legal pages added.
+
+How it works: src/middleware.ts rewrites every public request to /sites/<key>/<path> (key from the Host header via siteKeyForHost; MULTI_SITE=true + NEXT_PUBLIC_SITE_DOMAIN). All public routes now live under app/(public)/sites/[site]/ and read the site from params (src/lib/site.ts: resolveSite, getTheme(site), withSite for queries, navFor, demoLinks, siteUrl). Galleries + artworks gained a `site` column; slug is unique per (site, slug) via a compound index. The seed tags all four content sets when MULTI_SITE. Single-artist deployments leave MULTI_SITE unset and behave as before (env preset, no site filter). Cart storage is keyed per site. Legal copy in src/content/legal.tsx served at /privacy, /terms, /shipping-returns on every site, footer-linked.
+
+DB: the old sailing branch (ep-wild-star-akr8iroh) is now the consolidated DB; schema pushed and all four sets seeded and tagged 2026-09-15. The untagged sailing rows are still in it (harmless, invisible to filtered queries) — delete when convenient.
+
+Vercel: one project; domains mosseditions.com, www, and the four subdomains added explicitly (CNAME each; no wildcard needed). Env: MULTI_SITE=true, NEXT_PUBLIC_SITE_DOMAIN=mosseditions.com, DATABASE_URI=<ep-wild-star>, DB_PUSH=true for the first deploy only. The other three Vercel projects + Neon branches can be deleted after cutover.

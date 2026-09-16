@@ -3,13 +3,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
+import { resolveSite, withSite } from '@/lib/site'
+
 export const revalidate = 300
 
-export default async function GalleriesIndex() {
+export default async function GalleriesIndex({ params }: { params: Promise<{ site: string }> }) {
+  const site = resolveSite((await params).site)
   const payload = await getPayload({ config })
   const galleries = await payload.find({
     collection: 'galleries',
-    where: { isPublished: { equals: true } },
+    where: withSite(site, { isPublished: { equals: true } }),
     sort: 'sortOrder',
     limit: 50,
     depth: 1,

@@ -18,14 +18,23 @@ export const Galleries: CollectionConfig = {
     update: isAuthenticated,
     delete: isAuthenticated,
   },
+  indexes: [{ fields: ['site', 'slug'], unique: true }],
   fields: [
     { name: 'name', type: 'text', required: true },
     {
       name: 'slug',
       type: 'text',
       required: true,
-      unique: true,
       index: true,
+    },
+    {
+      // Which site this row belongs to when one deployment serves several
+      // (MULTI_SITE): a preset name such as 'wildlife'. Single-artist
+      // deployments leave it empty and nothing filters on it.
+      name: 'site',
+      type: 'text',
+      index: true,
+      admin: { position: 'sidebar', description: 'Multi-site deployments only. Preset name this gallery belongs to.' },
     },
     { name: 'description', type: 'textarea' },
     {

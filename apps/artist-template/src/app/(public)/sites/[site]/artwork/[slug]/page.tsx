@@ -9,6 +9,7 @@ import {
   type CatalogSettings,
 } from '@/lib/catalog-filter'
 import { fetchTemplates, fulfillmentConfigured } from '@/lib/fulfillment-client'
+import { MULTI_SITE, resolveSite, withSite } from '@/lib/site'
 
 import ArtworkBuilder from './ArtworkBuilder'
 
@@ -32,24 +33,29 @@ export async function generateStaticParams() {
       limit: PRERENDER_LIMIT,
       depth: 0,
     })
-    return artworks.docs.map((a) => ({ slug: a.slug as string }))
+    return artworks.docs.flatMap((a) => {
+      const row = a as { slug?: string; site?: string | null }
+      const siteKey = MULTI_SITE ? row.site : resolveSite(undefined).key
+      return siteKey && row.slug ? [{ site: siteKey, slug: row.slug }] : []
+    })
   } catch {
     return []
   }
 }
 
-type Args = { params: Promise<{ slug: string }> }
+type Args = { params: Promise<{ site: string; slug: string }> }
 
 export default async function ArtworkDetail({ params }: Args) {
-  const { slug } = await params
+  const { site: siteParam, slug } = await params
+  const site = resolveSite(siteParam)
   const payload = await getPayload({ config })
 
   const artwork = (
     await payload.find({
       collection: 'artworks',
-      where: {
+      where: withSite(site, {
         and: [{ slug: { equals: slug } }, { isPublished: { equals: true } }],
-      },
+      }),
       limit: 1,
       depth: 2,
     })

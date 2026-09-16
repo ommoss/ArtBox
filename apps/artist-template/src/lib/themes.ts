@@ -257,59 +257,6 @@ export function resolvePresetName(raw?: string | null): string {
   return themes[resolved] ? resolved : DEFAULT_PRESET
 }
 
-// Public demo URLs for cross-linking the theme switcher bar at the bottom of
-// every page. The URLs are Vercel project names and still carry the old
-// style-based slugs; rename here when the projects are renamed.
-export type ThemeLink = { preset: string; label: string; url: string; tagline: string }
-
-export const themeLinks: ThemeLink[] = [
-  {
-    preset: 'wildlife',
-    label: 'Wildlife',
-    tagline: 'Large-format, limited editions',
-    url: 'https://art-box-artist-template.vercel.app',
-  },
-  {
-    preset: 'lifestyle',
-    label: 'Lifestyle',
-    tagline: 'Editorial & candid',
-    url: 'https://art-box-artist-demo-editorial.vercel.app',
-  },
-  {
-    preset: 'art',
-    label: 'Fine Art',
-    tagline: 'Dark, cinematic, gallery-wall',
-    url: 'https://art-box-artist-demo-atmospheric.vercel.app',
-  },
-  {
-    preset: 'travel',
-    label: 'Travel',
-    tagline: 'Sun-warmed, by destination',
-    url: 'https://art-box-artist-demo-warm.vercel.app',
-  },
-]
-
-export function getTheme(): Theme {
-  const preset = themes[resolvePresetName(process.env.NEXT_PUBLIC_THEME)]
-  return {
-    ...preset,
-    // Real artist sites set NEXT_PUBLIC_ARTIST_NAME / _TAGLINE. The demo
-    // deployments leave them unset and get the genre placeholder.
-    artistName: process.env.NEXT_PUBLIC_ARTIST_NAME || preset.demoArtistName,
-    tagline: process.env.NEXT_PUBLIC_ARTIST_TAGLINE || preset.demoTagline,
-  }
-}
-
-export function isDemoSite(): boolean {
-  return process.env.NEXT_PUBLIC_IS_DEMO === 'true'
-}
-
-export function getAnnouncement(theme: Theme): string | null {
-  const fromEnv = process.env.NEXT_PUBLIC_ANNOUNCEMENT?.trim()
-  if (fromEnv) return fromEnv
-  return isDemoSite() && theme.demoAnnouncement ? theme.demoAnnouncement : null
-}
-
 // Convert the theme into a record of CSS custom properties, for spreading
 // onto a wrapping element's style prop. Every component in the public app and
 // in @artbox/ui reads these; nothing should hardcode a colour, font, radius

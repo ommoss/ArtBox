@@ -7,9 +7,10 @@ import GalleryWallHero from '@/components/GalleryWallHero'
 import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import HeroCarousel from '@/components/HeroCarousel'
 import JourneyHero from '@/components/JourneyHero'
+import MarketingHero, { type DemoCover } from '@/components/services/MarketingHero'
 import ServicesHome, { type GalleryCard } from '@/components/services/ServicesHome'
 import { getArtistBrand } from '@/lib/artist-config'
-import { getTheme, isDemoSite } from '@/lib/themes'
+import { DEMO_PRESETS, getTheme, isDemo, resolveSite, withSite, type Site } from '@/lib/site'
 
 // Cache rendered pages for 5 minutes. CMS edits propagate within that window
 // — fine for a gallery site where new work goes up rarely. Big win over
@@ -36,15 +37,18 @@ type GalleryRow = {
   lng?: number | null
 }
 
-export default async function HomePage() {
-  const brand = getArtistBrand()
-  const theme = getTheme()
-  const isDemo = isDemoSite()
+export default async function HomePage({ params }: { params: Promise<{ site: string }> }) {
+  const site = resolveSite((await params).site)
+  if (site.kind === 'home') return <MarketingHome />
+
+  const brand = getArtistBrand(site)
+  const theme = getTheme(site)
+  const demo = isDemo(site)
   const payload = await getPayload({ config })
 
   const galleries = await payload.find({
     collection: 'galleries',
-    where: { isPublished: { equals: true } },
+    where: withSite(site, { isPublished: { equals: true } }),
     sort: 'sortOrder',
     limit: 6,
     depth: 1,
@@ -55,7 +59,7 @@ export default async function HomePage() {
   // single-piece heroes (lifestyle, art) and by the demo builder embed.
   const leadQuery = await payload.find({
     collection: 'artworks',
-    where: { isPublished: { equals: true } },
+    where: withSite(site, { isPublished: { equals: true } }),
     sort: ['-isFeatured', '-updatedAt'],
     limit: theme.homeLayout === 'carousel' ? 6 : 1,
     depth: 0,
@@ -209,8 +213,9 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {isDemo ? (
+      {demo ? (
         <ServicesHome
+          variant="demo"
           theme={theme}
           galleries={galleryCards}
           builderImageUrl={
@@ -267,6 +272,45 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+    </div>
+  )
+}
+
+// Marketing root: one deployment, one URL. Lead image from each demo feeds
+// the hero mosaic and the builder embed.
+async function MarketingHome() {
+  const payload = await getPayload({ config })
+  const covers: DemoCover[] = await Promise.all(
+    DEMO_PRESETS.map(async (preset) => {
+      const demoSite: Site = { key: preset, kind: 'demo', preset }
+      const r = await payload.find({
+        collection: 'artworks',
+        where: withSite(demoSite, { isPublished: { equals: true } }),
+        sort: ['-isFeatured', '-updatedAt'],
+        limit: 1,
+        depth: 0,
+      })
+      const a = r.docs[0] as unknown as ArtworkRow | undefined
+      return { preset, imageUrl: a?.imageUrl ?? null }
+    }),
+  )
+  const lead = covers.find((c) => c.imageUrl)
+  const homeSite: Site = { key: 'home', kind: 'home', preset: 'wildlife' }
+  return (
+    <div>
+      <div className="site-hero" data-hero>
+        <MarketingHero covers={covers} />
+      </div>
+      <ServicesHome
+        variant="home"
+        theme={getTheme(homeSite)}
+        galleries={[]}
+        builderImageUrl={
+          lead?.imageUrl ||
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=75'
+        }
+        builderImageTitle="Featured work"
+      />
     </div>
   )
 }

@@ -1,14 +1,17 @@
 import { getArtistBrand } from '@/lib/artist-config'
+import { resolveSite } from '@/lib/site'
 
 import ContactForm from './ContactForm'
 
 export default async function ContactPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ site: string }>
   searchParams: Promise<{ subject?: string }>
 }) {
   const { subject } = await searchParams
-  const brand = getArtistBrand()
+  const brand = getArtistBrand(resolveSite((await params).site))
   const handle = brand.artistName.toLowerCase().replace(/\s+/g, '')
 
   return (

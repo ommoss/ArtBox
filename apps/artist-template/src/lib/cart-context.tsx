@@ -41,14 +41,15 @@ function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children, siteKey = '' }: { children: React.ReactNode; siteKey?: string }) {
+  const storageKey = siteKey ? `${STORAGE_KEY}:${siteKey}` : STORAGE_KEY
   const [items, setItems] = useState<CartItem[]>([])
   const [hydrated, setHydrated] = useState(false)
 
   // Hydrate from sessionStorage after mount.
   useEffect(() => {
     try {
-      const raw = window.sessionStorage.getItem(STORAGE_KEY)
+      const raw = window.sessionStorage.getItem(storageKey)
       if (raw) {
         const parsed = JSON.parse(raw) as CartItem[]
         if (Array.isArray(parsed)) setItems(parsed)
@@ -57,17 +58,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
     setHydrated(true)
-  }, [])
+  }, [storageKey])
 
   // Persist on change (only after hydration so we don't blow away saved cart).
   useEffect(() => {
     if (!hydrated) return
     try {
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+      window.sessionStorage.setItem(storageKey, JSON.stringify(items))
     } catch {
       // ignore
     }
-  }, [items, hydrated])
+  }, [items, hydrated, storageKey])
 
   const addItem = useCallback((item: Omit<CartItem, 'id'>) => {
     setItems((prev) => [...prev, { ...item, id: makeId() }])

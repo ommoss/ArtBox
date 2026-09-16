@@ -60,6 +60,19 @@
   opacity: 1;
 }
 
+/* Button variants used on the marketing hero (dark ground). */
+.svc-btn--light {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  border-color: var(--color-bg);
+}
+.svc-btn--outline {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+  opacity: 0.85;
+}
+
 /* Intro strip right under the hero */
 .svc-intro {
   padding: 40px 0 0;

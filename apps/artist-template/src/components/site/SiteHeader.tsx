@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import CartButton from '@/components/CartButton'
+import type { NavItem } from '@/lib/site'
 import type { HeaderLayout, HeaderStyle } from '@/lib/themes'
 
 // Site header for every preset. Two axes come from the theme:
@@ -18,20 +19,20 @@ import type { HeaderLayout, HeaderStyle } from '@/lib/themes'
 // the page (heroes opt in by rendering that attribute + the .site-hero class).
 // The results land on data attributes the stylesheet keys off.
 
-const NAV = [
-  { href: '/gallery', label: 'Galleries' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-]
-
 export default function SiteHeader({
   artistName,
   layout,
   style,
+  items,
+  showCart,
+  showAdmin,
 }: {
   artistName: string
   layout: HeaderLayout
   style: HeaderStyle
+  items: NavItem[]
+  showCart: boolean
+  showAdmin: boolean
 }) {
   const pathname = usePathname()
   const headerRef = useRef<HTMLElement>(null)
@@ -121,18 +122,21 @@ export default function SiteHeader({
           {menuOpen ? 'Close' : 'Menu'}
         </button>
         <nav className="site-nav" id="site-nav" aria-label="Primary">
-          {NAV.map((item) => {
-            const current = pathname === item.href || pathname.startsWith(item.href + '/')
+          {items.map((item) => {
+            const path = item.href.split('#')[0]
+            const current = path !== '/' && (pathname === path || pathname.startsWith(path + '/'))
             return (
               <Link key={item.href} href={item.href} aria-current={current ? 'page' : undefined}>
                 {item.label}
               </Link>
             )
           })}
-          <CartButton />
-          <Link href="/admin" className="site-nav__admin">
-            Admin
-          </Link>
+          {showCart ? <CartButton /> : null}
+          {showAdmin ? (
+            <Link href="/admin" className="site-nav__admin">
+              Admin
+            </Link>
+          ) : null}
         </nav>
       </div>
     </header>

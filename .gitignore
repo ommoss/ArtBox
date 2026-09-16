@@ -17,3 +17,6 @@ data/
 
 .turbo
 .vercel
+
+# second local dev server dist dir (NEXT_DIST_DIR)
+.next-alt/

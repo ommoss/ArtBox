@@ -384,3 +384,96 @@ body.header-glass .site-hero::before {
     padding: 3px 10px;
   }
 }
+
+/* ------------------------------------------------------------------
+   Footer links + marketing root hero
+   ------------------------------------------------------------------ */
+
+.site-footer__links {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.mkt-hero {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  padding: calc(var(--header-h) + clamp(40px, 8vh, 96px)) var(--page-padding) clamp(48px, 8vh, 96px);
+}
+.mkt-hero__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+.mkt-hero__kicker {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 18px;
+}
+.mkt-hero__title {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-heading);
+  letter-spacing: var(--tracking-heading);
+  font-size: clamp(2.2rem, 4.8vw, 4rem);
+  line-height: 1.04;
+  margin: 0 0 20px;
+  max-width: 16ch;
+}
+.mkt-hero__lede {
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  line-height: 1.6;
+  opacity: 0.85;
+  max-width: 52ch;
+  margin: 0 0 28px;
+}
+.mkt-hero__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mkt-hero__mosaic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mkt-hero__tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--control-radius);
+  background: rgba(255, 255, 255, 0.06);
+  display: block;
+}
+.mkt-hero__tile:nth-child(2),
+.mkt-hero__tile:nth-child(3) {
+  transform: translateY(18px);
+}
+.mkt-hero__tile-label {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+@media (max-width: 900px) {
+  .mkt-hero__inner {
+    grid-template-columns: 1fr;
+  }
+  .mkt-hero__tile:nth-child(2),
+  .mkt-hero__tile:nth-child(3) {
+    transform: none;
+  }
+}

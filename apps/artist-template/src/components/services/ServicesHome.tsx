@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { themeLinks, themes, type Theme } from '@/lib/themes'
+import { demoLinks } from '@/lib/site'
+import { themes, type Theme } from '@/lib/themes'
 
 import DemoBuilder from './DemoBuilder'
 import {
@@ -33,11 +34,15 @@ export type GalleryCard = {
 }
 
 export default function ServicesHome({
+  variant,
   theme,
   galleries,
   builderImageUrl,
   builderImageTitle,
 }: {
+  // 'demo' sits under a sample artist's hero and introduces the platform;
+  // 'home' is the marketing root, whose hero already did that.
+  variant: 'demo' | 'home'
   theme: Theme
   galleries: GalleryCard[]
   builderImageUrl: string
@@ -45,6 +50,7 @@ export default function ServicesHome({
 }) {
   return (
     <div className="svc">
+      {variant === 'demo' ? (
       <section className="svc-intro" id="services">
         <div>
           <span className="svc-kicker">A sample site by {PLATFORM_NAME}</span>
@@ -68,6 +74,7 @@ export default function ServicesHome({
           ))}
         </ul>
       </section>
+      ) : null}
 
       <section className="svc-fulfil" id="fulfilment">
         <div className="svc-fulfil__copy">
@@ -79,9 +86,9 @@ export default function ServicesHome({
             post office, no minimums.
           </p>
           <p>
-            You upload web-resolution images; print masters stay at the shop. Card payments run
-            through Helcim at checkout, and each order lands in a fulfilment queue the shop works
-            from directly.
+            You upload web-resolution images; print masters stay at the shop. Each order lands in
+            a fulfilment queue the shop works from directly. Payment and pricing are set up with
+            you when we scope the site.
           </p>
         </div>
         <ul className="svc-products">
@@ -158,9 +165,9 @@ export default function ServicesHome({
           Yours starts from one of these and is tuned to your work.
         </p>
         <div className="svc-looks__grid">
-          {themeLinks.map((link) => {
+          {demoLinks().map((link) => {
             const preset = themes[link.preset]
-            const active = link.preset === theme.preset
+            const active = variant === 'demo' && link.preset === theme.preset
             return (
               <a
                 key={link.preset}

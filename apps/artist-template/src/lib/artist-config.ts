@@ -1,6 +1,7 @@
-import { getTheme, type Theme } from './themes'
+import { getTheme, type Site } from './site'
+import type { Theme } from './themes'
 
-// Backward-compatible facade. New code should use getTheme() directly.
+// Backward-compatible facade. New code should use getTheme(site) directly.
 export type ArtistBrand = {
   artistName: string
   tagline: string
@@ -10,8 +11,8 @@ export type ArtistBrand = {
   theme: Theme
 }
 
-export function getArtistBrand(): ArtistBrand {
-  const theme = getTheme()
+export function getArtistBrand(site: Site): ArtistBrand {
+  const theme = getTheme(site)
   return {
     artistName: theme.artistName,
     tagline: theme.tagline,

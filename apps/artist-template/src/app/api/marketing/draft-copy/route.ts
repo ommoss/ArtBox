@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 
 import { getArtistBrand } from '@/lib/artist-config'
+import { resolveSite } from '@/lib/site'
 import { fetchEntitlements } from '@/lib/fulfillment-client'
 import { DRAFT_MODEL, getAnthropicClient } from '@/marketing/llm/client'
 import {
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const brand = getArtistBrand()
+  const brand = getArtistBrand(resolveSite(undefined))
   const target = defaultTargetFor(
     (body.platform as SocialTarget) ?? (prompt.socialTarget as SocialTarget),
   )

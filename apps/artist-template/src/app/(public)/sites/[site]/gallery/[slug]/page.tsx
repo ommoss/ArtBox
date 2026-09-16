@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 
 import GalleryGrid from '@/components/GalleryGrid'
-import { getTheme } from '@/lib/themes'
+import { getTheme, MULTI_SITE, resolveSite, withSite } from '@/lib/site'
 
 export const revalidate = 300
 // Pre-render known galleries at build time; render new ones on-demand and
@@ -20,7 +20,11 @@ export async function generateStaticParams() {
       limit: 100,
       depth: 0,
     })
-    return galleries.docs.map((g) => ({ slug: g.slug as string }))
+    return galleries.docs.flatMap((g) => {
+      const row = g as { slug?: string; site?: string | null }
+      const siteKey = MULTI_SITE ? row.site : resolveSite(undefined).key
+      return siteKey && row.slug ? [{ site: siteKey, slug: row.slug }] : []
+    })
   } catch {
     // DB unreachable at build time — fall back to fully on-demand rendering.
     return []
@@ -30,12 +34,13 @@ export async function generateStaticParams() {
 const PER_PAGE = 60
 
 type Args = {
-  params: Promise<{ slug: string }>
+  params: Promise<{ site: string; slug: string }>
   searchParams: Promise<{ page?: string }>
 }
 
 export default async function GalleryDetail({ params, searchParams }: Args) {
-  const { slug } = await params
+  const { site: siteParam, slug } = await params
+  const site = resolveSite(siteParam)
   const { page: pageParam } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
   const payload = await getPayload({ config })
@@ -43,9 +48,9 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
   const gallery = (
     await payload.find({
       collection: 'galleries',
-      where: {
+      where: withSite(site, {
         and: [{ slug: { equals: slug } }, { isPublished: { equals: true } }],
-      },
+      }),
       limit: 1,
       depth: 1,
     })
@@ -53,7 +58,7 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
 
   if (!gallery) notFound()
 
-  const theme = getTheme()
+  const theme = getTheme(site)
 
   const artworks = await payload.find({
     collection: 'artworks',

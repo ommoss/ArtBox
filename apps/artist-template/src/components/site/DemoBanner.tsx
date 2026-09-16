@@ -1,16 +1,18 @@
-import Link from 'next/link'
+import { HOME_KEY, MULTI_SITE, siteUrl } from '@/lib/site'
 
-// Shown only when NEXT_PUBLIC_IS_DEMO=true (the genre showcase deployments).
-// Real artist sites never render it.
-export default function DemoBanner({ href = '/#how-it-works' }: { href?: string }) {
+// Shown on demo sites only. Real artist sites never render it. Links back to
+// the marketing root when one deployment serves everything, otherwise to the
+// demo's own "how it works" section.
+export default function DemoBanner() {
+  const href = MULTI_SITE ? siteUrl(HOME_KEY, '/#how-it-works') : '/#how-it-works'
   return (
     <div className="demo-banner">
       <span className="demo-banner__text">
         Sample artist site — built on the Moss Editions platform
       </span>
-      <Link href={href} className="demo-banner__cta">
+      <a href={href} className="demo-banner__cta">
         See how it works →
-      </Link>
+      </a>
     </div>
   )
 }

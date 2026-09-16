@@ -1,5 +1,6 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 
+import { MULTI_SITE } from '@/lib/site'
 import { resolvePresetName } from '@/lib/themes'
 
 // Demo content for the artist template.
@@ -2132,6 +2133,8 @@ const travel: ContentSet = {
 
 // Pick the content set for this deployment's theme. Sailing is the default;
 // presets without their own set yet fall back to the neutral content.
+const contentSets: Record<string, ContentSet> = { wildlife, lifestyle, art, travel }
+
 function contentSetForTheme(): ContentSet {
   const theme = resolvePresetName(process.env.NEXT_PUBLIC_THEME)
   if (theme === 'wildlife') return wildlife
@@ -2210,14 +2213,23 @@ async function seedVolumeArtworks(
 }
 
 export async function seedDemoContent(payload: Payload) {
-  const { galleries, artworks } = contentSetForTheme()
+  if (MULTI_SITE) {
+    // One database serves every demo: seed each preset's set tagged with its
+    // site key. Rows are matched on (site, slug).
+    for (const [site, set] of Object.entries(contentSets)) {
+      await seedContentSet(payload, set, site)
+    }
+    return
+  }
+
+  const set = contentSetForTheme()
 
   // Safety: if the database already holds galleries and NONE of them belong to
   // this theme's content set, it's another preset's database — bail out rather
   // than pollute it. This is what stops `NEXT_PUBLIC_THEME=travel pnpm dev`
   // (run without overriding DATABASE_URI) from seeding travel galleries into
-  // the sailing DB. Re-seeding the same theme, or seeding an empty DB, proceeds.
-  const mySlugs = new Set(galleries.map((g) => g.slug))
+  // the wildlife DB. Re-seeding the same theme, or seeding an empty DB, proceeds.
+  const mySlugs = new Set(set.galleries.map((g) => g.slug))
   const existing = await payload.find({ collection: 'galleries', limit: 100, depth: 0 })
   if (
     existing.docs.length > 0 &&
@@ -2232,13 +2244,24 @@ export async function seedDemoContent(payload: Payload) {
     return
   }
 
+  await seedContentSet(payload, set, null)
+}
+
+// Upsert one content set. `site` tags every row when MULTI_SITE; null leaves
+// the column empty for single-artist deployments.
+async function seedContentSet(payload: Payload, set: ContentSet, site: string | null) {
+  const { galleries, artworks } = set
+  const bySlug = (slug: string): Where =>
+    site ? { and: [{ site: { equals: site } }, { slug: { equals: slug } }] } : { slug: { equals: slug } }
+  const siteData = site ? { site } : {}
+
   const galleryIdBySlug = new Map<string, number>()
 
   for (const g of galleries) {
     const existing = (
       await payload.find({
         collection: 'galleries',
-        where: { slug: { equals: g.slug } },
+        where: bySlug(g.slug),
         limit: 1,
         depth: 0,
       })
@@ -2249,6 +2272,7 @@ export async function seedDemoContent(payload: Payload) {
         collection: 'galleries',
         id: existing.id,
         data: {
+          ...siteData,
           name: g.name,
           description: g.description,
           coverImageUrl: g.coverImageUrl,
@@ -2264,6 +2288,7 @@ export async function seedDemoContent(payload: Payload) {
     const created = await payload.create({
       collection: 'galleries',
       data: {
+        ...siteData,
         slug: g.slug,
         name: g.name,
         description: g.description,
@@ -2284,7 +2309,7 @@ export async function seedDemoContent(payload: Payload) {
     const existing = (
       await payload.find({
         collection: 'artworks',
-        where: { slug: { equals: a.slug } },
+        where: bySlug(a.slug),
         limit: 1,
         depth: 0,
       })
@@ -2303,6 +2328,7 @@ export async function seedDemoContent(payload: Payload) {
         collection: 'artworks',
         id: existing.id,
         data: {
+          ...siteData,
           title: a.title,
           gallery: galleryId,
           description: a.description,
@@ -2319,6 +2345,7 @@ export async function seedDemoContent(payload: Payload) {
     await payload.create({
       collection: 'artworks',
       data: {
+        ...siteData,
         slug: a.slug,
         title: a.title,
         gallery: galleryId,

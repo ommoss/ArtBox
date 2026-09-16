@@ -1,12 +1,13 @@
 import Image from 'next/image'
 
 import { getArtistBrand } from '@/lib/artist-config'
+import { resolveSite } from '@/lib/site'
 
 const PORTRAIT_URL =
   'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80'
 
-export default function AboutPage() {
-  const brand = getArtistBrand()
+export default async function AboutPage({ params }: { params: Promise<{ site: string }> }) {
+  const brand = getArtistBrand(resolveSite((await params).site))
 
   return (
     <section style={{ padding: '64px 32px 32px', maxWidth: 1100, margin: '0 auto' }}>
