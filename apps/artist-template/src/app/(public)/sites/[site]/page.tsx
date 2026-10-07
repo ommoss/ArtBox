@@ -3,10 +3,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
+import ConstructHero from '@/components/ConstructHero'
 import GalleryWallHero from '@/components/GalleryWallHero'
 import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import HeroCarousel from '@/components/HeroCarousel'
 import JourneyHero from '@/components/JourneyHero'
+import QuietHero from '@/components/QuietHero'
 import DemoBand from '@/components/services/DemoBand'
 import MarketingHero from '@/components/services/MarketingHero'
 import ServicesHome, { type GalleryCard } from '@/components/services/ServicesHome'
@@ -163,6 +165,28 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
             <JourneyHero artistName={brand.artistName} tagline={brand.tagline} gallery={journey} />
           </div>
         ) : null
+      case 'construct': {
+        const pieces = leadRows
+          .filter((r) => r.imageUrl && r.slug)
+          .slice(0, 2)
+          .map((r) => ({ slug: r.slug as string, title: r.title ?? '', imageUrl: r.imageUrl as string }))
+        return <ConstructHero artistName={brand.artistName} tagline={brand.tagline} pieces={pieces} />
+      }
+      case 'quiet':
+        return lead?.imageUrl && lead.slug ? (
+          <QuietHero
+            artistName={brand.artistName}
+            tagline={brand.tagline}
+            piece={{
+              slug: lead.slug,
+              title: lead.title ?? '',
+              imageUrl: lead.imageUrl,
+              location: lead.location,
+              year: lead.year,
+            }}
+            pieceCount={leadQuery.totalDocs}
+          />
+        ) : null
       case 'globe':
         return globePins.length > 0 ? (
           <div className="site-hero" data-hero>
@@ -214,8 +238,20 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
         </section>
       ) : null}
 
-      <section style={{ padding: '0 var(--page-padding)', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
-        <h2 style={{ fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: 600, marginBottom: 24 }}>
+      <section
+        className="home-galleries"
+        style={{ padding: '56px var(--page-padding) 0', maxWidth: 'var(--max-width)', margin: '0 auto' }}
+      >
+        <h2
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--weight-heading)' as unknown as number,
+            fontSize: '1.05rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            margin: '0 0 24px',
+          }}
+        >
           Galleries
         </h2>
         <div

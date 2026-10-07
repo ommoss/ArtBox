@@ -32,12 +32,14 @@ export const PLATFORM_NAME = 'Moss Editions'
 export const PLATFORM_TAGLINE = 'Print shops for photographers, with fulfilment included'
 
 // Order the demos are presented in.
-export const DEMO_PRESETS = ['wildlife', 'lifestyle', 'art', 'travel'] as const
+export const DEMO_PRESETS = ['wildlife', 'lifestyle', 'art', 'travel', 'bauhaus', 'wabisabi'] as const
 export const DEMO_LABELS: Record<string, { label: string; tagline: string }> = {
   wildlife: { label: 'Wildlife', tagline: 'Large-format, limited editions' },
   lifestyle: { label: 'Lifestyle', tagline: 'Editorial & candid' },
   art: { label: 'Fine Art', tagline: 'Dark, cinematic, gallery-wall' },
   travel: { label: 'Travel', tagline: 'Sun-warmed, by destination' },
+  bauhaus: { label: 'Bauhaus', tagline: 'Primary colour, strict grid' },
+  wabisabi: { label: 'Wabi-sabi', tagline: 'Quiet, imperfect, unhurried' },
 }
 
 // Turn the [site] route param into a Site. In single-site mode the param is

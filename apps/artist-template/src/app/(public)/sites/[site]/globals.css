@@ -406,7 +406,7 @@ body.header-glass .site-hero::before {
   max-width: var(--max-width);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
   gap: clamp(32px, 5vw, 72px);
   align-items: center;
 }
@@ -441,7 +441,7 @@ body.header-glass .site-hero::before {
 }
 .mkt-hero__mosaic {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 .mkt-hero__tile {
@@ -478,11 +478,11 @@ body.header-glass .site-hero::before {
 .mkt-hero__mosaic {
   align-items: start;
 }
-/* Right-hand column sits a touch lower; both tiles shift so nothing overlaps. */
-.mkt-hero__tile:nth-child(even) {
+/* Middle column sits a touch lower; its tiles shift together so nothing overlaps. */
+.mkt-hero__tile:nth-child(3n+2) {
   transform: translateY(18px);
 }
-.mkt-hero__tile:nth-child(even):hover {
+.mkt-hero__tile:nth-child(3n+2):hover {
   transform: translateY(15px);
 }
 .mkt-hero__tile-label {
@@ -501,8 +501,64 @@ body.header-glass .site-hero::before {
   .mkt-hero__inner {
     grid-template-columns: 1fr;
   }
-  .mkt-hero__tile:nth-child(even),
-  .mkt-hero__tile:nth-child(even):hover {
+  .mkt-hero__mosaic {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mkt-hero__tile:nth-child(3n+2),
+  .mkt-hero__tile:nth-child(3n+2):hover {
     transform: none;
   }
+}
+
+/* ------------------------------------------------------------------
+   Style presets: the touches tokens can't express
+   ------------------------------------------------------------------ */
+
+/* Bauhaus: heavy rules, uppercase headings and nav, no softness anywhere. */
+body.theme-bauhaus .site-header {
+  border-bottom: 3px solid #111;
+}
+body.theme-bauhaus .site-header__name {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+body.theme-bauhaus .site-nav a {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+body.theme-bauhaus main h1,
+body.theme-bauhaus main h2 {
+  text-transform: uppercase;
+}
+body.theme-bauhaus .site-footer {
+  border-top: 3px solid #111;
+}
+
+/* Wabi-sabi: lighter text weight, lowercase nav, more air between lines. */
+body.theme-wabisabi {
+  font-weight: 300;
+  line-height: 1.75;
+}
+body.theme-wabisabi .site-header {
+  border-bottom-color: transparent;
+}
+body.theme-wabisabi .site-header__name {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+body.theme-wabisabi .site-nav a {
+  text-transform: lowercase;
+  letter-spacing: 0.08em;
+}
+body.theme-wabisabi .site-footer {
+  border-top-color: transparent;
+}
+body.theme-wabisabi .home-galleries h2 {
+  text-transform: none !important;
+  letter-spacing: 0.1em !important;
+  font-size: 1.2rem !important;
 }

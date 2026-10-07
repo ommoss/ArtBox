@@ -30,7 +30,7 @@ export default function MarketingHero() {
             </a>
           </div>
         </div>
-        <div className="mkt-hero__mosaic" aria-label="The four demo sites">
+        <div className="mkt-hero__mosaic" aria-label="The demo sites">
           {DEMO_PRESETS.map((preset, i) => (
             <a key={preset} href={siteUrl(preset)} className="mkt-hero__tile">
               <span className="mkt-hero__chrome" aria-hidden>

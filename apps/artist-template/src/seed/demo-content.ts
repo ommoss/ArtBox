@@ -1,6 +1,8 @@
 import type { Payload, Where } from 'payload'
 
 import { MULTI_SITE } from '@/lib/site'
+import { bauhausArtworks, bauhausGalleries } from './content/bauhaus'
+import { wabisabiArtworks, wabisabiGalleries } from './content/wabisabi'
 import { resolvePresetName } from '@/lib/themes'
 
 // Demo content for the artist template.
@@ -19,7 +21,7 @@ import { resolvePresetName } from '@/lib/themes'
 // Re-running the seed force-updates existing rows so deployed demos pick up
 // new URLs / new artworks on next boot.
 
-type ArtworkSeed = {
+export type ArtworkSeed = {
   slug: string
   title: string
   galleryslug: string
@@ -37,7 +39,7 @@ type ArtworkSeed = {
   lng?: number
 }
 
-type GallerySeed = {
+export type GallerySeed = {
   slug: string
   name: string
   description: string
@@ -2133,7 +2135,10 @@ const travel: ContentSet = {
 
 // Pick the content set for this deployment's theme. Sailing is the default;
 // presets without their own set yet fall back to the neutral content.
-const contentSets: Record<string, ContentSet> = { wildlife, lifestyle, art, travel }
+const bauhaus: ContentSet = { galleries: bauhausGalleries, artworks: bauhausArtworks }
+const wabisabi: ContentSet = { galleries: wabisabiGalleries, artworks: wabisabiArtworks }
+
+const contentSets: Record<string, ContentSet> = { wildlife, lifestyle, art, travel, bauhaus, wabisabi }
 
 function contentSetForTheme(): ContentSet {
   const theme = resolvePresetName(process.env.NEXT_PUBLIC_THEME)
@@ -2141,6 +2146,8 @@ function contentSetForTheme(): ContentSet {
   if (theme === 'lifestyle') return lifestyle
   if (theme === 'art') return art
   if (theme === 'travel') return travel
+  if (theme === 'bauhaus') return bauhaus
+  if (theme === 'wabisabi') return wabisabi
   return neutral
 }
 
@@ -2216,7 +2223,14 @@ export async function seedDemoContent(payload: Payload) {
   if (MULTI_SITE) {
     // One database serves every demo: seed each preset's set tagged with its
     // site key. Rows are matched on (site, slug).
+    // SEED_SITES=bauhaus,wabisabi seeds only those sites, leaving the rest
+    // (and any admin edits to them) untouched.
+    const only = (process.env.SEED_SITES || '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean)
     for (const [site, set] of Object.entries(contentSets)) {
+      if (only.length && !only.includes(site)) continue
       await seedContentSet(payload, set, site)
     }
     return

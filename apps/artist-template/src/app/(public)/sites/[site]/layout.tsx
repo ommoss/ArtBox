@@ -7,6 +7,7 @@ import SiteFooter from '@/components/site/SiteFooter'
 import SiteHeader from '@/components/site/SiteHeader'
 import ThemeSwitcher from '@/components/site/ThemeSwitcher'
 import { getAnnouncement, getTheme, isDemo, navFor, resolveSite } from '@/lib/site'
+import { fontVariables } from '@/lib/fonts'
 import { themeCssVars } from '@/lib/themes'
 
 import './globals.css'
@@ -43,7 +44,7 @@ export default async function PublicLayout({
   const nav = navFor(site)
 
   return (
-    <html lang="en">
+    <html lang="en" className={fontVariables}>
       <body
         className={`theme-${theme.preset} header-${theme.headerStyle} site-${site.kind}`}
         style={{

@@ -78,12 +78,12 @@ export default async function GalleryDetail({ params, searchParams }: Args) {
   const hasNext = page < totalPages
 
   return (
-    <section style={{ padding: '64px 32px', maxWidth: 1280, margin: '0 auto' }}>
+    <section style={{ padding: '64px var(--page-padding)', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
       <Link href="/gallery" style={{ color: 'var(--color-secondary)', fontSize: '0.9rem', textDecoration: 'none' }}>
         ← All galleries
       </Link>
 
-      <h1 style={{ fontSize: '2rem', fontWeight: 500, marginTop: 16, marginBottom: 8 }}>
+      <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--weight-heading)' as unknown as number, letterSpacing: 'var(--tracking-heading)', fontSize: '2rem', marginTop: 16, marginBottom: 8 }}>
         {gallery.name}
       </h1>
       {gallery.description ? (

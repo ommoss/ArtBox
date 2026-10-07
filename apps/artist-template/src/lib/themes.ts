@@ -19,7 +19,17 @@ export type HeaderStyle = 'solid' | 'glass'
 // 'journeys'     — latest journey cover, then the globe as a "browse by place" section (travel)
 // 'globe'        — globe as the whole hero (previous travel home, kept)
 // 'centered'     — name + tagline only (fallback)
-export type HomeLayout = 'centered' | 'hero' | 'carousel' | 'gallery-wall' | 'journeys' | 'globe'
+// 'construct'    — Bauhaus composition: colour blocks + photographs on a strict grid (bauhaus)
+// 'quiet'        — one photograph, wide margins, a few lines of text (wabisabi)
+export type HomeLayout =
+  | 'centered'
+  | 'hero'
+  | 'carousel'
+  | 'gallery-wall'
+  | 'journeys'
+  | 'globe'
+  | 'construct'
+  | 'quiet'
 export type GalleryGridMode =
   | 'uniform'
   | 'magazine'
@@ -27,6 +37,8 @@ export type GalleryGridMode =
   | 'cinematic'
   | 'solo'
   | 'route'
+  | 'construct'
+  | 'quiet'
 export type ArtworkLayout = 'stacked' | 'asymmetric'
 
 export type Theme = {
@@ -232,11 +244,79 @@ const travel: ThemePreset = {
   demoTagline: 'Journeys, one print at a time',
 }
 
+// Bauhaus: the style rather than a genre. Primary red / yellow / blue on an
+// off-white ground, black rules, a geometric sans set heavy and uppercase,
+// everything on a strict grid. Suits architectural and graphic photography.
+const bauhaus: ThemePreset = {
+  preset: 'bauhaus',
+  colorPrimary: '#111111',
+  colorSecondary: 'rgba(17,17,17,0.66)',
+  colorBg: '#f1ede4',
+  colorSurface: '#faf8f3',
+  colorAccent: '#d42a1f',
+  colorBorder: '#111111',
+  fontHeading: 'var(--font-jost), Futura, "Century Gothic", "Avenir Next", sans-serif',
+  fontBody: 'var(--font-jost), Futura, "Century Gothic", "Avenir Next", sans-serif',
+  headingWeight: 700,
+  headingTracking: '-0.01em',
+  baseFontSize: '16px',
+  maxWidth: '1320px',
+  pagePadding: '32px',
+  imageRadius: '0px',
+  imageShadow: 'none',
+  controlRadius: '0px',
+  headerLayout: 'split',
+  headerStyle: 'solid',
+  headerGlassBg: 'rgba(241,237,228,0.85)',
+  headerBlur: '12px',
+  homeLayout: 'construct',
+  galleryGridMode: 'construct',
+  artworkLayout: 'stacked',
+  demoArtistName: 'László Moholy-Nagy',
+  demoTagline: 'Form, light and the built world',
+}
+
+// Wabi-sabi: quiet, imperfect, impermanent. Unbleached-paper ground, warm
+// charcoal ink, a clay accent, a mincho for headings, wide margins, and image
+// corners that are very slightly uneven. Suits still life and quiet nature.
+const wabisabi: ThemePreset = {
+  preset: 'wabisabi',
+  colorPrimary: '#3b3833',
+  colorSecondary: 'rgba(59,56,51,0.6)',
+  colorBg: '#ece8df',
+  colorSurface: '#f4f1ea',
+  colorAccent: '#8d6e4c',
+  colorBorder: 'rgba(59,56,51,0.14)',
+  fontHeading: 'var(--font-shippori), "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif',
+  fontBody: 'var(--font-zen), "Hiragino Sans", "Segoe UI", sans-serif',
+  headingWeight: 400,
+  headingTracking: '0.04em',
+  baseFontSize: '16px',
+  maxWidth: '1120px',
+  pagePadding: '48px',
+  imageRadius: '3px 7px 4px 9px / 6px 3px 8px 4px',
+  imageShadow: 'none',
+  controlRadius: '2px',
+  headerLayout: 'split',
+  headerStyle: 'solid',
+  headerGlassBg: 'rgba(236,232,223,0.85)',
+  headerBlur: '12px',
+  homeLayout: 'quiet',
+  galleryGridMode: 'quiet',
+  artworkLayout: 'asymmetric',
+  bgTexture:
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.33  0 0 0 0 0.3  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")",
+  demoArtistName: 'Kusakabe Kimbei',
+  demoTagline: 'Quiet things, slowly seen',
+}
+
 export const themes: Record<string, ThemePreset> = {
   wildlife,
   lifestyle,
   art,
   travel,
+  bauhaus,
+  wabisabi,
 }
 
 export const DEFAULT_PRESET = 'wildlife'
@@ -249,6 +329,7 @@ const PRESET_ALIASES: Record<string, string> = {
   editorial: 'lifestyle',
   atmospheric: 'art',
   warm: 'travel',
+  'wabi-sabi': 'wabisabi',
 }
 
 export function resolvePresetName(raw?: string | null): string {

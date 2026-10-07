@@ -721,6 +721,142 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
     )
   }
 
+  // Construct (Bauhaus): strict square grid, black rules, and a numbered
+  // caption block that cycles the three primaries.
+  if (mode === 'construct') {
+    const PRIMARIES = ['#d42a1f', '#f2b705', '#1f4e9c']
+    return (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))',
+          gap: 0,
+          marginTop: 32,
+          borderTop: '2px solid var(--color-primary)',
+          borderLeft: '2px solid var(--color-primary)',
+        }}
+      >
+        {artworks.map((a, i) => {
+          const edition = editionStateFor(a)
+          const block = PRIMARIES[i % 3]
+          return (
+            <Link
+              key={a.id}
+              href={`/artwork/${a.slug}`}
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                borderRight: '2px solid var(--color-primary)',
+                borderBottom: '2px solid var(--color-primary)',
+                background: 'var(--color-surface)',
+              }}
+            >
+              <div style={{ position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden' }}>
+                {a.imageUrl ? (
+                  <Image
+                    src={a.imageUrl}
+                    alt={a.title ?? ''}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1320px) 33vw, 25vw"
+                    style={{ objectFit: 'cover' }}
+                    priority={i < 4}
+                  />
+                ) : null}
+                <EditionMarker state={edition} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'stretch', borderTop: '2px solid var(--color-primary)' }}>
+                <span
+                  style={{
+                    width: 48,
+                    flex: '0 0 48px',
+                    background: block,
+                    color: i % 3 === 1 ? '#111' : '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                  }}
+                >
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span style={{ padding: '10px 12px', minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      fontSize: '0.88rem',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {a.title}
+                  </span>
+                  <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--color-secondary)', marginTop: 2 }}>
+                    {[a.location, a.year].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Quiet (wabi-sabi): two loose columns at native proportions, wide gaps,
+  // the second column set lower so nothing lines up too neatly.
+  if (mode === 'quiet') {
+    const left = artworks.filter((_, i) => i % 2 === 0)
+    const right = artworks.filter((_, i) => i % 2 === 1)
+    const col = (items: Artwork[], offset: number) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(48px, 7vw, 96px)', paddingTop: offset }}>
+        {items.map((a) => {
+          const edition = editionStateFor(a)
+          return (
+            <Link key={a.id} href={`/artwork/${a.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ position: 'relative' }}>
+                {a.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={a.imageUrl}
+                    alt={a.title ?? ''}
+                    loading="lazy"
+                    style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 'var(--image-radius)' }}
+                  />
+                ) : null}
+                <EditionMarker state={edition} />
+              </div>
+              <p style={{ margin: '14px 0 0', fontFamily: 'var(--font-heading)', letterSpacing: '0.04em', fontSize: '1rem' }}>
+                {a.title}
+              </p>
+              <p style={{ margin: '4px 0 0', color: 'var(--color-secondary)', fontSize: '0.82rem', fontWeight: 300 }}>
+                {[a.location, a.year].filter(Boolean).join(', ')}
+              </p>
+            </Link>
+          )
+        })}
+      </div>
+    )
+    return (
+      <div
+        className="gg-quiet"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+          gap: 'clamp(32px, 7vw, 112px)',
+          marginTop: 48,
+          alignItems: 'start',
+        }}
+      >
+        <style>{`@media (max-width: 700px) { .gg-quiet { grid-template-columns: 1fr !important; } .gg-quiet > div { padding-top: 0 !important; } }`}</style>
+        {col(left, 0)}
+        {col(right, 140)}
+      </div>
+    )
+  }
+
   // Uniform — gallery-wall look used by the fine-art preset. Generous gap and
   // a larger minimum tile give each piece breathing room, like a hung wall.
   return (
