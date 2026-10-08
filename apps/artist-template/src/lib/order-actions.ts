@@ -1,5 +1,7 @@
 'use server'
 
+import { MULTI_SITE } from '@/lib/site'
+
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
@@ -51,6 +53,21 @@ export async function submitMockOrder(
   input: SubmitOrderInput,
 ): Promise<SubmitOrderResult> {
   if (!FULFILLMENT_API_URL || !FULFILLMENT_API_KEY) {
+    // Demo deployment: walk the visitor through to a confirmation without
+    // sending anything anywhere.
+    if (MULTI_SITE && input.items.length > 0) {
+      const subtotal = round2(
+        input.items.reduce((acc, i) => acc + i.configuration.unitPrice * i.quantity, 0),
+      )
+      const shipping = SHIPPING_FLAT_CAD
+      const tax = round2(subtotal * TAX_RATE)
+      return {
+        ok: true,
+        orderId: 'demo',
+        externalOrderId: `DEMO-${Date.now().toString(36).toUpperCase()}`,
+        totals: { subtotal, shipping, tax, total: round2(subtotal + shipping + tax) },
+      }
+    }
     return {
       ok: false,
       error:

@@ -1,6 +1,8 @@
 import config from '@payload-config'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { PublicProductTemplate } from '@artbox/types'
+import { ALL_FIXTURE_TEMPLATES } from '@artbox/ui'
 import { getPayload } from 'payload'
 
 import {
@@ -69,11 +71,17 @@ export default async function ArtworkDetail({ params }: Args) {
   const catalog = (await payload
     .findGlobal({ slug: 'catalog' })
     .catch(() => null)) as CatalogSettings | null
-  const templates = filterTemplates(
+  const liveTemplates = filterTemplates(
     allTemplates,
     catalog,
     artwork as unknown as ArtworkOverrides,
   )
+  // Demo sites must always show a working builder, even when the fulfilment
+  // platform is unreachable or not configured on this deployment.
+  const useSampleProducts = site.kind !== 'artist' && liveTemplates.length === 0
+  const templates = useSampleProducts
+    ? (ALL_FIXTURE_TEMPLATES as unknown as PublicProductTemplate[])
+    : liveTemplates
 
   return (
     <section style={{ padding: '48px 32px', maxWidth: 1280, margin: '0 auto' }}>
@@ -110,7 +118,7 @@ export default async function ArtworkDetail({ params }: Args) {
         ) : null}
       </header>
 
-      {!fulfillmentConfigured ? (
+      {!fulfillmentConfigured && site.kind === 'artist' ? (
         <FulfillmentNotConfiguredBanner />
       ) : null}
 
