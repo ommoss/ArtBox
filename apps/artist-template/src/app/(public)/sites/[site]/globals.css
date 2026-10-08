@@ -441,7 +441,7 @@ body.header-glass .site-hero::before {
 }
 .mkt-hero__mosaic {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 .mkt-hero__tile {
@@ -479,10 +479,10 @@ body.header-glass .site-hero::before {
   align-items: start;
 }
 /* Middle column sits a touch lower; its tiles shift together so nothing overlaps. */
-.mkt-hero__tile:nth-child(3n+2) {
+.mkt-hero__tile:nth-child(even) {
   transform: translateY(18px);
 }
-.mkt-hero__tile:nth-child(3n+2):hover {
+.mkt-hero__tile:nth-child(even):hover {
   transform: translateY(15px);
 }
 .mkt-hero__tile-label {
@@ -504,8 +504,8 @@ body.header-glass .site-hero::before {
   .mkt-hero__mosaic {
     grid-template-columns: 1fr 1fr;
   }
-  .mkt-hero__tile:nth-child(3n+2),
-  .mkt-hero__tile:nth-child(3n+2):hover {
+  .mkt-hero__tile:nth-child(even),
+  .mkt-hero__tile:nth-child(even):hover {
     transform: none;
   }
 }
@@ -561,4 +561,24 @@ body.theme-wabisabi .home-galleries h2 {
   text-transform: none !important;
   letter-spacing: 0.1em !important;
   font-size: 1.2rem !important;
+}
+
+.mkt-hero__yours {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-top: none;
+  color: #fff;
+  padding: 10px;
+}
+.mkt-hero__yours b {
+  font-size: 1.05rem;
+}
+.mkt-hero__yours span {
+  font-size: 0.78rem;
+  opacity: 0.75;
 }

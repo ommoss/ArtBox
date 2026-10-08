@@ -1,0 +1,90 @@
+/* Fine art, brutalism. Nothing softened: 2px black rules, a blunt display
+   face, monospace text, raw link blue, yellow as the only highlight. */
+
+body.theme-art ::selection {
+  background: #ffff00;
+  color: #000;
+}
+body.theme-art .site-header {
+  border-bottom: 2px solid #000;
+}
+body.theme-art .site-header__inner {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+body.theme-art .site-header__name {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+body.theme-art .site-nav {
+  gap: 0;
+}
+body.theme-art .site-nav a {
+  opacity: 1;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border-left: 2px solid #000;
+}
+body.theme-art .site-nav a:hover,
+body.theme-art .site-nav a[aria-current="page"] {
+  background: #000;
+  color: #fff;
+}
+body.theme-art main h1,
+body.theme-art main h2 {
+  text-transform: uppercase;
+}
+body.theme-art .svc-btn {
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  border-radius: 0;
+  text-transform: uppercase;
+}
+body.theme-art .svc-btn:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  opacity: 1;
+}
+body.theme-art .svc-btn--ghost {
+  background: #fff;
+  color: #000;
+}
+body.theme-art .svc-products li,
+body.theme-art .svc-tier,
+body.theme-art .svc-look,
+body.theme-art .svc-builder__frame,
+body.theme-art .demo-band {
+  border: 2px solid #000;
+  box-shadow: none;
+}
+body.theme-art .demo-band {
+  background: #ffff00;
+}
+body.theme-art .site-footer {
+  border-top: 2px solid #000;
+  text-align: left;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+body.theme-art .site-footer__links {
+  justify-content: flex-start;
+}
+body.theme-art .demo-banner {
+  background: #000;
+  color: #fff;
+}
+body.theme-art .home-galleries a > div:first-child {
+  border: 2px solid #000;
+}
+body.theme-art .home-galleries h3 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+}

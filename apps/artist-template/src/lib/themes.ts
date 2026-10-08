@@ -21,6 +21,9 @@ export type HeaderStyle = 'solid' | 'glass'
 // 'centered'     — name + tagline only (fallback)
 // 'construct'    — Bauhaus composition: colour blocks + photographs on a strict grid (bauhaus)
 // 'quiet'        — one photograph, wide margins, a few lines of text (wabisabi)
+// 'brutal'       — giant name, raw image, an index table of works (art)
+// 'desk'         — journal, polaroids and postcards on a wooden desk (travel)
+// 'collage'      — overlapping shapes, stickers and a ticker (maximalism)
 export type HomeLayout =
   | 'centered'
   | 'hero'
@@ -30,6 +33,9 @@ export type HomeLayout =
   | 'globe'
   | 'construct'
   | 'quiet'
+  | 'brutal'
+  | 'desk'
+  | 'collage'
 export type GalleryGridMode =
   | 'uniform'
   | 'magazine'
@@ -39,6 +45,9 @@ export type GalleryGridMode =
   | 'route'
   | 'construct'
   | 'quiet'
+  | 'glass'
+  | 'index'
+  | 'collage'
 export type ArtworkLayout = 'stacked' | 'asymmetric'
 
 export type Theme = {
@@ -108,35 +117,39 @@ const SERIF_STACK =
 const DISPLAY_SERIF =
   '"Playfair Display", Didot, "Bodoni MT", Garamond, serif'
 
-// Default preset: wildlife photography sold as large-format limited editions.
-// Modelled on the large-format landscape/wildlife sellers (Lik, Aaron Reed):
-// light neutral chrome, a sans face, the photographs carry all the colour.
-// Full-bleed carousel home with the glass header riding over it.
+// Wildlife, styled as glassmorphism: large-format nature photography seen
+// through frosted panels. A deep forest ground lit by soft colour fields so
+// the glass has something to blur; translucent surfaces, white hairline
+// borders, generous radii. Full-bleed carousel with a glass caption card.
 const wildlife: ThemePreset = {
   preset: 'wildlife',
-  colorPrimary: '#161a17',
-  colorSecondary: 'rgba(22,26,23,0.62)',
-  colorBg: '#f5f4f0',
-  colorSurface: '#ffffff',
-  colorAccent: '#a9672b',
-  colorBorder: 'rgba(22,26,23,0.1)',
-  fontHeading: SANS_STACK,
-  fontBody: SANS_STACK,
-  headingWeight: 600,
+  colorPrimary: '#f4f7f2',
+  colorSecondary: 'rgba(244,247,242,0.72)',
+  colorBg: '#0d1a16',
+  colorSurface: 'rgba(255,255,255,0.08)',
+  colorAccent: '#e8b04b',
+  colorBorder: 'rgba(255,255,255,0.18)',
+  fontHeading: 'var(--font-manrope), "Segoe UI", system-ui, sans-serif',
+  fontBody: 'var(--font-manrope), "Segoe UI", system-ui, sans-serif',
+  headingWeight: 700,
   headingTracking: '-0.02em',
   baseFontSize: '16px',
-  maxWidth: '1440px',
+  maxWidth: '1360px',
   pagePadding: '32px',
-  imageRadius: '0px',
-  imageShadow: 'none',
-  controlRadius: '2px',
+  imageRadius: '18px',
+  imageShadow: '0 24px 60px rgba(0,0,0,0.35)',
+  controlRadius: '14px',
   headerLayout: 'split',
   headerStyle: 'glass',
-  headerGlassBg: 'rgba(245,244,240,0.72)',
-  headerBlur: '14px',
+  headerGlassBg: 'rgba(13,26,22,0.45)',
+  headerBlur: '18px',
   homeLayout: 'carousel',
-  galleryGridMode: 'cinematic',
+  galleryGridMode: 'glass',
   artworkLayout: 'stacked',
+  bgTexture:
+    'radial-gradient(55vw 45vw at 8% 4%, rgba(46,140,110,0.55), transparent 62%), ' +
+    'radial-gradient(45vw 40vw at 96% 18%, rgba(214,150,60,0.32), transparent 62%), ' +
+    'radial-gradient(60vw 50vw at 55% 100%, rgba(40,96,150,0.45), transparent 62%)',
   demoArtistName: 'Eadweard Muybridge',
   demoTagline: 'Large-format wildlife, in limited editions',
 }
@@ -174,74 +187,108 @@ const lifestyle: ThemePreset = {
   demoAnnouncement: 'Free framing on orders over $300 through the end of the month',
 }
 
-// Fine-art photography: dark, cinematic presentation that suits limited-edition
-// print sales. Deliberately the one dark look in the set. Galleries use the
-// `solo` mode — each piece one-per-row at its native aspect ratio with its
-// story beside it.
+// Fine art, styled as brutalism: the work and nothing pretending otherwise.
+// White ground, black type, raw link blue, a blunt display face over a
+// monospace, hard 2px rules, no radius, no shadow. The home is a giant name
+// over an index of editions; galleries are a catalogue table.
 const art: ThemePreset = {
   preset: 'art',
-  colorPrimary: '#ebe8e3',
-  colorSecondary: 'rgba(235,232,227,0.55)',
-  colorBg: '#0d0d0e',
-  colorSurface: '#18181a',
-  colorAccent: '#c89657',
-  colorBorder: 'rgba(255,255,255,0.08)',
-  fontHeading: SANS_STACK,
-  fontBody: SANS_STACK,
+  colorPrimary: '#000000',
+  colorSecondary: 'rgba(0,0,0,0.62)',
+  colorBg: '#ffffff',
+  colorSurface: '#f1f1ee',
+  colorAccent: '#0000ee',
+  colorBorder: '#000000',
+  fontHeading: 'var(--font-archivo), "Arial Black", Impact, sans-serif',
+  fontBody: 'var(--font-mono), "Courier New", monospace',
   headingWeight: 400,
-  headingTracking: '0.02em',
-  baseFontSize: '16px',
-  maxWidth: '1280px',
-  pagePadding: '32px',
+  headingTracking: '-0.03em',
+  baseFontSize: '15px',
+  maxWidth: '1600px',
+  pagePadding: '20px',
   imageRadius: '0px',
-  imageShadow: '0 24px 48px rgba(0,0,0,0.55)',
+  imageShadow: 'none',
   controlRadius: '0px',
   headerLayout: 'split',
   headerStyle: 'solid',
-  headerGlassBg: 'rgba(13,13,14,0.7)',
-  headerBlur: '12px',
-  homeLayout: 'gallery-wall',
-  galleryGridMode: 'solo',
+  headerGlassBg: 'rgba(255,255,255,0.9)',
+  headerBlur: '0px',
+  homeLayout: 'brutal',
+  galleryGridMode: 'index',
   artworkLayout: 'stacked',
   demoArtistName: 'Alfred Stieglitz',
   demoTagline: 'Signed, limited edition photographs',
 }
 
-// Travel photography: sun-warmed, journal/album feel with a paper grain,
-// organised by journey. Interactive globe on the home (homeLayout 'globe');
-// inside a gallery the photos are plotted on a mini-map joined by a dashed
-// route (galleryGridMode 'route').
+// Travel, styled as skeuomorphism: a journal you can almost touch. Linen
+// paper ground, prints with real-world drop shadows, handwriting for notes.
+// The home is a wooden desk with a notebook, polaroids, a postcard and a
+// passport stamp; inside a gallery the antique route map stays and the photos
+// become polaroids (galleryGridMode 'route').
 const travel: ThemePreset = {
   preset: 'travel',
   colorPrimary: '#3d2f23',
-  colorSecondary: 'rgba(61,47,35,0.6)',
-  colorBg: '#f5ebdc',
-  colorSurface: '#fbf4e9',
-  colorAccent: '#bd5a2c',
-  colorBorder: 'rgba(61,47,35,0.12)',
-  fontHeading: SERIF_STACK,
-  fontBody: SANS_STACK,
+  colorSecondary: 'rgba(61,47,35,0.62)',
+  colorBg: '#efe4d2',
+  colorSurface: '#fbf6ec',
+  colorAccent: '#b4532a',
+  colorBorder: 'rgba(61,47,35,0.16)',
+  fontHeading: 'Georgia, "Iowan Old Style", "Source Serif Pro", serif',
+  fontBody: '"Segoe UI", system-ui, -apple-system, sans-serif',
   headingWeight: 500,
   headingTracking: '-0.005em',
   baseFontSize: '16px',
-  maxWidth: '1180px',
+  maxWidth: '1200px',
   pagePadding: '40px',
-  imageRadius: '6px',
-  imageShadow: '0 12px 28px rgba(61,47,35,0.14)',
+  imageRadius: '2px',
+  imageShadow: '0 1px 1px rgba(40,25,10,0.18), 0 6px 14px rgba(40,25,10,0.18), 0 18px 34px rgba(40,25,10,0.14)',
   controlRadius: '6px',
   headerLayout: 'split',
   headerStyle: 'solid',
-  headerGlassBg: 'rgba(245,235,220,0.8)',
+  headerGlassBg: 'rgba(239,228,210,0.85)',
   headerBlur: '12px',
-  homeLayout: 'journeys',
+  homeLayout: 'desk',
   galleryGridMode: 'route',
   artworkLayout: 'stacked',
-  // Subtle paper-grain texture using inline SVG noise — no external asset
-  // needed. Renders as a low-contrast overlay so warm tones stay warm.
   bgTexture:
-    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")",
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.6  0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0.09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")",
   demoArtistName: 'Francis Frith',
   demoTagline: 'Journeys, one print at a time',
+}
+
+// Maximalism: more of everything. Cream ground under a pink polka-dot field,
+// deep purple ink, hot pink accent with cobalt, chartreuse and tangerine in
+// play, a black italic display serif, pill buttons with hard offset shadows,
+// overlapping shapes. Suits saturated colour photography.
+const maximalism: ThemePreset = {
+  preset: 'maximalism',
+  colorPrimary: '#1e0b3a',
+  colorSecondary: 'rgba(30,11,58,0.74)',
+  colorBg: '#fff1dc',
+  colorSurface: '#ffffff',
+  colorAccent: '#ff2e88',
+  colorBorder: '#1e0b3a',
+  fontHeading: 'var(--font-fraunces), Georgia, serif',
+  fontBody: 'var(--font-grotesk), "Segoe UI", system-ui, sans-serif',
+  headingWeight: 900,
+  headingTracking: '-0.02em',
+  baseFontSize: '16px',
+  maxWidth: '1360px',
+  pagePadding: '32px',
+  imageRadius: '22px',
+  imageShadow: '8px 8px 0 #1e0b3a',
+  controlRadius: '999px',
+  headerLayout: 'split',
+  headerStyle: 'solid',
+  headerGlassBg: 'rgba(255,241,220,0.9)',
+  headerBlur: '12px',
+  homeLayout: 'collage',
+  galleryGridMode: 'collage',
+  artworkLayout: 'stacked',
+  bgTexture: 'radial-gradient(rgba(255,46,136,0.22) 1.6px, transparent 1.9px)',
+  demoArtistName: "Mervyn O'Gorman",
+  demoTagline: 'Colour, loudly',
+  demoAnnouncement: 'New colour editions every month · Free shipping on two or more prints',
 }
 
 // Bauhaus: the style rather than a genre. Primary red / yellow / blue on an
@@ -310,6 +357,37 @@ const wabisabi: ThemePreset = {
   demoTagline: 'Quiet things, slowly seen',
 }
 
+// Moss Editions' own look, for the marketing root (never a demo). Light
+// neutral chrome with the glass header; the demos each carry their own style.
+const moss: ThemePreset = {
+  preset: 'moss',
+  colorPrimary: '#161a17',
+  colorSecondary: 'rgba(22,26,23,0.62)',
+  colorBg: '#f5f4f0',
+  colorSurface: '#ffffff',
+  colorAccent: '#a9672b',
+  colorBorder: 'rgba(22,26,23,0.1)',
+  fontHeading: SANS_STACK,
+  fontBody: SANS_STACK,
+  headingWeight: 600,
+  headingTracking: '-0.02em',
+  baseFontSize: '16px',
+  maxWidth: '1440px',
+  pagePadding: '32px',
+  imageRadius: '0px',
+  imageShadow: 'none',
+  controlRadius: '2px',
+  headerLayout: 'split',
+  headerStyle: 'glass',
+  headerGlassBg: 'rgba(245,244,240,0.72)',
+  headerBlur: '14px',
+  homeLayout: 'centered',
+  galleryGridMode: 'uniform',
+  artworkLayout: 'stacked',
+  demoArtistName: 'Moss Editions',
+  demoTagline: 'Print shops for photographers',
+}
+
 export const themes: Record<string, ThemePreset> = {
   wildlife,
   lifestyle,
@@ -317,6 +395,8 @@ export const themes: Record<string, ThemePreset> = {
   travel,
   bauhaus,
   wabisabi,
+  maximalism,
+  moss,
 }
 
 export const DEFAULT_PRESET = 'wildlife'

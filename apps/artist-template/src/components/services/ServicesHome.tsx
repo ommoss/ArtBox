@@ -161,7 +161,7 @@ export default function ServicesHome({
 
       <section className="svc-looks" id="looks">
         <span className="svc-kicker">Pick a look</span>
-        <h2 className="svc-h2">Six starting points, each tuned to a kind of work.</h2>
+        <h2 className="svc-h2">Seven starting points, each tuned to a kind of work.</h2>
         <p className="svc-lede">
           Same platform, different feeling. Each one is a live demo with its own sample galleries.
           Yours starts from one of these and is tuned to your work.

@@ -19,7 +19,7 @@ export const mailto = (subject: string) =>
 export const proofPoints = [
   { title: 'Printing, framing and shipping included', body: 'Every order is produced and shipped by Artbox Printing. You never touch a box.' },
   { title: 'You set the prices', body: `Production cost is fixed and known up front. You set the markup; we take a ${COMMISSION} commission on each sale and nothing else.` },
-  { title: 'Your look, your name', body: 'Six starting looks, tuned to your work. Your domain, your brand, your galleries.' },
+  { title: 'Your look, your name', body: 'Seven starting looks, tuned to your work. Your domain, your brand, your galleries.' },
 ]
 
 export const products = [

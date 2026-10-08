@@ -1,0 +1,113 @@
+/* Maximalism. Dots on the ground, hard offset shadows, colour on every
+   surface, black italic display type, pills everywhere. */
+
+body.theme-maximalism {
+  background-size: 22px 22px !important;
+}
+body.theme-maximalism .site-header {
+  border-bottom: 4px solid #1e0b3a;
+}
+body.theme-maximalism .site-header__name {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+body.theme-maximalism .site-nav a {
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  opacity: 1;
+}
+body.theme-maximalism .site-nav a:hover,
+body.theme-maximalism .site-nav a[aria-current="page"] {
+  background: #c6f432;
+  border-color: #1e0b3a;
+  text-decoration: none;
+}
+body.theme-maximalism .announce {
+  background: repeating-linear-gradient(-45deg, #ff2e88 0 18px, #ff4f9c 18px 36px);
+  color: #fff;
+  font-weight: 700;
+}
+body.theme-maximalism main h1,
+body.theme-maximalism main h2 {
+  font-style: italic;
+}
+body.theme-maximalism .svc-btn {
+  background: #ff2e88;
+  color: #fff;
+  border: 3px solid #1e0b3a;
+  border-radius: 999px;
+  box-shadow: 5px 5px 0 #1e0b3a;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+body.theme-maximalism .svc-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 #1e0b3a;
+  opacity: 1;
+}
+body.theme-maximalism .svc-btn--ghost {
+  background: #fff;
+  color: #1e0b3a;
+}
+body.theme-maximalism .svc-products li,
+body.theme-maximalism .svc-tier,
+body.theme-maximalism .svc-look,
+body.theme-maximalism .svc-builder__frame {
+  border: 3px solid #1e0b3a;
+  border-radius: 22px;
+  box-shadow: 6px 6px 0 #1e0b3a;
+}
+body.theme-maximalism .svc-products li:nth-child(4n + 1),
+body.theme-maximalism .svc-tier:nth-child(3n + 1) {
+  background: #c6f432;
+}
+body.theme-maximalism .svc-products li:nth-child(4n + 2),
+body.theme-maximalism .svc-tier:nth-child(3n + 2) {
+  background: #ffd1e6;
+}
+body.theme-maximalism .svc-products li:nth-child(4n + 3),
+body.theme-maximalism .svc-tier:nth-child(3n + 3) {
+  background: #cfd6ff;
+}
+body.theme-maximalism .svc-products li:nth-child(4n + 4) {
+  background: #ffd3a8;
+}
+body.theme-maximalism .demo-band {
+  background: #c6f432;
+  border-top: 4px solid #1e0b3a;
+  border-bottom: 4px solid #1e0b3a;
+}
+body.theme-maximalism .home-galleries h3,
+body.theme-maximalism .feat__title {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 900;
+}
+body.theme-maximalism .home-galleries a > div:first-child,
+body.theme-maximalism .feat__img {
+  border: 3px solid #1e0b3a;
+}
+body.theme-maximalism .site-footer {
+  background: #1e0b3a;
+  color: #fff1dc;
+  border-top: none;
+  margin-top: 96px;
+}
+body.theme-maximalism .site-footer a {
+  border-bottom-color: #ff2e88;
+}
+body.theme-maximalism .theme-switcher {
+  background: #1e0b3a;
+  border-top: none;
+}
+body.theme-maximalism .theme-switcher__label {
+  color: #c6f432;
+}
+body.theme-maximalism .theme-switcher__link {
+  color: #fff1dc;
+  border-color: rgba(255, 241, 220, 0.4);
+}

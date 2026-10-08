@@ -3,7 +3,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 
+import BrutalHero from '@/components/BrutalHero'
+import CollageHero from '@/components/CollageHero'
 import ConstructHero from '@/components/ConstructHero'
+import DeskHero from '@/components/DeskHero'
 import GalleryWallHero from '@/components/GalleryWallHero'
 import GlobeHome, { type GalleryPin } from '@/components/GlobeHome'
 import HeroCarousel from '@/components/HeroCarousel'
@@ -64,7 +67,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
     collection: 'artworks',
     where: withSite(site, { isPublished: { equals: true } }),
     sort: ['-isFeatured', '-updatedAt'],
-    limit: 6,
+    limit: theme.homeLayout === 'brutal' ? 12 : 6,
     depth: 0,
   })
   const leadRows = leadQuery.docs as unknown as ArtworkRow[]
@@ -84,7 +87,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
   // Globe pins (travel): each gallery at its coordinates. Galleries without
   // lat/lng are skipped on the globe but still appear in the grid below.
   const globePins: GalleryPin[] =
-    theme.homeLayout === 'globe' || theme.homeLayout === 'journeys'
+    theme.homeLayout === 'globe' || theme.homeLayout === 'journeys' || theme.homeLayout === 'desk'
       ? galleryRows
           .filter((g) => typeof g.lat === 'number' && typeof g.lng === 'number' && !!g.slug)
           .map((g) => ({
@@ -99,7 +102,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
   // Journey hero (travel): the first journey, captioned with the place and
   // year of its opening photograph.
   let journey: Parameters<typeof JourneyHero>[0]['gallery'] | null = null
-  if (theme.homeLayout === 'journeys' && galleryRows[0]?.slug) {
+  if ((theme.homeLayout === 'journeys' || theme.homeLayout === 'desk') && galleryRows[0]?.slug) {
     const g = galleryRows[0]
     const opener = await payload.find({
       collection: 'artworks',
@@ -165,6 +168,39 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
             <JourneyHero artistName={brand.artistName} tagline={brand.tagline} gallery={journey} />
           </div>
         ) : null
+      case 'brutal':
+        return (
+          <BrutalHero artistName={brand.artistName} tagline={brand.tagline} works={leadRows} total={leadQuery.totalDocs} />
+        )
+      case 'desk':
+        return (
+          <DeskHero
+            artistName={brand.artistName}
+            tagline={brand.tagline}
+            polaroids={leadRows
+              .filter((r) => r.imageUrl && r.slug)
+              .slice(1, 4)
+              .map((r) => ({
+                slug: r.slug as string,
+                title: r.title ?? '',
+                imageUrl: r.imageUrl as string,
+                location: r.location,
+              }))}
+            journey={journey}
+          />
+        )
+      case 'collage':
+        return (
+          <CollageHero
+            artistName={brand.artistName}
+            tagline={brand.tagline}
+            pieces={leadRows
+              .filter((r) => r.imageUrl && r.slug)
+              .slice(0, 3)
+              .map((r) => ({ slug: r.slug as string, title: r.title ?? '', imageUrl: r.imageUrl as string }))}
+            galleries={galleryRows.map((g) => g.name ?? '').filter(Boolean)}
+          />
+        )
       case 'construct': {
         const pieces = leadRows
           .filter((r) => r.imageUrl && r.slug)
@@ -217,7 +253,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
         </section>
       )}
 
-      {theme.homeLayout === 'journeys' && globePins.length > 0 ? (
+      {(theme.homeLayout === 'journeys' || theme.homeLayout === 'desk') && globePins.length > 0 ? (
         <section style={{ padding: '64px var(--page-padding) 0', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
           <p style={{ margin: '0 0 6px', fontSize: '0.72rem', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
             Browse by place
@@ -297,7 +333,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
         </div>
       </section>
 
-      <FeaturedStrip artworks={leadRows} />
+      {theme.homeLayout === 'brutal' ? null : <FeaturedStrip artworks={leadRows} />}
 
       {demo ? <DemoBand /> : null}
     </div>
@@ -353,7 +389,7 @@ async function MarketingHome() {
     depth: 0,
   })
   const lead = r.docs[0] as unknown as ArtworkRow | undefined
-  const homeSite: Site = { key: 'home', kind: 'home', preset: 'wildlife' }
+  const homeSite: Site = { key: 'home', kind: 'home', preset: 'moss' }
   return (
     <div>
       <div className="site-hero" data-hero>

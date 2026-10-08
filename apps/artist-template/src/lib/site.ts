@@ -32,14 +32,15 @@ export const PLATFORM_NAME = 'Moss Editions'
 export const PLATFORM_TAGLINE = 'Print shops for photographers, with fulfilment included'
 
 // Order the demos are presented in.
-export const DEMO_PRESETS = ['wildlife', 'lifestyle', 'art', 'travel', 'bauhaus', 'wabisabi'] as const
+export const DEMO_PRESETS = ['wildlife', 'lifestyle', 'art', 'travel', 'bauhaus', 'wabisabi', 'maximalism'] as const
 export const DEMO_LABELS: Record<string, { label: string; tagline: string }> = {
-  wildlife: { label: 'Wildlife', tagline: 'Large-format, limited editions' },
+  wildlife: { label: 'Wildlife', tagline: 'Glassmorphism, large-format' },
   lifestyle: { label: 'Lifestyle', tagline: 'Editorial & candid' },
-  art: { label: 'Fine Art', tagline: 'Dark, cinematic, gallery-wall' },
-  travel: { label: 'Travel', tagline: 'Sun-warmed, by destination' },
+  art: { label: 'Fine Art', tagline: 'Brutalist, an index of editions' },
+  travel: { label: 'Travel', tagline: 'Skeuomorphic travel journal' },
   bauhaus: { label: 'Bauhaus', tagline: 'Primary colour, strict grid' },
   wabisabi: { label: 'Wabi-sabi', tagline: 'Quiet, imperfect, unhurried' },
+  maximalism: { label: 'Maximalism', tagline: 'Colour, pattern, more of it' },
 }
 
 // Turn the [site] route param into a Site. In single-site mode the param is
@@ -47,7 +48,7 @@ export const DEMO_LABELS: Record<string, { label: string; tagline: string }> = {
 // either way.
 export function resolveSite(param: string | undefined): Site {
   if (MULTI_SITE) {
-    if (!param || param === HOME_KEY) return { key: HOME_KEY, kind: 'home', preset: DEFAULT_PRESET }
+    if (!param || param === HOME_KEY) return { key: HOME_KEY, kind: 'home', preset: 'moss' }
     const preset = resolvePresetName(param)
     return { key: preset, kind: 'demo', preset }
   }
@@ -63,7 +64,7 @@ export function siteKeyForHost(host: string): string {
   if (h === d || h === `www.${d}`) return HOME_KEY
   if (h.endsWith(`.${d}`)) {
     const sub = h.slice(0, -(d.length + 1))
-    if (sub in themes) return sub
+    if ((DEMO_PRESETS as readonly string[]).includes(sub)) return sub
   }
   // Preview hosts (*.vercel.app) and anything unknown land on the marketing root.
   return HOME_KEY

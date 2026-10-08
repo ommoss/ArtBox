@@ -11,6 +11,10 @@ import { fontVariables } from '@/lib/fonts'
 import { themeCssVars } from '@/lib/themes'
 
 import './globals.css'
+import './styles/glass.css'
+import './styles/brutal.css'
+import './styles/skeuo.css'
+import './styles/maximal.css'
 
 type Params = Promise<{ site: string }>
 

@@ -128,6 +128,7 @@ export default function HeroCarousel({
           pointerEvents: 'none',
         }}
       >
+        <div className="hc-card">
         <h1
           style={{
             fontFamily: 'var(--font-heading)',
@@ -188,6 +189,7 @@ export default function HeroCarousel({
             </span>
           </div>
         ) : null}
+        </div>
       </div>
 
       {/* Controls: prev / next / pause + a "n / N" position indicator. Hidden

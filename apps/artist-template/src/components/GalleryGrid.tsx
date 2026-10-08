@@ -400,6 +400,7 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
               <Link
                 key={a.id}
                 href={`/artwork/${a.slug}`}
+                className="gg-route-card"
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
                 <div
@@ -714,6 +715,158 @@ export default function GalleryGrid({ artworks, mode, accent, mapImageUrl }: Pro
                   </span>
                 ) : null}
               </div>
+            </Link>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Glass (wildlife glassmorphism): rounded tiles with a frosted caption
+  // panel floating over the bottom of each photograph.
+  if (mode === 'glass') {
+    return (
+      <div className="gg-glass">
+        <style>{`
+          .gg-glass { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 22px; margin-top: 32px; }
+          .gg-glass a { position: relative; display: block; aspect-ratio: 4 / 3; border-radius: var(--image-radius); overflow: hidden;
+            text-decoration: none; color: #fff; box-shadow: var(--image-shadow); border: 1px solid rgba(255,255,255,0.16); }
+          .gg-glass a img { transition: transform 0.5s ease; }
+          .gg-glass a:hover img { transform: scale(1.04); }
+          .gg-glass__cap { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 12px 16px; border-radius: 14px;
+            background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28);
+            -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 24px rgba(0,0,0,0.2);
+            display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+          .gg-glass__cap b { font-weight: 700; font-size: 1rem; display: block; }
+          .gg-glass__cap small { opacity: 0.82; font-size: 0.8rem; }
+          .gg-glass__pill { flex: none; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+            background: rgba(232,176,75,0.9); color: #1a1408; }
+        `}</style>
+        {artworks.map((a, i) => (
+          <Link key={a.id} href={`/artwork/${a.slug}`}>
+            {a.imageUrl ? (
+              <Image
+                src={a.imageUrl}
+                alt={a.title ?? ''}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1360px) 50vw, 33vw"
+                style={{ objectFit: 'cover' }}
+                priority={i < 3}
+              />
+            ) : null}
+            <span className="gg-glass__cap">
+              <span style={{ minWidth: 0 }}>
+                <b>{a.title}</b>
+                <small>{[a.location, a.year].filter(Boolean).join(' · ')}</small>
+              </span>
+              {a.isLimitedEdition && a.editionSize ? (
+                <span className="gg-glass__pill">
+                  {a.editionsRemaining === 0 ? 'Sold out' : `Edition of ${a.editionSize}`}
+                </span>
+              ) : null}
+            </span>
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
+  // Index (fine-art brutalism): the gallery as a catalogue table. Number,
+  // thumbnail, title, place, year, edition, one row per work, yellow on hover.
+  if (mode === 'index') {
+    return (
+      <div className="gg-index">
+        <style>{`
+          .gg-index { margin-top: 24px; border-top: 2px solid #000; }
+          .gg-index__row { display: grid; grid-template-columns: 4em 140px minmax(0, 2fr) minmax(0, 1.4fr) 5em 7em 2em;
+            gap: 16px; align-items: center; padding: 10px 0; border-bottom: 1px solid #000; color: #000; text-decoration: none; font-size: 0.88rem; }
+          .gg-index__row:hover { background: #ffff00; }
+          .gg-index__row .t { font-family: var(--font-heading); font-size: 1.15rem; text-transform: uppercase; letter-spacing: -0.02em; }
+          .gg-index__thumb { position: relative; width: 140px; aspect-ratio: 4 / 3; background: #eee; }
+          .gg-index__head { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; border-bottom: 2px solid #000; }
+          .gg-index__head:hover { background: none; }
+          .gg-index .go { color: var(--color-accent); font-weight: 700; }
+          @media (max-width: 760px) {
+            .gg-index__row { grid-template-columns: 96px minmax(0, 1fr); gap: 4px 12px; }
+            .gg-index__row > :nth-child(1), .gg-index__row > :nth-child(7) { display: none; }
+            .gg-index__thumb { width: 96px; grid-row: span 4; }
+            .gg-index__head { display: none; }
+          }
+        `}</style>
+        <div className="gg-index__row gg-index__head" aria-hidden>
+          <span>No.</span>
+          <span>Plate</span>
+          <span>Title</span>
+          <span>Place</span>
+          <span>Year</span>
+          <span>Edition</span>
+          <span />
+        </div>
+        {artworks.map((a, i) => (
+          <Link key={a.id} href={`/artwork/${a.slug}`} className="gg-index__row">
+            <span>{String(i + 1).padStart(3, '0')}</span>
+            <span className="gg-index__thumb">
+              {a.imageUrl ? (
+                <Image src={a.imageUrl} alt={a.title ?? ''} fill sizes="140px" style={{ objectFit: 'cover' }} priority={i < 6} />
+              ) : null}
+            </span>
+            <span className="t">{a.title}</span>
+            <span>{a.location ?? '—'}</span>
+            <span>{a.year ?? '—'}</span>
+            <span>
+              {a.isLimitedEdition && a.editionSize
+                ? a.editionsRemaining === 0
+                  ? 'SOLD OUT'
+                  : `ED. ${a.editionSize}`
+                : 'OPEN'}
+            </span>
+            <span className="go">→</span>
+          </Link>
+        ))}
+      </div>
+    )
+  }
+
+  // Collage (maximalism): masonry columns, every tile framed in a different
+  // loud colour and shape, with a tilted sticker caption.
+  if (mode === 'collage') {
+    const FRAMES = ['#ff2e88', '#2b3cff', '#c6f432', '#ff8a1f']
+    const SHAPES = ['22px', '999px 999px 22px 22px', '22px', '50% 50% 22px 22px / 30% 30% 22px 22px', '4px']
+    return (
+      <div className="gg-collage">
+        <style>{`
+          .gg-collage { columns: 3 300px; column-gap: 28px; margin-top: 36px; }
+          .gg-collage a { break-inside: avoid; display: block; margin: 0 0 34px; position: relative; text-decoration: none; color: #1e0b3a; }
+          .gg-collage__frame { display: block; padding: 10px; border: 4px solid #1e0b3a; box-shadow: 8px 8px 0 #1e0b3a; overflow: hidden; transition: transform 0.15s; }
+          .gg-collage a:hover .gg-collage__frame { transform: translate(-3px, -3px) rotate(-1deg); }
+          .gg-collage img { display: block; width: 100%; height: auto; }
+          .gg-collage__tag { position: absolute; left: 14px; bottom: -14px; padding: 6px 14px; background: #fff; border: 3px solid #1e0b3a;
+            border-radius: 999px; font-weight: 700; font-size: 0.9rem; box-shadow: 3px 3px 0 #1e0b3a; max-width: 85%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .gg-collage__ed { position: absolute; right: 10px; top: 10px; width: 70px; height: 70px; border-radius: 50%;
+            background: #c6f432; border: 3px solid #1e0b3a; display: flex; align-items: center; justify-content: center;
+            text-align: center; font-weight: 800; font-size: 0.66rem; line-height: 1.05; text-transform: uppercase; transform: rotate(12deg); }
+        `}</style>
+        {artworks.map((a, i) => {
+          const frame = FRAMES[i % FRAMES.length]
+          const shape = SHAPES[i % SHAPES.length]
+          return (
+            <Link key={a.id} href={`/artwork/${a.slug}`}>
+              <span className="gg-collage__frame" style={{ background: frame, borderRadius: shape }}>
+                {a.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.imageUrl} alt={a.title ?? ''} loading={i < 4 ? 'eager' : 'lazy'} style={{ borderRadius: `calc(${shape} - 6px)` }} />
+                ) : null}
+              </span>
+              <span className="gg-collage__tag" style={{ transform: `rotate(${i % 2 ? 2 : -2}deg)` }}>
+                {a.title}
+              </span>
+              {a.isLimitedEdition && a.editionSize ? (
+                <span className="gg-collage__ed">
+                  {a.editionsRemaining === 0 ? 'Sold out' : `Only ${a.editionSize}`}
+                </span>
+              ) : null}
             </Link>
           )
         })}

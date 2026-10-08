@@ -3,6 +3,7 @@ import type { Payload, Where } from 'payload'
 import { MULTI_SITE } from '@/lib/site'
 import { bauhausArtworks, bauhausGalleries } from './content/bauhaus'
 import { wabisabiArtworks, wabisabiGalleries } from './content/wabisabi'
+import { maximalismArtworks, maximalismGalleries } from './content/maximalism'
 import { resolvePresetName } from '@/lib/themes'
 
 // Demo content for the artist template.
@@ -2138,7 +2139,9 @@ const travel: ContentSet = {
 const bauhaus: ContentSet = { galleries: bauhausGalleries, artworks: bauhausArtworks }
 const wabisabi: ContentSet = { galleries: wabisabiGalleries, artworks: wabisabiArtworks }
 
-const contentSets: Record<string, ContentSet> = { wildlife, lifestyle, art, travel, bauhaus, wabisabi }
+const maximalism: ContentSet = { galleries: maximalismGalleries, artworks: maximalismArtworks }
+
+const contentSets: Record<string, ContentSet> = { wildlife, lifestyle, art, travel, bauhaus, wabisabi, maximalism }
 
 function contentSetForTheme(): ContentSet {
   const theme = resolvePresetName(process.env.NEXT_PUBLIC_THEME)
@@ -2148,6 +2151,7 @@ function contentSetForTheme(): ContentSet {
   if (theme === 'travel') return travel
   if (theme === 'bauhaus') return bauhaus
   if (theme === 'wabisabi') return wabisabi
+  if (theme === 'maximalism') return maximalism
   return neutral
 }
 

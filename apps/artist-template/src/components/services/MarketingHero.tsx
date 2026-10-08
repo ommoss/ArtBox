@@ -51,6 +51,17 @@ export default function MarketingHero() {
               <span className="mkt-hero__tile-label">{DEMO_LABELS[preset].label}</span>
             </a>
           ))}
+          <a href="#contact" className="mkt-hero__tile mkt-hero__tile--yours">
+            <span className="mkt-hero__chrome" aria-hidden>
+              <i />
+              <i />
+              <i />
+            </span>
+            <span className="mkt-hero__shot mkt-hero__yours">
+              <b>Your site</b>
+              <span>Tell us about your work →</span>
+            </span>
+          </a>
         </div>
       </div>
     </section>
